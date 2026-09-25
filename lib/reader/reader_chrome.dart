@@ -103,10 +103,10 @@ class ReaderStatusBar extends StatelessWidget {
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 18),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
+              // Page number hard-left, battery hard-right (Fanqie bottom strip).
               if (pageLabel.isNotEmpty)
                 Text(
                   pageLabel,
@@ -116,8 +116,7 @@ class ReaderStatusBar extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-              if (pageLabel.isNotEmpty && batteryLabel.isNotEmpty)
-                const SizedBox(width: 14),
+              const Spacer(),
               if (batteryLabel.isNotEmpty)
                 Row(
                   mainAxisSize: MainAxisSize.min,

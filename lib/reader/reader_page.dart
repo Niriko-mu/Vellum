@@ -1681,7 +1681,12 @@ class _ReaderPageState extends State<ReaderPage>
                               return PageView.builder(
                                 controller: _pageController,
                                 scrollDirection: Axis.horizontal,
-                                physics: const SnapPageScrollPhysics(),
+                                // Finger swipes are classified by
+                                // ReaderGestures and routed through
+                                // _changePage so the selected PageTurnStyle
+                                // (cover / slide / none) always applies.
+                                // PageView scrolling would bypass that.
+                                physics: const NeverScrollableScrollPhysics(),
                                 allowImplicitScrolling: true,
                                 itemCount: _pageCount,
                                 onPageChanged: (index) {

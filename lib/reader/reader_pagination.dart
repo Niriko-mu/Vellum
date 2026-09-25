@@ -197,11 +197,20 @@ class ProgressiveBookPager {
       _newPage();
     }
 
+    // Inter-paragraph gap is charged when content is laid onto a non-empty
+    // page. It is never reserved at the page bottom: the last fragment on a
+    // page has 0 bottom padding in the render tree, so a trailing +22 left
+    // every page visibly short — worst on long sentences split mid-way.
+    double gapBefore() => pages.last.isEmpty ? 0.0 : 22.0;
+
     if (source.isEmpty) {
-      final needed = imageHeight + linkHeight + headingChrome + 22;
-      if (_usedHeight + needed > availableHeight && pages.last.isNotEmpty) {
+      // Empty paragraphs render as a 22px step (bottom pad when not last).
+      final body = 22 + imageHeight + linkHeight + headingChrome;
+      if (_usedHeight + gapBefore() + body > availableHeight &&
+          pages.last.isNotEmpty) {
         _newPage();
       }
+      final gap = gapBefore();
       pages.last.add(
         PageFragment(
           paragraphIndex: index,
@@ -211,7 +220,7 @@ class ProgressiveBookPager {
         ),
       );
       _remember(index);
-      _usedHeight += needed;
+      _usedHeight += gap + body;
       return;
     }
 
@@ -255,13 +264,17 @@ class ProgressiveBookPager {
       var fragmentHeight = 0.0;
       var fragmentEnd = lineStart;
       final prefixHeight = firstFragment ? imageHeight + headingChrome : 0.0;
+      // Continuations of a split sentence: no leading gap, no indent.
+      final leadGap = firstFragment ? gapBefore() : 0.0;
 
       while (lineIndex < lines.length) {
         final nextHeight = fragmentHeight + lines[lineIndex].height;
         final isLastLine = lineIndex == lines.length - 1;
-        final suffixHeight = 22 + (isLastLine ? linkHeight : 0.0);
+        // No trailing paragraph gap here — only the link chrome on the
+        // paragraph's final line. Filling the page must not leave 22px idle.
+        final linkCost = isLastLine ? linkHeight : 0.0;
         final wouldFit =
-            _usedHeight + prefixHeight + nextHeight + suffixHeight <=
+            _usedHeight + leadGap + prefixHeight + nextHeight + linkCost <=
             availableHeight;
         if (!wouldFit && fragmentEnd != fragmentStart) break;
         fragmentHeight = nextHeight;
@@ -271,23 +284,31 @@ class ProgressiveBookPager {
             )
             .offset;
         lineIndex++;
-        if (!wouldFit ||
-            _usedHeight + prefixHeight + fragmentHeight + 22 >=
-                availableHeight) {
-          break;
-        }
+        if (!wouldFit) break;
       }
 
       if (fragmentEnd == fragmentStart) {
-        _newPage();
-        continue;
+        // Nothing committed (should be rare): open a fresh page and retry.
+        if (pages.last.isNotEmpty) {
+          _newPage();
+          continue;
+        }
+        // Empty page still cannot hold the first line — commit it anyway so
+        // the pager always makes progress.
+        fragmentHeight = lines[lineIndex].height;
+        fragmentEnd = painter
+            .getPositionForOffset(
+              Offset(contentWidth, lines[lineIndex].baseline),
+            )
+            .offset;
+        lineIndex++;
       }
 
       final isLastFragment = lineIndex == lines.length;
       final needed =
+          leadGap +
           prefixHeight +
           fragmentHeight +
-          22 +
           (isLastFragment ? linkHeight : 0.0);
       if (_usedHeight + needed > availableHeight && pages.last.isNotEmpty) {
         lineStart = fragmentStart;
@@ -315,6 +336,8 @@ class ProgressiveBookPager {
           indentFirstLine: firstFragment && willIndent,
           showImage: firstFragment && hasImage,
           showLinkAction: isLastFragment && hasLink,
+          // Mid-sentence continuations skip the inter-paragraph 22px step.
+          compactPadding: !firstFragment,
         ),
       );
       _remember(index);

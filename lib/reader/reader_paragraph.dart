@@ -148,13 +148,16 @@ class ReaderParagraph extends StatelessWidget {
         // that wraps to two or more lines. CJK lines fill evenly anyway.
         : TextAlign.start;
     final span = TextSpan(style: textStyle, children: spans);
+    // Pass style explicitly: SelectableText.rich must paint body ink
+    // (custom 正文字色) rather than DefaultTextStyle.
     final text = selectable
         ? SelectableText.rich(
             span,
+            style: textStyle,
             contextMenuBuilder: contextMenuBuilder,
             textAlign: alignment,
           )
-        : Text.rich(span, textAlign: alignment);
+        : Text.rich(span, style: textStyle, textAlign: alignment);
     final formattedText = isQuote
         ? Container(
             padding: const EdgeInsets.only(left: 14),

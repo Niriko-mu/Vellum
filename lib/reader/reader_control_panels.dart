@@ -7,6 +7,7 @@ import '../theme/vellum_theme.dart';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import '../services/reader_background.dart';
+import 'reader_color_picker.dart';
 import 'reader_models.dart';
 
 class ReaderDirectoryPanel extends StatefulWidget {
@@ -493,14 +494,13 @@ class ReaderSettingsPanel extends StatefulWidget {
 
 /// First level keeps mid-book controls (mode, font size, paper, font,
 /// line spacing). Rarer options live behind 「更多设置」.
-enum _PaperColorTarget { underlay, ink }
-
 class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
   bool _showMore = false;
   bool _showBackground = false;
-  _PaperColorTarget? _colorTarget;
-  late HSVColor _pickerColor;
-  final _hexController = TextEditingController();
+  // Inline pickers replace the old third-level 取色 page: one tap expands
+  // a live HSV pad under the row and every drag paints the reader at once.
+  bool _showInkPicker = false;
+  bool _showUnderlayPicker = false;
 
   static const double _followSystemBrightness = -1;
 
@@ -508,7 +508,6 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
 
   @override
   void dispose() {
-    _hexController.dispose();
     super.dispose();
   }
 
@@ -526,13 +525,9 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: switch ((_showBackground, _colorTarget)) {
-            (true, final target?) => _colorPickerSettings(context, target),
-            (true, null) => _backgroundSettings(context),
-            (false, _) => _showMore
-                ? _moreSettings(context)
-                : _mainSettings(context),
-          },
+          children: _showBackground
+              ? _backgroundSettings(context)
+              : (_showMore ? _moreSettings(context) : _mainSettings(context)),
         ),
       ),
     );
@@ -558,7 +553,8 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
       surface: _surface,
       onClose: widget.onClose,
       onBack: () => setState(() {
-        _colorTarget = null;
+        _showInkPicker = false;
+        _showUnderlayPicker = false;
         _showBackground = false;
       }),
     ),
@@ -633,8 +629,14 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             minimumSize: const Size(0, 34),
-            onPressed: () => _openColorPicker(_PaperColorTarget.underlay),
-            child: Text('取色', style: TextStyle(fontSize: 13, color: _ink)),
+            onPressed: () => setState(() {
+              _showInkPicker = false;
+              _showUnderlayPicker = !_showUnderlayPicker;
+            }),
+            child: Text(
+              _showUnderlayPicker ? '收起取色' : '取色',
+              style: TextStyle(fontSize: 13, color: _ink),
+            ),
           ),
           if (widget.background.colorValue != null)
             CupertinoButton(
@@ -647,6 +649,18 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             ),
         ],
       ),
+      if (_showUnderlayPicker) ...[
+        const SizedBox(height: 10),
+        ReaderColorPicker(
+          color: Color(
+            widget.background.colorValue ?? VellumTheme.readerWhite.toARGB32(),
+          ),
+          previewLabel: '背景色示例',
+          onChanged: (c) => widget.onBackground(
+            widget.background.copyWith(colorValue: c.toARGB32()),
+          ),
+        ),
+      ],
       const SizedBox(height: 12),
       _studioLabel('背景图透明度'),
       Row(
@@ -673,7 +687,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
       ),
     ],
     const SizedBox(height: 8),
-    _studioLabel('字体颜色'),
+    _studioLabel('正文字色（阅读正文的颜色）'),
     Row(
       children: [
         Container(
@@ -689,8 +703,14 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
         CupertinoButton(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           minimumSize: const Size(0, 34),
-          onPressed: () => _openColorPicker(_PaperColorTarget.ink),
-          child: Text('取色', style: TextStyle(fontSize: 13, color: _ink)),
+          onPressed: () => setState(() {
+            _showUnderlayPicker = false;
+            _showInkPicker = !_showInkPicker;
+          }),
+          child: Text(
+            _showInkPicker ? '收起取色' : '取色',
+            style: TextStyle(fontSize: 13, color: _ink),
+          ),
         ),
         if (widget.background.inkColorValue != null)
           CupertinoButton(
@@ -703,6 +723,50 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           ),
       ],
     ),
+    if (_showInkPicker) ...[
+      const SizedBox(height: 10),
+      ReaderColorPicker(
+        color: Color(widget.background.inkValue),
+        previewLabel: '正文示例文字',
+        onChanged: (c) => widget.onBackground(
+          widget.background.copyWith(inkColorValue: c.toARGB32()),
+        ),
+      ),
+      const SizedBox(height: 6),
+      // One-tap common inks so most users never open the pad.
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final entry in const {
+            0xff000000: '纯黑',
+            0xff333333: '深灰',
+            0xff8c8c8c: '中灰',
+            0xffb7b7b7: '浅灰',
+            0xfff7e4cf: '米黄',
+          }.entries)
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: const Size(0, 30),
+              color: Color(entry.key),
+              borderRadius: BorderRadius.circular(15),
+              onPressed: () => widget.onBackground(
+                widget.background.copyWith(inkColorValue: entry.key),
+              ),
+              child: Text(
+                entry.value,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: ReaderBackground.suggestTone(entry.key) ==
+                          BackgroundTone.dark
+                      ? CupertinoColors.white
+                      : CupertinoColors.black,
+                ),
+              ),
+            ),
+        ],
+      ),
+    ],
     const SizedBox(height: 8),
     _studioLabel('墨色（未自定义字体色时按底色明暗）'),
     _optionGroup<BackgroundTone>(
@@ -726,214 +790,6 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     const SizedBox(height: 8),
   ];
 
-  /// In-panel HSV picker for underlay colour or body ink (never a popup).
-  List<Widget> _colorPickerSettings(
-    BuildContext context,
-    _PaperColorTarget target,
-  ) {
-    final title = target == _PaperColorTarget.underlay ? '背景色' : '字体颜色';
-    final preview = _pickerColor.toColor();
-    return [
-      ReaderPanelTitle(
-        icon: CupertinoIcons.color_filter,
-        title: title,
-        surface: _surface,
-        onClose: widget.onClose,
-        onBack: () => setState(() => _colorTarget = null),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(bottom: 2),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: preview,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _ink.withValues(alpha: .22)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: CupertinoTextField(
-                controller: _hexController,
-                placeholder: '#RRGGBB',
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                style: TextStyle(fontSize: 13, color: _ink),
-                placeholderStyle: TextStyle(fontSize: 13, color: _muted),
-                onSubmitted: (_) => _applyHexColor(target),
-              ),
-            ),
-            const SizedBox(width: 6),
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              minimumSize: const Size(0, 34),
-              onPressed: () => _applyHexColor(target),
-              child: Text('应用', style: TextStyle(fontSize: 13, color: _ink)),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 14),
-      _pickerSlider(
-        label: '色相',
-        value: _pickerColor.hue / 360,
-        max: 1,
-        trackColors: [
-          for (var h = 0; h <= 360; h += 30)
-            HSVColor.fromAHSV(1, h.toDouble(), 1, 1).toColor(),
-        ],
-        onChanged: (v) => setState(() {
-          _pickerColor = _pickerColor.withHue(v * 360);
-          _syncHexFromPicker();
-        }),
-      ),
-      _pickerSlider(
-        label: '饱和',
-        value: _pickerColor.saturation,
-        max: 1,
-        trackColors: [
-          HSVColor.fromAHSV(
-            1,
-            _pickerColor.hue,
-            0,
-            _pickerColor.value,
-          ).toColor(),
-          HSVColor.fromAHSV(
-            1,
-            _pickerColor.hue,
-            1,
-            _pickerColor.value,
-          ).toColor(),
-        ],
-        onChanged: (v) => setState(() {
-          _pickerColor = _pickerColor.withSaturation(v);
-          _syncHexFromPicker();
-        }),
-      ),
-      _pickerSlider(
-        label: '明度',
-        value: _pickerColor.value,
-        max: 1,
-        trackColors: [
-          HSVColor.fromAHSV(1, _pickerColor.hue, _pickerColor.saturation, 0)
-              .toColor(),
-          HSVColor.fromAHSV(1, _pickerColor.hue, _pickerColor.saturation, 1)
-              .toColor(),
-        ],
-        onChanged: (v) => setState(() {
-          _pickerColor = _pickerColor.withValue(v);
-          _syncHexFromPicker();
-        }),
-      ),
-      const SizedBox(height: 8),
-      Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: CupertinoButton(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                color: VellumTheme.readerAccentOf(context),
-                borderRadius: BorderRadius.circular(10),
-                onPressed: () => _commitPicker(target),
-                child: const Text('完成', style: TextStyle(fontSize: 14)),
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 8),
-    ];
-  }
-
-  Widget _pickerSlider({
-    required String label,
-    required double value,
-    required double max,
-    required List<Color> trackColors,
-    required ValueChanged<double> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 36,
-            child: Text(label, style: TextStyle(fontSize: 12, color: _muted)),
-          ),
-          Expanded(
-            child: SizedBox(
-              height: 36,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: SizedBox(
-                        height: 8,
-                        width: double.infinity,
-                        child: _GradientBar(colors: trackColors),
-                      ),
-                    ),
-                  ),
-                  CupertinoSlider(
-                    value: value.clamp(0.0, max),
-                    min: 0,
-                    max: max,
-                    onChanged: onChanged,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _syncHexFromPicker() {
-    final argb = _pickerColor.toColor().toARGB32();
-    final hex = argb.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase();
-    _hexController.text = '#$hex';
-  }
-
-  void _openColorPicker(_PaperColorTarget target) {
-    final current = target == _PaperColorTarget.underlay
-        ? Color(widget.background.colorValue ?? VellumTheme.readerWhite.toARGB32())
-        : Color(widget.background.inkValue);
-    setState(() {
-      _colorTarget = target;
-      _pickerColor = HSVColor.fromColor(current);
-    });
-    _syncHexFromPicker();
-  }
-
-  void _commitPicker(_PaperColorTarget target) {
-    final argb = _pickerColor.toColor().toARGB32();
-    widget.onBackground(
-      target == _PaperColorTarget.underlay
-          ? widget.background.copyWith(colorValue: argb)
-          : widget.background.copyWith(inkColorValue: argb),
-    );
-    setState(() => _colorTarget = null);
-  }
-
-  void _applyHexColor(_PaperColorTarget target) {
-    final argb = _parseHex(_hexController.text);
-    if (argb == null) return;
-    setState(() {
-      _pickerColor = HSVColor.fromColor(Color(argb));
-    });
-    _commitPicker(target);
-  }
-
   Widget _studioLabel(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(
@@ -944,13 +800,6 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
 
   bool _isSelectedColor(int argb) =>
       !widget.background.usesImage && widget.background.colorValue == argb;
-
-  int? _parseHex(String value) {
-    var v = value.trim().replaceFirst('#', '');
-    if (v.isEmpty) return null;
-    if (v.length == 6) v = 'ff$v';
-    return int.tryParse(v, radix: 16);
-  }
 
   void _applyPresetColor(Color color) {
     final argb = color.toARGB32();
@@ -1116,7 +965,8 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             minimumSize: const Size(0, 36),
             onPressed: () => setState(() {
               _showMore = false;
-              _colorTarget = null;
+              _showInkPicker = false;
+              _showUnderlayPicker = false;
               _showBackground = true;
             }),
             child: Row(
@@ -1393,32 +1243,6 @@ class ReaderSettingRow extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(child: child),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Filled track painted under the hue / saturation / brightness sliders.
-class _GradientBar extends StatelessWidget {
-  const _GradientBar({required this.colors});
-
-  final List<Color> colors;
-
-  @override
-  Widget build(BuildContext context) {
-    final stops = colors.length <= 1
-        ? null
-        : [for (var i = 0; i < colors.length; i++) i / (colors.length - 1)];
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors.length == 1
-              ? [colors.first, colors.first]
-              : colors,
-          stops: stops,
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
         ),
       ),
     );

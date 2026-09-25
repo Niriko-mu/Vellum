@@ -4,6 +4,70 @@ import 'package:flutter/material.dart' show LinearProgressIndicator;
 import '../services/book_importer.dart';
 import '../theme/vellum_theme.dart';
 
+/// Destructive affordance shared by the grid cover and the list row.
+///
+/// Cover variant is a dark glass disc so it stays legible on any artwork;
+/// row variant is a soft red disc that sits cleanly on the paper surface.
+class LibraryDeleteButton extends StatelessWidget {
+  const LibraryDeleteButton({
+    required this.onPressed,
+    this.onCover = false,
+    super.key,
+  });
+
+  final VoidCallback onPressed;
+
+  /// Overlay style for book covers; false for list rows.
+  final bool onCover;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = onCover ? 32.0 : 34.0;
+    final iconSize = onCover ? 15.0 : 17.0;
+    final background = onCover
+        ? CupertinoColors.black.withValues(alpha: .42)
+        : CupertinoColors.systemRed.withValues(alpha: .12);
+    final iconColor = onCover
+        ? CupertinoColors.white
+        : CupertinoColors.systemRed;
+    return CupertinoButton(
+      padding: EdgeInsets.all(onCover ? 7 : 8),
+      // Comfortable 44pt-class target without growing the visual disc.
+      minimumSize: Size(size + 14, size + 14),
+      pressedOpacity: .55,
+      onPressed: onPressed,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: background,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: onCover
+                ? CupertinoColors.white.withValues(alpha: .28)
+                : CupertinoColors.systemRed.withValues(alpha: .22),
+            width: 1,
+          ),
+          boxShadow: onCover
+              ? [
+                  BoxShadow(
+                    color: CupertinoColors.black.withValues(alpha: .28),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Icon(
+          CupertinoIcons.trash,
+          color: iconColor,
+          size: iconSize,
+        ),
+      ),
+    );
+  }
+}
+
 class EmptyLibrary extends StatelessWidget {
   final VoidCallback onImport;
   const EmptyLibrary({required this.onImport, super.key});
@@ -186,28 +250,9 @@ class BookGridCard extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: 6,
-                  right: 6,
-                  child: CupertinoButton(
-                    padding: const EdgeInsets.all(6),
-                    minimumSize: const Size(30, 30),
-                    onPressed: onDelete,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey6.resolveFrom(context),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: VellumTheme.lineOf(context),
-                          width: .8,
-                        ),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.delete,
-                        color: CupertinoColors.systemRed,
-                        size: 15,
-                      ),
-                    ),
-                  ),
+                  top: 2,
+                  right: 2,
+                  child: LibraryDeleteButton(onPressed: onDelete, onCover: true),
                 ),
               ],
             ),
@@ -343,15 +388,9 @@ class BookRow extends StatelessWidget {
           ),
         ),
         if (onDelete != null)
-          CupertinoButton(
-            padding: const EdgeInsets.only(left: 8),
-            minimumSize: const Size(36, 36),
-            onPressed: onDelete,
-            child: const Icon(
-              CupertinoIcons.delete,
-              color: CupertinoColors.systemRed,
-              size: 19,
-            ),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: LibraryDeleteButton(onPressed: onDelete!),
           )
         else
           Icon(

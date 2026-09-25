@@ -33,6 +33,10 @@ abstract final class ReaderGestures {
 
   static const double bookmarkPullThreshold = 96;
 
+  /// Minimum horizontal travel for a flick to count as a page swipe.
+  /// Comfortably above the 12px tap slop, small enough for short swipes.
+  static const double swipeMinDistance = 40;
+
   /// Long-press to select text then drag down must not arm bookmark.
   /// Bookmark requires a quick, mostly vertical downward flick at the top.
   static const Duration bookmarkMaxHold = Duration(milliseconds: 400);
@@ -62,6 +66,17 @@ abstract final class ReaderGestures {
     final mostlyVertical = horizontalShift < 48;
     if (downwardPull && beginsAtScrollTop && quickFlick && mostlyVertical) {
       return ReaderTapAction.toggleBookmark;
+    }
+    // Horizontal page swipe (finger flick, not a tap). Leftward = next page.
+    // Must run BEFORE the tap-distance rejection so swipes are not dropped —
+    // that was why PageTurnStyle had no effect on drags.
+    if (mode == ReadingMode.page &&
+        !selectionGesture &&
+        horizontalShift >= swipeMinDistance &&
+        horizontalShift > delta.dy.abs()) {
+      return delta.dx < 0
+          ? ReaderTapAction.nextPage
+          : ReaderTapAction.previousPage;
     }
     // A long-press drag is selection, not a tap action.
     if (elapsed >= const Duration(milliseconds: 450) || delta.distance > 12) {

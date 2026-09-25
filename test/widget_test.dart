@@ -156,7 +156,7 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(CupertinoIcons.delete), findsOneWidget);
+    expect(find.byIcon(CupertinoIcons.trash), findsOneWidget);
   });
 
   testWidgets('reading controls live in the reader overlay', (tester) async {
@@ -248,7 +248,7 @@ void main() {
     expect(find.text('自定义背景'), findsOneWidget);
     expect(find.text('背景图'), findsOneWidget);
     expect(find.text('导入图片'), findsOneWidget);
-    expect(find.text('字体颜色'), findsOneWidget);
+    expect(find.text('正文字色（阅读正文的颜色）'), findsOneWidget);
     expect(find.text('护眼'), findsOneWidget);
     await tester.tap(
       find.descendant(
@@ -733,7 +733,9 @@ void main() {
     );
 
     final pageView = tester.widget<PageView>(find.byType(PageView));
-    expect(pageView.physics, isA<SnapPageScrollPhysics>());
+    // Finger swipes are routed through _changePage so PageTurnStyle applies;
+    // the PageView itself must not scroll on its own.
+    expect(pageView.physics, isA<NeverScrollableScrollPhysics>());
 
     await tester.tapAt(const Offset(700, 300));
     // One frame is enough: jump is immediate, no spring frames in between.

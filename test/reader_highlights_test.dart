@@ -96,6 +96,12 @@ void main() {
     // Chapter / remaining-time no longer clutter the bottom strip.
     expect(find.textContaining('剩余'), findsNothing);
     expect(find.textContaining('本章'), findsNothing);
+
+    // Page number sits hard-left, battery hard-right.
+    final pageDx = tester.getTopLeft(find.text('12 / 80')).dx;
+    final batteryDx = tester.getTopLeft(find.text('80%')).dx;
+    expect(pageDx, lessThan(batteryDx));
+    expect(pageDx, lessThan(80));
   });
 
   testWidgets('reader running head shows the chapter at top left', (
