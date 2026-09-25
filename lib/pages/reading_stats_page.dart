@@ -17,7 +17,7 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
   final _library = const BookLibrary();
   final _statsService = const ReadingStatsService();
   ReadingStats _stats = const ReadingStats();
-  List<_BookReadingRow> _rows = [];
+  List<BookReadingRow> _rows = [];
   bool _loading = true;
 
   @override
@@ -33,25 +33,45 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
       stats = await _statsService.load().timeout(const Duration(seconds: 2));
       books = await _library.load().timeout(const Duration(seconds: 2));
     } catch (_) {}
-    final rows = <_BookReadingRow>[];
-    for (final entry in stats.bookSeconds.entries) {
-      if (entry.value <= 0) continue;
-      var title = '未知书籍';
-      for (final book in books) {
-        if (book.storageId == entry.key) {
-          title = book.title.trim().isEmpty ? '未命名' : book.title.trim();
-          break;
-        }
-      }
-      rows.add(_BookReadingRow(title: title, seconds: entry.value));
-    }
-    rows.sort((a, b) => b.seconds.compareTo(a.seconds));
+    // Deleted books are skipped (never 未知书籍).
+    final rows = buildBookReadingRows(
+      stats: stats,
+      titleByBookId: {
+        for (final book in books)
+          book.storageId: book.title.trim().isEmpty ? '未命名' : book.title.trim(),
+      },
+    );
     if (!mounted) return;
     setState(() {
       _stats = stats;
       _rows = rows;
       _loading = false;
     });
+  }
+
+  Future<void> _confirmReset() async {
+    final ok = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('重置阅读统计？'),
+        content: const Text('今日、累计和按书籍的阅读时长都会清零，此操作不可恢复。'),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await _statsService.reset();
+    if (!mounted) return;
+    await _reload();
   }
 
   @override
@@ -66,6 +86,18 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
         backgroundColor: VellumTheme.shellOf(context),
         border: null,
         middle: const Text('阅读统计'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(44, 44),
+          onPressed: _confirmReset,
+          child: Text(
+            '重置',
+            style: TextStyle(
+              color: CupertinoColors.destructiveRed.resolveFrom(context),
+              fontSize: 16,
+            ),
+          ),
+        ),
       ),
       child: SafeArea(
         child: _loading
@@ -138,8 +170,3 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
   }
 }
 
-class _BookReadingRow {
-  const _BookReadingRow({required this.title, required this.seconds});
-  final String title;
-  final int seconds;
-}

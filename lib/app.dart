@@ -23,6 +23,7 @@ import 'services/book_importer.dart';
 import 'services/book_import_service.dart' show BookImportService;
 
 import 'services/book_library.dart';
+import 'services/reading_stats.dart';
 
 import 'theme/vellum_theme.dart';
 
@@ -610,6 +611,9 @@ class _LibraryShellState extends State<LibraryShell> {
     await _library.deleteBook(book);
 
     await _library.deleteReadingState(book);
+
+    // Drop the per-book reading-time row so stats never show 未知书籍.
+    await const ReadingStatsService().removeBook(book.storageId);
   }
 
   @override

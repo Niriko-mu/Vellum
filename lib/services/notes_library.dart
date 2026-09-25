@@ -132,6 +132,26 @@ class NotesLibrary {
     ];
   }
 
+  Future<void> updateNote(String id, String note) async {
+    final notes = await load();
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].id == id) {
+        notes[i] = ReadingNote(
+          id: notes[i].id,
+          bookId: notes[i].bookId,
+          bookTitle: notes[i].bookTitle,
+          paragraphIndex: notes[i].paragraphIndex,
+          selectedText: notes[i].selectedText,
+          note: note,
+          createdAt: notes[i].createdAt,
+          style: notes[i].style,
+        );
+        break;
+      }
+    }
+    await saveAll(notes);
+  }
+
   Future<void> delete(String id) async {
     final notes = await load();
     notes.removeWhere((n) => n.id == id);

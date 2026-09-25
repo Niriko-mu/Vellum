@@ -29,6 +29,8 @@ class ReaderParagraph extends StatelessWidget {
     this.highlights = const [],
     this.highlightColor,
     this.isChapterHeading,
+    this.noteCount = 0,
+    this.onOpenNotes,
     super.key,
   });
 
@@ -58,6 +60,12 @@ class ReaderParagraph extends StatelessWidget {
   /// Whether a table-of-contents entry starts here. Callers that know it should
   /// pass it: the fallback scans every entry, which is O(entries) per build.
   final bool? isChapterHeading;
+
+  /// Number of notes/highlights on this paragraph; drives the margin marker.
+  final int noteCount;
+
+  /// Opens the paragraph's note list/editor when the marker is tapped.
+  final VoidCallback? onOpenNotes;
 
   @override
   Widget build(BuildContext context) {
@@ -213,21 +221,31 @@ class ReaderParagraph extends StatelessWidget {
         ),
       if (ReaderMarkup.layoutText(paragraph).isNotEmpty) formattedText,
     ];
-    if (target == null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: content,
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final body = target == null
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: content,
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ...content,
+              CupertinoButton(
+                padding: const EdgeInsets.only(top: 2),
+                minimumSize: const Size(0, 28),
+                onPressed: () => onJumpToParagraph?.call(target),
+                child: const Text('跳转至书内链接'),
+              ),
+            ],
+          );
+    if (noteCount <= 0 || onOpenNotes == null) return body;
+    return Stack(
       children: [
-        ...content,
-        CupertinoButton(
-          padding: const EdgeInsets.only(top: 2),
-          minimumSize: const Size(0, 28),
-          onPressed: () => onJumpToParagraph?.call(target),
-          child: const Text('跳转至书内链接'),
+        Padding(padding: const EdgeInsets.only(right: 28), child: body),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: _NoteMarker(count: noteCount, onTap: onOpenNotes!),
         ),
       ],
     );
@@ -407,5 +425,58 @@ class ReaderParagraph extends StatelessWidget {
       }
     }
     return result;
+  }
+}
+
+/// Small comment badge shown on paragraphs that carry notes.
+class _NoteMarker extends StatelessWidget {
+  const _NoteMarker({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = const Color(0xff5e5ce6).withValues(alpha: .88);
+    return CupertinoButton(
+      padding: const EdgeInsets.all(2),
+      minimumSize: const Size(32, 28),
+      onPressed: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: CupertinoColors.black.withValues(alpha: .18),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              CupertinoIcons.chat_bubble_text,
+              size: 11,
+              color: CupertinoColors.white,
+            ),
+            if (count > 1) ...[
+              const SizedBox(width: 3),
+              Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: CupertinoColors.white,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

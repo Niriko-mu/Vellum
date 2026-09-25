@@ -45,6 +45,37 @@ class ReadingStats {
   );
 }
 
+/// One visible per-book row. Orphaned book ids (deleted books) are dropped
+/// so the stats page never labels them 未知书籍.
+class BookReadingRow {
+  const BookReadingRow({required this.bookId, required this.title, required this.seconds});
+  final String bookId;
+  final String title;
+  final int seconds;
+}
+
+/// Pure projection: stats × library index → sorted display rows.
+List<BookReadingRow> buildBookReadingRows({
+  required ReadingStats stats,
+  required Map<String, String> titleByBookId,
+}) {
+  final rows = <BookReadingRow>[];
+  for (final entry in stats.bookSeconds.entries) {
+    if (entry.value <= 0) continue;
+    final title = titleByBookId[entry.key];
+    if (title == null) continue;
+    rows.add(
+      BookReadingRow(
+        bookId: entry.key,
+        title: title.trim().isEmpty ? '未命名' : title.trim(),
+        seconds: entry.value,
+      ),
+    );
+  }
+  rows.sort((a, b) => b.seconds.compareTo(a.seconds));
+  return rows;
+}
+
 class ReadingStatsService {
   const ReadingStatsService();
 
@@ -102,6 +133,21 @@ class ReadingStatsService {
     );
     await save(next);
     return next;
+  }
+
+  /// Wipes all accumulated stats (today / total / per-book).
+  Future<void> reset() async {
+    await save(const ReadingStats());
+  }
+
+  /// Drops [bookId]'s row after the book is deleted so the stats page never
+  /// has to label it 未知书籍. Totals keep the already-read time (cumulative).
+  Future<void> removeBook(String bookId) async {
+    if (bookId.isEmpty) return;
+    final current = await load();
+    if (!current.bookSeconds.containsKey(bookId)) return;
+    final books = {...current.bookSeconds}..remove(bookId);
+    await save(current.copyWith(bookSeconds: books));
   }
 
   Future<File> _file() async {

@@ -6,10 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="d06d7fbd-f527-471e-9b91-d12b0b4e9b10" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_markup.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_markup.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/pages/reading_stats_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/reading_stats_page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/reader/reader_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_pagination.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_pagination.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/reader/reader_paragraph.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_paragraph.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/reader/reader_selection.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_selection.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/notes_library.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/notes_library.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/reading_stats.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/reading_stats.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

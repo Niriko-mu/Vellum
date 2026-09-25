@@ -281,6 +281,31 @@ class _ReaderPageState extends State<ReaderPage>
     });
   }
 
+  int _noteCountFor(int paragraphIndex) {
+    var n = 0;
+    for (final note in _notes) {
+      if (note.paragraphIndex == paragraphIndex) n++;
+    }
+    return n;
+  }
+
+  void _openNotesForParagraph(int paragraphIndex) {
+    final notes = [
+      for (final note in _notes)
+        if (note.paragraphIndex == paragraphIndex) note,
+    ];
+    if (notes.isEmpty) return;
+    showParagraphNotesSheet(
+      context,
+      bookId: _bookId,
+      bookTitle: widget.book.title,
+      paragraphIndex: paragraphIndex,
+      notes: notes,
+      notesLibrary: _notesLibrary,
+      onChanged: _loadNotes,
+    );
+  }
+
   Map<int, List<String>> _groupHighlights(List<ReadingNote> notes) {
     final map = <int, List<String>>{};
     for (final note in notes) {
@@ -1707,6 +1732,7 @@ class _ReaderPageState extends State<ReaderPage>
                               selectedText: selected,
                               notesLibrary: _notesLibrary,
                             );
+                            await _loadNotes();
                           },
                         ),
                     ];
@@ -1803,6 +1829,7 @@ class _ReaderPageState extends State<ReaderPage>
                                                 paragraphIndex,
                                             notesLibrary: _notesLibrary,
                                             onHighlight: _toggleHighlight,
+                                            onNoteSaved: _loadNotes,
                                           ),
                                       highlights: [
                                       ...?_highlights[paragraphIndex],
@@ -1810,6 +1837,10 @@ class _ReaderPageState extends State<ReaderPage>
                                         _spokenSentence,
                                     ],
                                       isChapterHeading: _tocParagraphs.contains(
+                                        paragraphIndex,
+                                      ),
+                                      noteCount: _noteCountFor(paragraphIndex),
+                                      onOpenNotes: () => _openNotesForParagraph(
                                         paragraphIndex,
                                       ),
                                       onJumpToParagraph: _jumpToParagraph,
@@ -2119,6 +2150,7 @@ class _ReaderPageState extends State<ReaderPage>
                                 fragments[index].paragraphIndex,
                             notesLibrary: _notesLibrary,
                             onHighlight: _toggleHighlight,
+                            onNoteSaved: _loadNotes,
                           ),
                           highlights: [
                                       ...?_highlights[fragments[index].paragraphIndex],
@@ -2126,6 +2158,12 @@ class _ReaderPageState extends State<ReaderPage>
                                         _spokenSentence,
                                     ],
                           isChapterHeading: _tocParagraphs.contains(
+                            fragments[index].paragraphIndex,
+                          ),
+                          noteCount: _noteCountFor(
+                            fragments[index].paragraphIndex,
+                          ),
+                          onOpenNotes: () => _openNotesForParagraph(
                             fragments[index].paragraphIndex,
                           ),
                           showImage: fragments[index].showImage,
