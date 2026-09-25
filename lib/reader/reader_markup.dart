@@ -94,11 +94,49 @@ abstract final class ReaderMarkup {
         (t.contains('，') || t.contains('、') || t.contains(','));
   }
 
+  /// CJK first-line indent (two ideographic spaces).
+  static const String cjkIndent = '\u3000\u3000';
+
+  /// English first-line indent: 1em, market standard for Latin prose.
+  static const String latinIndent = '\u2003';
+
+  /// True when [text] is Latin-script body (English books). Latin letters
+  /// must not be outnumbered by CJK ideographs; empty/punctuation-only
+  /// text falls back to false (CJK indent rules apply).
+  ///
+  /// Counts only visible prose — `[[image:N]]` and other markers must not
+  /// vote Latin (the word "image" used to flip CJK paragraphs).
+  static bool isLatinBody(String text) {
+    var latin = 0;
+    var cjk = 0;
+    for (final rune in stripAllMarkers(text).runes) {
+      if ((rune >= 0x41 && rune <= 0x5A) ||
+          (rune >= 0x61 && rune <= 0x7A) ||
+          (rune >= 0xC0 && rune <= 0x24F)) {
+        latin++;
+      } else if ((rune >= 0x4E00 && rune <= 0x9FFF) ||
+          (rune >= 0x3400 && rune <= 0x4DBF) ||
+          (rune >= 0x3040 && rune <= 0x30FF) ||
+          (rune >= 0xAC00 && rune <= 0xD7AF)) {
+        cjk++;
+      }
+    }
+    return latin > 0 && latin >= cjk;
+  }
+
+  /// First-line indent string for [plain] under the market typography split:
+  /// Latin books get a 1em indent, CJK gets the two-em indent.
+  static String indentPrefixFor(String plain) =>
+      isLatinBody(plain) ? latinIndent : cjkIndent;
+
+  static int indentPrefixLengthFor(String plain) => indentPrefixFor(plain).length;
+
   /// Source already carries a first-line indent — display must not double it.
   static bool alreadyHasFirstLineIndent(String source) {
     final t = readerText(source);
     if (t.isEmpty) return false;
     return t.startsWith('　') ||
+        t.startsWith('\u2003') ||
         t.startsWith('\u00A0') ||
         t.startsWith('\u2007') ||
         t.startsWith('\t') ||

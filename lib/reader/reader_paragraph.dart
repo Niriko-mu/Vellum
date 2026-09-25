@@ -116,12 +116,26 @@ class ReaderParagraph extends StatelessWidget {
           )
         : false;
     final plain = ReaderMarkup.readerText(paragraph);
+    // Latin prose is justified (flush both margins). Flutter hangs leading
+    // whitespace on non-last justified lines, so a first-line indent span
+    // would vanish on every wrap — Latin body uses block paragraphs (space
+    // between paragraphs already provided by the fragment gap). CJK keeps
+    // the two-em indent and natural start alignment.
+    final latinBody =
+        ReaderMarkup.isLatinBody(plain) &&
+        effectiveHeading == null &&
+        !isQuote &&
+        !isList &&
+        !isCenter;
+    final indentPrefix = (needsFirstLineIndent && !latinBody)
+        ? ReaderMarkup.indentPrefixFor(plain)
+        : '';
     final spans = <InlineSpan>[
       // Text indent, not WidgetSpan: a leading WidgetSpan breaks SelectionArea
       // offsets and can throw RangeError(start) = -1 while selecting text.
-      if (needsFirstLineIndent)
+      if (indentPrefix.isNotEmpty)
         TextSpan(
-          text: '　　',
+          text: indentPrefix,
           style: TextStyle(
             fontSize: displayFontSize,
             height: effectiveHeading == null
@@ -142,10 +156,11 @@ class ReaderParagraph extends StatelessWidget {
         ? (plain.trim().length <= 28 ? TextAlign.center : TextAlign.start)
         : isCenter
         ? TextAlign.center
-        // Natural start alignment, never `TextAlign.justify`: justified
-        // (non-last) lines hang their leading whitespace, which silently
-        // deletes the `　　` two-em first-line indent on every paragraph
-        // that wraps to two or more lines. CJK lines fill evenly anyway.
+        // Latin body: justified (market standard — flush both margins).
+        // CJK body: natural start — `TextAlign.justify` hangs the leading
+        // `　　` on wrapped lines and CJK already fills evenly.
+        : latinBody
+        ? TextAlign.justify
         : TextAlign.start;
     final span = TextSpan(style: textStyle, children: spans);
     // Pass style explicitly: SelectableText.rich must paint body ink

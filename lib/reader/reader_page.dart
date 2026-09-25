@@ -68,6 +68,16 @@ class _ReaderPageState extends State<ReaderPage>
   bool _coverJumping = false;
   int _pendingPageDelta = 0;
   bool _slideBusy = false;
+  // Finger-driven page turn: overlay tracks the drag, then finishes or
+  // springs back on release. This is what makes swipes 跟手.
+  bool _dragTurn = false;
+  bool _dragCommitted = false;
+  int? _dragFromPage;
+  int? _dragToPage;
+  double _dragProgress = 0;
+  double _dragLastTravel = 0;
+  int _dragLastMicros = 0;
+  double _dragVelocity = 0;
   final _notesLibrary = const NotesLibrary();
   String _lastSelectedText = '';
   bool _showControls = false;
@@ -1351,6 +1361,13 @@ class _ReaderPageState extends State<ReaderPage>
       _bookmarkPullInProgress = true;
       _restorePageAfterBookmarkPull();
     }
+    if (_readingMode == ReadingMode.page &&
+        !_pointerLooksLikeSelection &&
+        !_bookmarkPullInProgress &&
+        !_coverJumping &&
+        !_slideBusy) {
+      _updateDragTurn(dx);
+    }
     final next = dy > 0 ? dy : 0.0;
     if ((next - _pullDownDistance).abs() > 0.5) {
       setState(() => _pullDownDistance = next);
@@ -1373,6 +1390,124 @@ class _ReaderPageState extends State<ReaderPage>
     }
   }
 
+  /// Begin/update a finger-driven page turn. Progress maps 1:1 to drag
+  /// distance so the overlay follows the hand instead of playing a canned
+  /// animation only after release.
+  void _updateDragTurn(double dx) {
+    const intent = 10.0;
+    if (!_dragTurn) {
+      if (dx.abs() < intent) return;
+      final pageCount = _pageCount;
+      if (pageCount <= 0) return;
+      final from = _currentPage.clamp(0, pageCount - 1);
+      final to = dx < 0 ? from + 1 : from - 1;
+      if (to < 0 || to >= pageCount) return;
+      if (!_pager.fullyPaginated && to >= _pager.pageCount) {
+        _pager.paginateUntilPages(to + 1);
+      }
+      _dragTurn = true;
+      _dragFromPage = from;
+      _dragToPage = to;
+      _dragProgress = 0;
+      _dragLastTravel = 0;
+      _dragLastMicros = DateTime.now().microsecondsSinceEpoch;
+      _dragVelocity = 0;
+      _coverFromPage = from;
+      _coverToPage = to;
+      _requestedPage = to;
+      setState(() {});
+      return;
+    }
+    final from = _dragFromPage;
+    final to = _dragToPage;
+    if (from == null || to == null) return;
+    final travel = to > from ? -dx : dx;
+    final width = MediaQuery.sizeOf(context).width;
+    final p = (travel / (width == 0 ? 1 : width)).clamp(0.0, 1.0);
+    final now = DateTime.now().microsecondsSinceEpoch;
+    final dt = (now - _dragLastMicros) / 1e6;
+    if (dt > 0) {
+      _dragVelocity = (travel - _dragLastTravel) / dt;
+    }
+    _dragLastTravel = travel;
+    _dragLastMicros = now;
+    if ((p - _dragProgress).abs() < 0.002) return;
+    setState(() => _dragProgress = p);
+  }
+
+  void _cancelDragTurn() {
+    _dragCommitted = false;
+    _dragTurn = false;
+    _dragFromPage = null;
+    _dragToPage = null;
+    _dragProgress = 0;
+    _dragVelocity = 0;
+    _coverFromPage = null;
+    _coverToPage = null;
+  }
+
+  /// Release a finger-driven turn: finish past ~38% (or a fast flick),
+  /// otherwise spring back to the original page.
+  void _endDragTurn() {
+    if (!_dragTurn) return;
+    final from = _dragFromPage;
+    final to = _dragToPage;
+    final progress = _dragProgress;
+    // Positive travel speed commits the turn (direction-normalised).
+    final velocityTravel = _dragVelocity;
+    _dragTurn = false;
+    if (from == null || to == null) {
+      _cancelDragTurn();
+      return;
+    }
+    final flick = velocityTravel > 700;
+    final commit = progress >= 0.38 || flick;
+    if (!commit) {
+      _coverFromPage = from;
+      _coverToPage = to;
+      _requestedPage = from;
+      _coverAnim.stop();
+      _coverAnim.value = progress.clamp(0.0, 1.0);
+      _coverAnim
+          .animateTo(0, duration: const Duration(milliseconds: 160))
+          .whenComplete(() {
+            if (!mounted) return;
+            _dragCommitted = false;
+            _cancelDragTurn();
+            setState(() {
+              _currentPage = from;
+              _requestedPage = from;
+            });
+          });
+      setState(() {});
+      return;
+    }
+    if (_pageTurnStyle == PageTurnStyle.none) {
+      _cancelDragTurn();
+      setState(() {
+        _currentPage = to;
+        _requestedPage = to;
+      });
+      _jumpToPageExact(to);
+      _scheduleSave();
+      return;
+    }
+    // Cover and slide: glide the remainder on the same overlay so the page
+    // does not jump at release (跟手). Timed _startSlideTurn is for taps only.
+    _dragCommitted = true;
+    _coverFromPage = from;
+    _coverToPage = to;
+    _requestedPage = to;
+    _coverAnim.stop();
+    _coverAnim.value = progress.clamp(0.0, 1.0);
+    _coverAnim.forward().whenComplete(() {
+      if (!mounted) return;
+      _dragCommitted = false;
+      _finishCoverTurn(to);
+    });
+    setState(() {});
+  }
+
   void _handleReaderPointerUp(BuildContext context, PointerUpEvent event) {
     final pressedAt = _readerPointerDownAt;
     final pressedPosition = _readerPointerDownPosition;
@@ -1382,12 +1517,18 @@ class _ReaderPageState extends State<ReaderPage>
     final wasBookmarkPull = _bookmarkPullInProgress;
     if (wasBookmarkPull) _restorePageAfterBookmarkPull();
     _bookmarkPullInProgress = false;
+    final wasDragTurn = _dragTurn;
+    if (wasDragTurn) {
+      _endDragTurn();
+    }
     _readerPointerDownAt = null;
     _readerPointerDownPosition = null;
     _pointerLooksLikeSelection = false;
     if (_pullDownDistance != 0) {
       setState(() => _pullDownDistance = 0);
     }
+    // Drag-turn already resolved the gesture — do not also fire a tap/swipe.
+    if (wasDragTurn) return;
     final size = MediaQuery.sizeOf(context);
     final beginsAtScrollTop =
         _readingMode != ReadingMode.scroll ||
@@ -1598,6 +1739,9 @@ class _ReaderPageState extends State<ReaderPage>
                       if (_bookmarkPullInProgress) {
                         _restorePageAfterBookmarkPull();
                         _bookmarkPullInProgress = false;
+                      }
+                      if (_dragTurn) {
+                        _endDragTurn();
                       }
                       if (_pullDownDistance != 0) {
                         setState(() => _pullDownDistance = 0);
@@ -2115,6 +2259,7 @@ class _ReaderPageState extends State<ReaderPage>
     }
     // Keep PageView on [from] during the overlay so the underlying page does
     // not re-layout mid-animation (avoids visible “reflow” under the cover).
+    _dragCommitted = false;
     setState(() {
       _requestedPage = to;
     });
@@ -2196,11 +2341,11 @@ class _ReaderPageState extends State<ReaderPage>
                     ),
                   ),
                   builder: (context, child) {
-                    // easeOutCubic: fast start, gentle settle — matches the
-                    // "flick and it goes" feel of Fanqie's custom Scroller.
-                    final progress = Curves.easeOutCubic.transform(
-                      _coverAnim.value,
-                    );
+                    // While the finger is down (and after a committed drag)
+                    // progress is raw travel — linear = 跟手. Timed taps ease.
+                    final progress = (_dragTurn || _dragCommitted)
+                        ? (_dragTurn ? _dragProgress : _coverAnim.value)
+                        : Curves.easeOutCubic.transform(_coverAnim.value);
                     // Next: current slides out to the left (dx 0→-1).
                     // Prev: previous slides in from the left (dx -1→0).
                     final dx = isNext ? -progress : -1 + progress;

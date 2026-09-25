@@ -225,7 +225,7 @@ class ProgressiveBookPager {
     }
 
     final plainSource = ReaderMarkup.stripAllMarkers(source);
-    // Same indent rule as ReaderParagraph — measure with the same `　　`
+    // Same indent rule as ReaderParagraph — measure with the same prefix
     // prefix the page will render, or page-mode layout drifts from scroll.
     final isQuote = ReaderMarkup.quote.hasMatch(source);
     final isList = ReaderMarkup.list.hasMatch(source);
@@ -241,7 +241,9 @@ class ProgressiveBookPager {
     );
     final displaySource = plainSource.isEmpty
         ? plainSource
-        : (willIndent ? '　　$plainSource' : plainSource);
+        : (willIndent
+              ? '${ReaderMarkup.indentPrefixFor(plainSource)}$plainSource'
+              : plainSource);
     final measureStyle = isHeading
         ? TextStyle(
             fontFamily: _config.fontFamily,
@@ -331,7 +333,9 @@ class ProgressiveBookPager {
             plainSource,
             fragmentStart,
             fragmentEnd,
-            indentPrefixLength: willIndent ? 2 : 0,
+            indentPrefixLength: willIndent
+                ? ReaderMarkup.indentPrefixLengthFor(plainSource)
+                : 0,
           ),
           indentFirstLine: firstFragment && willIndent,
           showImage: firstFragment && hasImage,
