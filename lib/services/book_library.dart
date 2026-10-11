@@ -189,6 +189,10 @@ ImportedBook _decodeBookContent(Map<String, dynamic> data) {
 ImportedBook _decodeBookContentJson(String raw) =>
     _decodeBookContent(jsonDecode(raw) as Map<String, dynamic>);
 
+/// Reads and decodes a content file inside the worker isolate.
+ImportedBook _loadBookContentFile(String path) =>
+    _decodeBookContentJson(File(path).readAsStringSync());
+
 class BookLibrary {
   const BookLibrary({this.fonts = const FontStorage()});
 
@@ -294,8 +298,7 @@ class BookLibrary {
     final file = await _bookContentFile(book.storageId);
     if (await file.exists()) {
       try {
-        final raw = await file.readAsString();
-        final full = await compute(_decodeBookContentJson, raw);
+        final full = await compute(_loadBookContentFile, file.path);
         // Content files do not carry shelf cover; keep the index shell's cover.
         return full.copyWith(
           coverBytes: book.coverBytes,
@@ -745,6 +748,11 @@ class BookLibrary {
   Future<Directory> _booksDir() async => Directory(
     '${(await getApplicationDocumentsDirectory()).path}${Platform.pathSeparator}vellum_books',
   );
+
+  /// Storage root used by the import worker. Decoding and persistence stay in
+  /// one worker so a large book is never sent back to the UI and copied again
+  /// into a writer isolate.
+  Future<String> bookStorageDirectoryPath() async => (await _booksDir()).path;
 
   Future<File> _bookContentFile(String id) async {
     final dir = await _booksDir();

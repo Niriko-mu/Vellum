@@ -192,7 +192,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // First level: mode + font size + brightness + paper + font + line space.
-    // Half-screen sheet may clip the tail — scroll the panel if needed.
+    // The taller sheet can still clip the tail on compact viewports — scroll
+    // the panel if needed.
     Future<void> ensureSetting(String label) async {
       final finder = find.text(label);
       if (finder.evaluate().isEmpty) return;
@@ -322,7 +323,7 @@ void main() {
     // Fanqie structure: 字体 lives inside the settings panel.
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
-    // Half-screen sheet: bring 字体 into view before tapping.
+    // Bring 字体 into view before tapping on compact viewports.
     final fontFinder = find.text('字体');
     var guard = 0;
     while (fontFinder.evaluate().isNotEmpty &&

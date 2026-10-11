@@ -464,13 +464,15 @@ class _LibraryShellState extends State<LibraryShell>
     });
 
     try {
-      final book = await importer.pickAndDecode(onStage: _setImportStage);
+      final result = await importer.importAndPersist(
+        library: _library,
+        existing: _books,
+        onStage: _setImportStage,
+      );
 
-      if (book == null) return;
-
-      _setImportStage('正在保存到书库…');
-
-      final updated = await importer.persistImported(_library, _books, book);
+      if (result == null) return;
+      final book = result.book;
+      final updated = result.library;
 
       if (!mounted) return;
 

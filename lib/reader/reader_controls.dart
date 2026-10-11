@@ -314,11 +314,13 @@ class _ReaderMenuState extends State<ReaderMenu>
               0.0,
               double.infinity,
             );
-            // Half-sheet normally; while typing it must fill the space above
+            // The catalogue/settings sheet is slightly taller than half the
+            // reading area so chapter rows remain useful without hiding the
+            // bottom reading controls. While typing it fills the space above
             // the keyboard or the result list collapses to a stripe.
             final desired = expandSheet
                 ? room
-                : (available * .5).clamp(0.0, double.infinity);
+                : (available * .58).clamp(0.0, double.infinity);
             final panelHeight = desired
                 .clamp(
                   room < ReaderDirectoryPanel.minPanelHeight
@@ -348,7 +350,7 @@ class _ReaderMenuState extends State<ReaderMenu>
                     ),
                   ),
 
-                // Half-screen sheet above the action bar (seek row stays under it).
+                // Taller sheet above the action bar (seek row stays under it).
                 if (_panel != _AbovePanel.none)
                   Positioned(
                     left: 0,
