@@ -34,6 +34,9 @@
       <root url="file://$PROJECT_DIR$/../../../pub_cache/hosted/pub.flutter-io.cn/shared_preferences-2.5.5" />
       <root url="file://$PROJECT_DIR$/../../../pub_cache/hosted/pub.flutter-io.cn/shared_preferences_windows-2.4.1" />
       <root url="file://$PROJECT_DIR$/../../../pub_cache/hosted/pub.flutter-io.cn/shared_preferences_android-2.4.28" />
+      <root url="file://$PROJECT_DIR$/../../../pub_cache/hosted/pub.flutter-io.cn/webview_flutter-4.13.0" />
+      <root url="file://$PROJECT_DIR$/../../../pub_cache/hosted/pub.flutter-io.cn/webview_flutter_android-4.14.1" />
+      <root url="file://$PROJECT_DIR$/../../../pub_cache/hosted/pub.flutter-io.cn/webview_flutter_wkwebview-3.26.2" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

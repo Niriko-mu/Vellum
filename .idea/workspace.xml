@@ -5,14 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d06d7fbd-f527-471e-9b91-d12b0b4e9b10" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_page_pagination_controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_page_pagination_controller.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_page_state_gestures.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_page_state_gestures.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_page_state_pagination.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_page_state_pagination.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_page_state_surface_rendering.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_page_state_surface_rendering.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/reader/reader_page_surface.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/reader/reader_page_surface.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/reader_page_controllers_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/test/reader_page_controllers_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vellum.iml" beforeDir="false" afterPath="$PROJECT_DIR$/vellum.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
