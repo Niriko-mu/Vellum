@@ -215,10 +215,27 @@ class EpubOriginalServer {
       uri.port == _server.port &&
       uri.path.startsWith('/$_token/');
 
+  static Future<void> _removeStaleExtractionDirectories() async {
+    try {
+      final root = Directory.systemTemp;
+      final cutoff = DateTime.now().subtract(const Duration(days: 1));
+      await for (final entity in root.list()) {
+        if (entity is! Directory || !entity.path.contains('vellum_epub_'))
+          continue;
+        try {
+          if ((await entity.stat()).modified.isBefore(cutoff)) {
+            await entity.delete(recursive: true);
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
   static Future<EpubOriginalServer> start(
     String sourcePath, {
     Map<String, Uint8List>? assets,
   }) async {
+    await _removeStaleExtractionDirectories();
     final directory = await Directory.systemTemp.createTemp('vellum_epub_');
     HttpServer? server;
     try {

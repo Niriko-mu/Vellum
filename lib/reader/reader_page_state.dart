@@ -198,7 +198,14 @@ class ReaderPageState extends State<ReaderPage>
       widget.initialState.lineSpacing,
     );
     bookmarks = widget.initialState.bookmarks.toSet().toList()..sort();
-    readingMode = widget.initialState.mode == 'page'
+    // Large MOBI files can contain thousands of tiny HTML paragraphs. Starting
+    // page pagination for all of them makes the first frame compete with a
+    // long layout pass and can trigger an Android ANR. The lazy scroll surface
+    // opens immediately; users can still switch to page mode after opening.
+    final largeMobi =
+        widget.book.format == BookFormat.mobi &&
+        widget.book.paragraphs.length > 5000;
+    readingMode = !largeMobi && widget.initialState.mode == 'page'
         ? ReadingMode.page
         : ReadingMode.scroll;
     pageTurnStyle = PageTurnStyle.fromStorage(widget.initialState.pageTurn);

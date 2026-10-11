@@ -72,6 +72,7 @@ class VellumUpdateInstaller {
       '${Platform.pathSeparator}updates',
     );
     if (!await directory.exists()) await directory.create(recursive: true);
+    await _pruneOldDownloads(directory);
     final file = File(
       '${directory.path}${Platform.pathSeparator}${_safeFileName(asset.name)}',
     );
@@ -110,6 +111,29 @@ class VellumUpdateInstaller {
       rethrow;
     } finally {
       client.close();
+    }
+  }
+
+  /// Keep only the newest few update packages. Failed installs and renamed
+  /// release assets must not grow application storage forever.
+  Future<void> _pruneOldDownloads(Directory directory) async {
+    final files = <File>[];
+    await for (final entity in directory.list()) {
+      if (entity is File && entity.path.toLowerCase().endsWith('.apk')) {
+        files.add(entity);
+      }
+    }
+    final dated = <(DateTime, File)>[];
+    for (final file in files) {
+      try {
+        dated.add(((await file.stat()).modified, file));
+      } catch (_) {}
+    }
+    dated.sort((a, b) => b.$1.compareTo(a.$1));
+    for (var i = 2; i < dated.length; i++) {
+      try {
+        await dated[i].$2.delete();
+      } catch (_) {}
     }
   }
 
