@@ -318,10 +318,16 @@ class MobiDecoder {
           ? null
           : firstImageRecord(bytes, offsets, textRecords);
       final imageBytes = <int, Uint8List>{};
+      // Bound optional inline images so opening a scan-heavy MOBI cannot
+      // decode an unbounded base64 cache on the Android UI path.
+      var imageBudget = 16 * 1024 * 1024;
       if (firstImage != null) {
         for (final entry in content.images.entries) {
+          if (imageBytes.length >= 128 || imageBudget <= 0) break;
           final image = mobiImage(bytes, offsets, firstImage, entry.value);
-          if (image != null) imageBytes[entry.key] = image;
+          if (image == null || image.length > imageBudget) continue;
+          imageBytes[entry.key] = image;
+          imageBudget -= image.length;
         }
       }
       if (paragraphs.isEmpty) {
