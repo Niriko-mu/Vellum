@@ -7,6 +7,126 @@
 /// list.
 library;
 
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:isolate';
+import 'txt_catalog.dart';
+import 'txt_seek_source.dart';
+
+final _searchPaths = Expando<String>();
+
+String? registeredBookSearchPath(List<String> paragraphs) =>
+    _searchPaths[paragraphs];
+
+/// Associate a loaded inline body with its persisted file. Workers read that
+/// file directly, keeping the body out of UI-isolate message serialization.
+void registerBookSearchPath(List<String> paragraphs, String path) {
+  _searchPaths[paragraphs] = path;
+}
+
+String? bookContentPathFor(List<String> paragraphs) => _searchPaths[paragraphs];
+
+class BookSearchTask {
+  BookSearchTask({
+    required List<String> paragraphs,
+    required String query,
+    required List<MapEntry<int, String>> chapters,
+  }) {
+    final message = <String, dynamic>{
+      'port': _port.sendPort,
+      'query': query,
+      'chapters': chapters,
+    };
+    if (paragraphs is TxtParagraphList) {
+      message['txtPath'] = paragraphs.source.file.path;
+      message['catalog'] = paragraphs.catalog.toJson();
+    } else if (_searchPaths[paragraphs] case final String path) {
+      message['contentPath'] = path;
+    } else {
+      message['paragraphs'] = paragraphs;
+    }
+    _subscription = _port.listen((value) {
+      if (value is SearchResults) {
+        if (!_result.isCompleted) _result.complete(value);
+      } else {
+        if (!_result.isCompleted) _result.completeError(StateError('$value'));
+      }
+      _release();
+    });
+    Future<void>(() async {
+      if (_closed) return;
+      final worker = await Isolate.spawn(
+        _searchWorker,
+        message,
+        onError: _port.sendPort,
+      );
+      if (_closed)
+        worker.kill(priority: Isolate.immediate);
+      else
+        _worker = worker;
+    }).then(
+      (_) {},
+      onError: (Object error, StackTrace stack) {
+        if (!_result.isCompleted) _result.completeError(error, stack);
+        _release();
+      },
+    );
+  }
+  final _port = ReceivePort();
+  final _result = Completer<SearchResults>();
+  StreamSubscription<dynamic>? _subscription;
+  Isolate? _worker;
+  bool _closed = false;
+  Future<SearchResults> get result => _result.future;
+  void cancel() {
+    if (!_result.isCompleted) _result.complete(SearchResults.empty);
+    _release();
+  }
+
+  void _release() {
+    _closed = true;
+    _worker?.kill(priority: Isolate.immediate);
+    _subscription?.cancel();
+    _port.close();
+  }
+}
+
+void _searchWorker(Map<String, dynamic> message) {
+  TxtSeekSource? source;
+  final port = message['port'] as SendPort;
+  try {
+    List<String> paragraphs;
+    if (message['txtPath'] case final String path) {
+      source = TxtSeekSource(
+        file: File(path),
+        catalog: TxtCatalog.fromJson(
+          message['catalog'] as Map<String, dynamic>,
+        ),
+      );
+      paragraphs = TxtParagraphList(source);
+    } else if (message['contentPath'] case final String path) {
+      final raw =
+          jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
+      paragraphs = (raw['paragraphs'] as List<dynamic>).cast<String>();
+    } else {
+      paragraphs = message['paragraphs'] as List<String>;
+    }
+    final result = searchBook(
+      paragraphs: paragraphs,
+      query: message['query'] as String,
+      chapters: message['chapters'] as List<MapEntry<int, String>>,
+    );
+    source?.close();
+    source = null;
+    port.send(result);
+  } catch (error) {
+    port.send(error.toString());
+  } finally {
+    source?.close();
+  }
+}
+
 /// One occurrence of the query inside a paragraph.
 class SearchMatch {
   const SearchMatch({

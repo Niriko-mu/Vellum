@@ -23,6 +23,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
   ReaderPageSurface readerSurface() => ReaderPageSurface(
     book: widget.book,
     readingMode: readingMode,
+    scrollAnchor: scrollAnchor,
     scrollController: scrollController,
     pageController: pageController,
     pageCount: pageCount,

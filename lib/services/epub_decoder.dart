@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
+import 'package:xml/xml.dart';
 
 import 'book_models.dart';
 import 'html_text_pipeline.dart';
@@ -16,30 +17,47 @@ class EpubDecoder {
   ImportedBook decode(String filename, Uint8List bytes) {
     try {
       final archive = ZipDecoder().decodeBytes(bytes, verify: true);
+      var expandedBytes = 0;
+      if (archive.length > 20000) {
+        throw const BookImportException('EPUB 包含过多文件。');
+      }
+      for (final entry in archive) {
+        expandedBytes += entry.size;
+        if (entry.size > 64 * 1024 * 1024 ||
+            expandedBytes > 256 * 1024 * 1024) {
+          throw const BookImportException('EPUB 解压后超过安全大小。');
+        }
+      }
       final container = fileText(archive, 'META-INF/container.xml');
-      final packagePath = attribute(container, 'rootfile', 'full-path');
+      final containerXml = XmlDocument.parse(container);
+      final rootfiles = _elements(containerXml, 'rootfile');
+      final packagePath = rootfiles.isEmpty
+          ? null
+          : rootfiles.first.getAttribute('full-path');
       if (packagePath == null) {
         throw const BookImportException('EPUB 缺少 OPF 书籍目录。');
       }
       final opf = fileText(archive, packagePath);
-      final title =
-          elementText(opf, 'dc:title') ?? pipeline.titleFromFilename(filename);
+      final opfXml = XmlDocument.parse(opf);
+      final titles = _elements(opfXml, 'title');
+      final creators = _elements(opfXml, 'creator');
+      final title = titles.isEmpty
+          ? pipeline.titleFromFilename(filename)
+          : pipeline.chapterTitle(titles.first.innerText);
       // Fanqie's EpubMetaData carries mCreator; without it the shelf has no
       // author line to show.
-      final author = _cleanMeta(elementText(opf, 'dc:creator') ?? '');
+      final author = _cleanMeta(
+        creators.isEmpty ? '' : creators.first.innerText,
+      );
       final manifest = <String, _ManifestItem>{};
-      for (final match in RegExp(
-        r'<item\b[^>]*/?>',
-        caseSensitive: false,
-      ).allMatches(opf)) {
-        final tag = match.group(0)!;
-        final id = attributeInTag(tag, 'id');
-        final href = attributeInTag(tag, 'href');
+      for (final item in _elements(opfXml, 'item')) {
+        final id = item.getAttribute('id');
+        final href = item.getAttribute('href');
         if (id == null || href == null) continue;
         manifest[id] = _ManifestItem(
           href: href,
-          mediaType: attributeInTag(tag, 'media-type') ?? '',
-          properties: attributeInTag(tag, 'properties') ?? '',
+          mediaType: item.getAttribute('media-type') ?? '',
+          properties: item.getAttribute('properties') ?? '',
         );
       }
       final slash = packagePath.lastIndexOf('/');
@@ -57,15 +75,15 @@ class EpubDecoder {
       final contents = <_SpineDocument>[];
       final imageByIndex = <int, String>{};
       var nextImageIndex = 1;
-      for (final match in RegExp(
-        r'<itemref\b[^>]*/?>',
-        caseSensitive: false,
-      ).allMatches(opf)) {
-        final id = attributeInTag(match.group(0)!, 'idref');
+      for (final ref in _elements(opfXml, 'itemref')) {
+        final id = ref.getAttribute('idref');
         final item = id == null ? null : manifest[id];
         if (item == null) continue;
         final href = _normalizePath(opfDir, item.href);
         if (href == null) continue;
+        if ((archive.findFile(href)?.size ?? 0) > 16 * 1024 * 1024) {
+          throw const BookImportException('EPUB 单章正文超过安全大小。');
+        }
         final raw = _tryFileText(archive, href);
         if (raw == null) continue;
         // Rewrite <img src="…"> to recindex so the shared HTML pipeline
@@ -174,6 +192,11 @@ class EpubDecoder {
     return cleaned;
   }
 
+  Iterable<XmlElement> _elements(XmlDocument document, String localName) =>
+      document.descendants.whereType<XmlElement>().where(
+        (element) => element.name.local == localName,
+      );
+
   Uint8List? _extractCover({
     required Archive archive,
     required String opf,
@@ -181,14 +204,13 @@ class EpubDecoder {
     required Map<String, _ManifestItem> manifest,
   }) {
     // 1) <meta name="cover" content="manifest-id"/> (EPUB2 convention)
-    final metaCoverId = RegExp(
-      r'''<meta\b[^>]*\bname\s*=\s*["']cover["'][^>]*\bcontent\s*=\s*["']([^"']+)["']''',
-      caseSensitive: false,
-    ).firstMatch(opf)?.group(1);
-    final metaCoverIdAlt = RegExp(
-      r'''<meta\b[^>]*\bcontent\s*=\s*["']([^"']+)["'][^>]*\bname\s*=\s*["']cover["']''',
-      caseSensitive: false,
-    ).firstMatch(opf)?.group(1);
+    final coverMeta = _elements(
+      XmlDocument.parse(opf),
+      'meta',
+    ).where((item) => item.getAttribute('name') == 'cover');
+    final metaCoverId = coverMeta.isEmpty
+        ? null
+        : coverMeta.first.getAttribute('content');
     // 2) manifest properties="cover-image" (EPUB3)
     String? propertiesHref;
     String? firstImageHref;
@@ -204,7 +226,6 @@ class EpubDecoder {
     }
     final candidates = <String?>[
       manifest[metaCoverId]?.href,
-      manifest[metaCoverIdAlt]?.href,
       propertiesHref,
       // href heuristic: a file named cover.*
       for (final item in manifest.values)
@@ -284,10 +305,8 @@ class EpubDecoder {
     String opfDir,
     Map<String, _ManifestItem> manifest,
   ) {
-    final spineToc = RegExp(
-      r'''<spine\b[^>]*\btoc\s*=\s*["']([^"']+)["']''',
-      caseSensitive: false,
-    ).firstMatch(opf)?.group(1);
+    final spines = _elements(XmlDocument.parse(opf), 'spine');
+    final spineToc = spines.isEmpty ? null : spines.first.getAttribute('toc');
     if (spineToc != null && manifest[spineToc] != null) {
       return _normalizePath(opfDir, manifest[spineToc]!.href);
     }
@@ -316,23 +335,26 @@ class EpubDecoder {
   List<_RawTocItem> _parseNcx(String source, String ncxPath) {
     final dir = _dirOf(ncxPath);
     final items = <_RawTocItem>[];
-    // Match every content/src; attach the nearest preceding navLabel text so
-    // nested navPoints still resolve correctly.
-    final contentPattern = RegExp(
-      r'''<content\b[^>]*\bsrc\s*=\s*["']([^"']+)["']''',
-      caseSensitive: false,
+    // A few generators put dangling HTML tags inside NCX text. Sanitize each
+    // label once before XML parsing, preserving the tolerant historical path.
+    final cleanSource = source.replaceAllMapped(
+      RegExp(r'<text\b[^>]*>([\s\S]*?)</text\s*>', caseSensitive: false),
+      (match) =>
+          '<text>${pipeline.chapterTitle(match.group(1)!).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</text>',
     );
-    for (final match in contentPattern.allMatches(source)) {
-      final src = match.group(1)!.trim();
-      if (src.isEmpty) continue;
-      final before = source.substring(0, match.start);
-      final labelMatches = RegExp(
-        r'<text\b[^>]*>([\s\S]*?)</text\s*>',
-        caseSensitive: false,
-      ).allMatches(before).toList();
-      if (labelMatches.isEmpty) continue;
-      final title = pipeline.chapterTitle(labelMatches.last.group(1)!);
-      if (title.isEmpty) continue;
+    final document = XmlDocument.parse(cleanSource);
+    for (final point in document.descendants.whereType<XmlElement>().where(
+      (element) => element.name.local == 'navPoint',
+    )) {
+      final label = point.childElements
+          .where((e) => e.name.local == 'navLabel')
+          .firstOrNull;
+      final content = point.childElements
+          .where((e) => e.name.local == 'content')
+          .firstOrNull;
+      final src = content?.getAttribute('src')?.trim();
+      final title = pipeline.chapterTitle(label?.innerText ?? '');
+      if (src == null || src.isEmpty || title.isEmpty) continue;
       items.add(_RawTocItem(title: title, href: src, baseDir: dir));
     }
     return items;

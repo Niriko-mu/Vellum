@@ -37,6 +37,7 @@ class VellumAudioHandler extends BaseAudioHandler {
   int _index = -1;
   String _bookId = '';
   bool _loading = false;
+  int _queueGeneration = 0;
 
   /// Reader callback: a sentence started (paragraph, sentence, text).
   void Function(int paragraphIndex, int sentenceIndex, String text)?
@@ -68,14 +69,23 @@ class VellumAudioHandler extends BaseAudioHandler {
     required int startParagraph,
     int startSentence = 0,
   }) async {
+    final generation = ++_queueGeneration;
     final preferences = await preferencesStore.load();
+    if (generation != _queueGeneration) return;
     _preferences = preferences;
     _bookId = bookId;
-    _segments = buildSpeakableSegments(paragraphs);
+    try {
+      final segments = await buildSpeakableSegmentsInBackground(paragraphs);
+      if (generation != _queueGeneration) return;
+      _segments = segments;
+    } on FormatException catch (error) {
+      if (generation == _queueGeneration) {
+        onError?.call(TtsException(TtsFailure.badResponse, error.message));
+      }
+      return;
+    }
     if (_segments.isEmpty) {
-      onError?.call(
-        const TtsException(TtsFailure.badResponse, '这本书没有可朗读的文字'),
-      );
+      onError?.call(const TtsException(TtsFailure.badResponse, '这本书没有可朗读的文字'));
       return;
     }
     var index = _segments.indexWhere(
@@ -158,6 +168,7 @@ class VellumAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> stop() async {
+    _queueGeneration++;
     _segments = const [];
     _index = -1;
     await _player.stop();
@@ -209,9 +220,9 @@ class VellumAudioHandler extends BaseAudioHandler {
       );
       var file = await cache.lookup(key);
       if (file == null) {
-        final bytes = await TtsClient.forPreferences(preferences).synthesize(
-          segment.text,
-        );
+        final bytes = await TtsClient.forPreferences(
+          preferences,
+        ).synthesize(segment.text);
         file = await cache.write(key, bytes);
       }
       if (_index != index) return;
@@ -245,9 +256,9 @@ class VellumAudioHandler extends BaseAudioHandler {
     );
     if (await cache.lookup(key) != null) return;
     try {
-      final bytes = await TtsClient.forPreferences(preferences).synthesize(
-        segment.text,
-      );
+      final bytes = await TtsClient.forPreferences(
+        preferences,
+      ).synthesize(segment.text);
       await cache.write(key, bytes);
     } catch (_) {
       // Prefetch is best effort; the real error surfaces when it plays.

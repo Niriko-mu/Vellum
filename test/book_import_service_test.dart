@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/services/book_import_service.dart';
-import 'package:vellum/services/book_library.dart';
 
 void main() {
   Future<Directory> tempStorage() async =>
@@ -90,6 +89,8 @@ void main() {
       '${shell.storageId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')}.json',
     );
     expect(content.existsSync(), isTrue);
+    final original = File('${storage.path}/${shell.storageId}.original.epub');
+    expect(original.readAsBytesSync(), bytes);
     final decoded =
         jsonDecode(content.readAsStringSync()) as Map<String, dynamic>;
     expect((decoded['paragraphs'] as List).length, 2000);

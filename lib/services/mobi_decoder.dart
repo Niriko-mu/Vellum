@@ -92,7 +92,12 @@ class MobiHuffCdic {
     }
   }
 
-  Uint8List unpack(Uint8List input) {
+  Uint8List unpack(
+    Uint8List input, {
+    int maxOutput = 64 * 1024 * 1024,
+    int depth = 0,
+  }) {
+    if (depth > 64) throw const BookImportException('MOBI 压缩词典嵌套过深。');
     if (_dict1.isEmpty || _dictionary.isEmpty) {
       throw const BookImportException('MOBI Huffman 词典未加载。');
     }
@@ -113,6 +118,9 @@ class MobiHuffCdic {
       final code = _shr32(x, n);
       final head = _dict1[(code >> 24) & 0xff];
       var codelen = head.codelen;
+      if (codelen < 1 || codelen > 32) {
+        throw const BookImportException('MOBI Huffman 码长无效。');
+      }
       var maxcode = head.maxcode;
       if (!head.term) {
         while (codelen < 33 && code < _mincode[codelen]) {
@@ -131,8 +139,11 @@ class MobiHuffCdic {
       var slice = entry.bytes;
       if (!entry.isTerminal) {
         _dictionary[r] = _CdicEntry(Uint8List(0), true);
-        slice = unpack(slice);
+        slice = unpack(slice, maxOutput: maxOutput, depth: depth + 1);
         _dictionary[r] = _CdicEntry(slice, true);
+      }
+      if (out.length + slice.length > maxOutput) {
+        throw const BookImportException('MOBI 解压正文超过安全大小。');
       }
       out.addAll(slice);
     }
@@ -258,7 +269,10 @@ class MobiDecoder {
             throw const BookImportException('MOBI 正文记录无效。');
           }
           final record = Uint8List.sublistView(bytes, start, end);
-          final decoded = decoder.unpack(record);
+          final decoded = decoder.unpack(
+            record,
+            maxOutput: 64 * 1024 * 1024 - builder.length,
+          );
           if (remaining != null && decoded.length > remaining) {
             builder.add(Uint8List.sublistView(decoded, 0, remaining));
           } else {

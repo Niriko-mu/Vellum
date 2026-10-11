@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../services/book_library.dart';
+import '../services/txt_seek_source.dart';
 import 'reader_models.dart';
 import 'reader_pagination.dart';
 import 'reader_page_pagination_controller.dart';
@@ -367,14 +368,19 @@ extension ReaderPagePagination on ReaderPageState {
         position.maxScrollExtent > 0;
   }
 
-  void jumpToProgress(double value) {
+  Future<void> jumpToProgress(double value) async {
     final target = value.clamp(0.0, 1.0);
-    jumpGeneration++;
+    final generation = ++jumpGeneration;
     cancelPagination();
     if (readingMode == ReadingMode.page) {
       final totalParas = widget.book.paragraphs.length;
       if (totalParas <= 0) return;
       final para = (target * (totalParas - 1)).round().clamp(0, totalParas - 1);
+      final paragraphs = widget.book.paragraphs;
+      if (paragraphs is TxtParagraphList) {
+        await paragraphs.source.prefetchAroundParagraph(para);
+        if (!mounted || generation != jumpGeneration) return;
+      }
       // Past the anchor threshold this jumps the pagination window to the target
       // instead of measuring the whole prefix — the difference between an
       // instant seek and a minute of blocked UI in a 二十四史-sized book.
@@ -419,15 +425,13 @@ extension ReaderPagePagination on ReaderPageState {
     final count = widget.book.paragraphs.length;
     if (count == 0 || !scrollController.hasClients) return;
     final index = target.clamp(0, count - 1);
-    final fraction = count <= 1 ? 0.0 : index / (count - 1);
-    final position = scrollController.position;
-    scrollController.jumpTo(
-      (preferredOffset ?? (fraction * position.maxScrollExtent)).clamp(
-        0.0,
-        position.maxScrollExtent,
-      ),
-    );
-    refresh(() => currentParagraph = index);
+    // A pixel jump in a variable-height list lays out every preceding child.
+    // Re-center the two lazy slivers at the destination instead.
+    scrollController.jumpTo(0);
+    refresh(() {
+      scrollAnchor = index;
+      currentParagraph = index;
+    });
     scheduleSave();
     refineScrollJump(index, jumpGeneration: jumpGeneration);
   }
@@ -539,11 +543,11 @@ extension ReaderPagePagination on ReaderPageState {
     clearSearchHighlight();
   }
 
-  void jumpToParagraph(
+  Future<void> jumpToParagraph(
     int paragraphIndex, {
     bool restoreChapter = false,
     bool preloadPreviousPage = false,
-  }) {
+  }) async {
     final generation = ++jumpGeneration;
     cancelPagination();
     final maxIndex = widget.book.paragraphs.isEmpty
@@ -557,6 +561,11 @@ extension ReaderPagePagination on ReaderPageState {
       if (checkpoint != null) {
         target = checkpoint.paragraphIndex.clamp(0, maxIndex);
       }
+    }
+    final paragraphs = widget.book.paragraphs;
+    if (paragraphs is TxtParagraphList) {
+      await paragraphs.source.prefetchAroundParagraph(target);
+      if (!mounted || generation != jumpGeneration) return;
     }
     if (readingMode == ReadingMode.page) {
       var page = pageForParagraph(target).clamp(0, pageCount - 1);

@@ -40,6 +40,7 @@ class ReaderPageSurface extends StatelessWidget {
     required this.onRestorePage,
     required this.onPageChanged,
     this.selectable = true,
+    this.scrollAnchor = 0,
     super.key,
   });
 
@@ -77,38 +78,77 @@ class ReaderPageSurface extends StatelessWidget {
   final VoidCallback onRestorePage;
   final ValueChanged<int> onPageChanged;
   final bool selectable;
+  final int scrollAnchor;
 
   @override
   Widget build(BuildContext context) {
     if (readingMode == ReadingMode.scroll) {
+      if (scrollAnchor == 0) {
+        return NotificationListener<ScrollNotification>(
+          onNotification: onBookmarkPull,
+          child: ListView.builder(
+            controller: scrollController,
+            padding: EdgeInsets.fromLTRB(
+              sideInset,
+              topInset,
+              sideInset,
+              bottomInset,
+            ),
+            itemCount: book.paragraphs.length + 2,
+            itemBuilder: (context, index) {
+              if (index == 0) return _title();
+              if (index == 1) return const SizedBox(height: 30);
+              return _scrollParagraph(index - 2);
+            },
+          ),
+        );
+      }
       return NotificationListener<ScrollNotification>(
         onNotification: onBookmarkPull,
-        child: ListView.builder(
+        child: CustomScrollView(
+          key: ValueKey('scroll-$scrollAnchor'),
           controller: scrollController,
-          padding: EdgeInsets.fromLTRB(
-            sideInset,
-            topInset,
-            sideInset,
-            bottomInset,
-          ),
-          itemCount: book.paragraphs.length + 2,
-          itemBuilder: (context, index) {
-            if (index == 0) return _title();
-            if (index == 1) return const SizedBox(height: 30);
-            final paragraphIndex = index - 2;
-            final isHeading =
-                ReaderMarkup.heading.hasMatch(
-                  book.paragraphs[paragraphIndex],
-                ) ||
-                tocParagraphs.contains(paragraphIndex);
-            return KeyedSubtree(
-              key: paragraphKeys.putIfAbsent(paragraphIndex, () => GlobalKey()),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 22, top: isHeading ? 10 : 0),
-                child: _paragraph(paragraphIndex),
+          center: ValueKey('anchor-$scrollAnchor'),
+          slivers: [
+            if (scrollAnchor > 0)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: sideInset),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) =>
+                        _scrollParagraph(scrollAnchor - index - 1),
+                    childCount: scrollAnchor,
+                    addAutomaticKeepAlives: false,
+                  ),
+                ),
               ),
-            );
-          },
+            SliverPadding(
+              key: ValueKey('anchor-$scrollAnchor'),
+              padding: EdgeInsets.fromLTRB(
+                sideInset,
+                topInset,
+                sideInset,
+                bottomInset,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (scrollAnchor == 0) {
+                      if (index == 0) return _title();
+                      if (index == 1) return const SizedBox(height: 30);
+                      index -= 2;
+                    }
+                    return _scrollParagraph(scrollAnchor + index);
+                  },
+                  childCount:
+                      book.paragraphs.length -
+                      scrollAnchor +
+                      (scrollAnchor == 0 ? 2 : 0),
+                  addAutomaticKeepAlives: false,
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -134,6 +174,23 @@ class ReaderPageSurface extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _scrollParagraph(int index) {
+    // Forget unmounted identities so long reading sessions stay bounded.
+    if (paragraphKeys.length > 256) {
+      paragraphKeys.removeWhere((_, key) => key.currentContext == null);
+    }
+    final isHeading =
+        ReaderMarkup.heading.hasMatch(book.paragraphs[index]) ||
+        tocParagraphs.contains(index);
+    return KeyedSubtree(
+      key: paragraphKeys.putIfAbsent(index, () => GlobalKey()),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 22, top: isHeading ? 10 : 0),
+        child: _paragraph(index),
+      ),
     );
   }
 

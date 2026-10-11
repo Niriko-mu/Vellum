@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+import '../services/txt_seek_source.dart';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -123,6 +124,7 @@ class ReaderPageState extends State<ReaderPage>
   int pageBeforePointerDown = 0;
   Timer? selectionHoldTimer;
   final Map<int, GlobalKey> paragraphKeys = {};
+  int scrollAnchor = 0;
   bool scrollPositionRestored = false;
   bool pagePositionRestored = false;
   int scrollRestoreAttempts = 0;
@@ -225,8 +227,8 @@ class ReaderPageState extends State<ReaderPage>
           clearSearchHighlight();
         }
         final estimated =
-            (scrollController.offset /
-                    (fontSize * (lineSpacing.height + 1.3)))
+            scrollAnchor +
+            (scrollController.offset / (fontSize * (lineSpacing.height + 1.3)))
                 .floor();
         final clamped = estimated.clamp(
           0,
@@ -254,7 +256,23 @@ class ReaderPageState extends State<ReaderPage>
     loadNotes();
     loadPaper();
     syncPlatformSettings();
+    final paragraphs = widget.book.paragraphs;
+    if (paragraphs is TxtParagraphList) {
+      txtReady = false;
+      paragraphs.source
+          .prefetchAroundParagraph(widget.initialState.paragraphIndex)
+          .then(
+            (_) {
+              if (mounted) setState(() => txtReady = true);
+            },
+            onError: (Object _) {
+              if (mounted) setState(() => txtReady = true);
+            },
+          );
+    }
   }
+
+  bool txtReady = true;
 
   /// Screen brightness / keep-awake / volume-key paging are window-level
   /// settings on Android, so they follow the reader's lifetime.
@@ -371,36 +389,11 @@ class ReaderPageState extends State<ReaderPage>
         if (scrollRestoreAttempts < 8) restoreScrollPositionWhenReady();
         return;
       }
-      final maxExtent = scrollController.position.maxScrollExtent;
-      final requestedOffset = widget.initialState.position;
-      if (requestedOffset > 0 && maxExtent <= 0) {
-        scrollRestoreAttempts++;
-        if (scrollRestoreAttempts < 8) restoreScrollPositionWhenReady();
-        return;
-      }
-      if (requestedOffset > 0) {
-        scrollController.jumpTo(requestedOffset.clamp(0.0, maxExtent));
-        currentParagraph =
-            (requestedOffset / (fontSize * (lineSpacing.height + 1.3)))
-                .floor()
-                .clamp(
-                  0,
-                  widget.book.paragraphs.isEmpty
-                      ? 0
-                      : widget.book.paragraphs.length - 1,
-                );
-      } else {
-        final paragraph = widget.initialState.paragraphIndex.clamp(
-          0,
-          widget.book.paragraphs.isEmpty
-              ? 0
-              : widget.book.paragraphs.length - 1,
-        );
-        final estimated =
-            paragraph * (fontSize * (lineSpacing.height + 22 / fontSize));
-        scrollController.jumpTo(estimated.clamp(0.0, maxExtent));
-        currentParagraph = paragraph;
-      }
+      final paragraph = widget.initialState.paragraphIndex.clamp(
+        0,
+        widget.book.paragraphs.isEmpty ? 0 : widget.book.paragraphs.length - 1,
+      );
+      jumpToScrollParagraph(paragraph);
       scrollPositionRestored = true;
     });
   }
@@ -438,6 +431,8 @@ class ReaderPageState extends State<ReaderPage>
   void dispose() {
     // Stops the background pagination loop before it schedules another yield.
     pagination.dispose();
+    final paragraphs = widget.book.paragraphs;
+    if (paragraphs is TxtParagraphList) paragraphs.source.close();
     WidgetsBinding.instance.removeObserver(this);
     tapTimer?.cancel();
     ttsStateSub?.cancel();
@@ -548,9 +543,8 @@ class ReaderPageState extends State<ReaderPage>
     );
   }
 
-  Widget paperLayer(BuildContext context) => Positioned.fill(
-        child: RepaintBoundary(child: paperSurface(context)),
-      );
+  Widget paperLayer(BuildContext context) =>
+      Positioned.fill(child: RepaintBoundary(child: paperSurface(context)));
 
   Future<void> loadPaper() async {
     await paperController.load(bookId: bookId);
@@ -563,6 +557,7 @@ class ReaderPageState extends State<ReaderPage>
     setState(() {});
     scheduleSave();
   }
+
   /// Paragraph the listen feature should start from: the one in the middle
   /// of the screen in scroll mode, the first one on the page in page mode.
   int listenStartParagraph() {
@@ -805,5 +800,9 @@ class ReaderPageState extends State<ReaderPage>
   }
 
   @override
-  Widget build(BuildContext context) => renderReaderPage(this, context);
+  Widget build(BuildContext context) => txtReady
+      ? renderReaderPage(this, context)
+      : const CupertinoPageScaffold(
+          child: Center(child: CupertinoActivityIndicator()),
+        );
 }

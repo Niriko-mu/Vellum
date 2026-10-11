@@ -21,7 +21,8 @@ class TtsException implements Exception {
     TtsFailure.quota => '朗读服务返回限流/余额不足（429），请稍后重试。',
     TtsFailure.network => '连不上朗读服务，请检查网络或接口地址。',
     TtsFailure.server => '朗读服务错误：$message',
-    TtsFailure.badResponse => '朗读服务返回了无法播放的内容，请检查模型/音色设置。',
+    TtsFailure.badResponse =>
+      message.contains('安全大小') ? message : '朗读服务返回了无法播放的内容，请检查模型/音色设置。',
   };
 
   @override
@@ -111,10 +112,7 @@ class OpenAiCompatibleTtsClient implements TtsClient {
       case 429:
         throw const TtsException(TtsFailure.quota, 'HTTP 429');
       default:
-        throw TtsException(
-          TtsFailure.server,
-          'HTTP ${response.statusCode}',
-        );
+        throw TtsException(TtsFailure.server, 'HTTP ${response.statusCode}');
     }
   }
 }
@@ -139,7 +137,8 @@ class AzureTtsClient implements TtsClient {
         ? 'zh-CN-XiaoxiaoNeural'
         : preferences.voice.trim();
     final rate = (((preferences.speed - 1) * 100).round()).toString();
-    final ssml = '<speak version="1.0" xml:lang="zh-CN">'
+    final ssml =
+        '<speak version="1.0" xml:lang="zh-CN">'
         '<voice name="$voice">'
         '<prosody rate="$rate%">${_escape(text)}</prosody>'
         '</voice>'
@@ -172,10 +171,7 @@ class AzureTtsClient implements TtsClient {
       if (response.statusCode == 429) {
         throw const TtsException(TtsFailure.quota, 'HTTP 429');
       }
-      throw TtsException(
-        TtsFailure.server,
-        'HTTP ${response.statusCode}',
-      );
+      throw TtsException(TtsFailure.server, 'HTTP ${response.statusCode}');
     } on TimeoutException {
       throw const TtsException(TtsFailure.network, '请求超时');
     } on SocketException catch (error) {

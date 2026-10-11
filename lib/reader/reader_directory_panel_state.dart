@@ -32,6 +32,8 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
   /// book, ~100 ms on a 二十四史-sized one — so typing waits for a short pause
   /// instead of scanning per keystroke.
   Timer? searchDebounce;
+  BookSearchTask? _searchTask;
+  int _searchGeneration = 0;
 
   /// Below this length the scan matches too much to be useful; CJK words are
   /// short, so two characters is the useful floor.
@@ -77,6 +79,8 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
 
   @override
   void dispose() {
+    _searchGeneration++;
+    _searchTask?.cancel();
     searchDebounce?.cancel();
     focusLossTimer?.cancel();
     searchFocus.removeListener(onSearchFocusChanged);
@@ -157,6 +161,8 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
   }
 
   void closeSearch() {
+    _searchGeneration++;
+    _searchTask?.cancel();
     searchDebounce?.cancel();
     focusLossTimer?.cancel();
     searchController.clear();
@@ -183,23 +189,36 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
     });
   }
 
-  void runSearch(String value) {
+  Future<void> runSearch(String value) async {
     searchDebounce?.cancel();
+    _searchTask?.cancel();
+    final generation = ++_searchGeneration;
     final nextQuery = value.trim();
     setState(() {
       query = nextQuery;
-      results = nextQuery.length < minQueryLength
-          ? SearchResults.empty
-          : searchBook(
-              paragraphs: widget.paragraphs!,
-              query: nextQuery,
-              chapters: widget.chapters,
-            );
-      // A new scan starts from the top of the list.
-      activeHit = results.isEmpty ? null : results.hits.first.paragraphIndex;
+      results = SearchResults.empty;
+      activeHit = null;
     });
-    if (searchScrollController.hasClients) {
-      searchScrollController.jumpTo(0);
+    if (nextQuery.length < minQueryLength || widget.paragraphs == null) return;
+    final task = BookSearchTask(
+      paragraphs: widget.paragraphs!,
+      query: nextQuery,
+      chapters: widget.chapters,
+    );
+    _searchTask = task;
+    try {
+      final found = await task.result;
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() {
+        results = found;
+        activeHit = results.isEmpty ? null : results.hits.first.paragraphIndex;
+      });
+      if (searchScrollController.hasClients) searchScrollController.jumpTo(0);
+    } catch (_) {
+      // Closing or replacing a query must never surface a stale worker failure.
+      if (mounted && generation == _searchGeneration) {
+        setState(() => results = SearchResults.empty);
+      }
     }
   }
 
@@ -252,7 +271,8 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
     if (tab != 0) return -1;
     final chapterEntries = entries;
     for (var index = 0; index < chapterEntries.length; index++) {
-      if (isCurrentChapter(chapterEntries[index].key, index, chapterEntries)) return index;
+      if (isCurrentChapter(chapterEntries[index].key, index, chapterEntries))
+        return index;
     }
     return -1;
   }
@@ -304,8 +324,9 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
   /// - also word count / first-pass time when available.
   String readStateLabel(int paragraphIndex, bool isCurrent, bool isRead) {
     if (isCurrent && widget.progressSummary != null) {
-      final percent =
-          (widget.progressSummary!.chapterProgress * 100).round().clamp(0, 100);
+      final percent = (widget.progressSummary!.chapterProgress * 100)
+          .round()
+          .clamp(0, 100);
       final page = widget.chapterPageLabels[paragraphIndex];
       if (page != null && page.isNotEmpty) return '读到 $percent% · $page';
       return '读到 $percent%';
@@ -368,5 +389,6 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
   }
 
   @override
-  Widget build(BuildContext context) => renderReaderDirectoryPanel(this, context);
+  Widget build(BuildContext context) =>
+      renderReaderDirectoryPanel(this, context);
 }

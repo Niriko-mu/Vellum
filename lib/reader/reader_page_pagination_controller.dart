@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/widgets.dart';
 
 import '../services/book_importer.dart';
+import '../services/txt_seek_source.dart';
 import 'reader_models.dart';
 import 'reader_pagination.dart';
 
@@ -75,7 +76,7 @@ class ReaderPaginationController {
     );
     final watch = Stopwatch()..start();
     final int page;
-    if (safe > anchorFoldParagraphs) {
+    if (safe > anchorFoldParagraphs || (_book.usesSeek && safe > 0)) {
       pager.paginateFrom(safe, minPages: initialPages);
       page = 0;
     } else {
@@ -162,7 +163,7 @@ class ReaderPaginationController {
     final localPager = pager;
     final generation = _generation;
 
-    void step() {
+    Future<void> step() async {
       _yieldTimer = null;
       if (!isActive() ||
           !_busy ||
@@ -174,6 +175,21 @@ class ReaderPaginationController {
         _busy = false;
         return;
       }
+      final paragraphs = _book.paragraphs;
+      if (paragraphs is TxtParagraphList) {
+        try {
+          await paragraphs.source.prefetchAroundParagraph(
+            localPager.nextParagraph,
+          );
+        } catch (_) {
+          _busy = false;
+          return;
+        }
+        if (!isActive() ||
+            generation != _generation ||
+            !identical(localPager, pager))
+          return;
+      }
       final sw = Stopwatch()..start();
       while (isActive() &&
           _busy &&
@@ -182,7 +198,17 @@ class ReaderPaginationController {
           !localPager.fullyPaginated &&
           localPager.pageCount < targetPages &&
           sw.elapsedMilliseconds < 12) {
-        localPager.paginateSlice(maxParagraphs: 20);
+        var sliceSize = 20;
+        if (paragraphs is TxtParagraphList) {
+          final next = localPager.nextParagraph;
+          final chapter = paragraphs.catalog.chapterForParagraph(next);
+          if (!paragraphs.source.isCached(chapter.index)) break;
+          final end =
+              paragraphs.catalog.paragraphStartOf(chapter.index) +
+              chapter.paragraphCount;
+          sliceSize = (end - next).clamp(1, 20);
+        }
+        localPager.paginateSlice(maxParagraphs: sliceSize);
       }
       if (!isActive() ||
           !_busy ||
@@ -265,7 +291,9 @@ class ReaderPaginationController {
         pager.pageCount - 1,
       );
     }
-    if (total > 0 && paragraphIndex > anchorFoldParagraphs) {
+    if (total > 0 &&
+        (paragraphIndex > anchorFoldParagraphs ||
+            (_book.usesSeek && paragraphIndex > pager.nextParagraph))) {
       cancel();
       pager.paginateFrom(paragraphIndex, minPages: initialPages);
       return 0;

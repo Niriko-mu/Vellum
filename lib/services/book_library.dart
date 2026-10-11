@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -12,6 +13,8 @@ import 'tts_cache.dart';
 import 'library_models.dart';
 import 'txt_catalog.dart';
 import 'txt_seek_source.dart';
+import 'book_search.dart';
+import 'library_file_mutex.dart';
 
 export 'font_storage.dart';
 export 'library_models.dart';
@@ -193,13 +196,39 @@ ImportedBook _decodeBookContentJson(String raw) =>
 ImportedBook _loadBookContentFile(String path) =>
     _decodeBookContentJson(File(path).readAsStringSync());
 
+Future<TxtCatalog> _migrateTxtCatalog(String path) async =>
+    scanTxtCatalogFile(path);
+
 class BookLibrary {
+  static Future<void> _commitTail = Future<void>.value();
+  static Future<void> _indexTail = Future<void>.value();
+  static final Set<String> _activeCommits = {};
+  static final Set<String> _activeStaging = {};
+
+  static void trackImportStaging(Directory directory, {required bool active}) {
+    if (active) {
+      _activeStaging.add(directory.path);
+    } else {
+      _activeStaging.remove(directory.path);
+    }
+  }
+
   const BookLibrary({this.fonts = const FontStorage()});
 
   final FontStorage fonts;
 
-  Future<List<ImportedBook>> load() async {
+  Future<T> _locked<T>(Future<T> Function() operation) async {
     final file = await _file();
+    return LibraryFileMutex.run('${file.path}.lock', operation);
+  }
+
+  Future<List<ImportedBook>> load() => _locked(_load);
+
+  Future<List<ImportedBook>> _load() async {
+    await _indexTail;
+    final file = await _file();
+    await _recoverIndex(file);
+    await recoverImports();
     if (!await file.exists()) return [];
     try {
       final raw = jsonDecode(await file.readAsString());
@@ -281,6 +310,28 @@ class BookLibrary {
       }
       final src = await _bookSourceFile(book.storageId);
       if (catalog != null && await src.exists()) {
+        if (catalog.chapters.any(
+          (chapter) => chapter.byteLength > 256 * 1024,
+        )) {
+          catalog = await compute(_migrateTxtCatalog, src.path);
+          final temp = File('${catFile.path}.next');
+          await temp.writeAsString(jsonEncode(catalog.toJson()), flush: true);
+          if (await catFile.exists()) await catFile.delete();
+          await temp.rename(catFile.path);
+          // Persist revised counts in the shell; source bytes and storage id
+          // remain unchanged, preserving book identity and reading metadata.
+          final shelf = await load();
+          await saveIndex([
+            for (final item in shelf)
+              if (item.storageId == book.storageId)
+                item.copyWith(
+                  catalog: catalog,
+                  metaParagraphCount: catalog.totalParagraphs,
+                )
+              else
+                item,
+          ]);
+        }
         final source = TxtSeekSource(file: src, catalog: catalog);
         return book.copyWith(
           paragraphs: TxtParagraphList(source),
@@ -299,6 +350,7 @@ class BookLibrary {
     if (await file.exists()) {
       try {
         final full = await compute(_loadBookContentFile, file.path);
+        registerBookSearchPath(full.paragraphs, file.path);
         // Content files do not carry shelf cover; keep the index shell's cover.
         return full.copyWith(
           coverBytes: book.coverBytes,
@@ -508,12 +560,256 @@ class BookLibrary {
   }
 
   /// Rewrites only the lightweight shelf index (titles, covers, counts).
-  Future<void> saveIndex(List<ImportedBook> books) async {
-    final index = await compute(_encodeLibraryIndex, books);
-    await (await _file()).writeAsString(index, flush: true);
+  Future<void> saveIndex(List<ImportedBook> books) =>
+      _locked(() => _queueIndex(books));
+
+  Future<void> _queueIndex(List<ImportedBook> books) async {
+    final previous = _indexTail;
+    final done = Completer<void>();
+    _indexTail = done.future;
+    await previous;
+    try {
+      await _saveIndex(books);
+    } finally {
+      done.complete();
+    }
   }
 
-  Future<void> deleteBook(ImportedBook book) async {
+  Future<void> _saveIndex(List<ImportedBook> books) async {
+    final index = await compute(_encodeLibraryIndex, books);
+    final file = await _file();
+    await _recoverIndex(file);
+    final temporary = File('${file.path}.next');
+    final backup = File('${file.path}.backup');
+    await temporary.writeAsString(index, flush: true);
+    if (await file.exists()) await file.rename(backup.path);
+    try {
+      await temporary.rename(file.path);
+      try {
+        if (await backup.exists()) await backup.delete();
+      } on FileSystemException {
+        // Publication succeeded; startup will retry obsolete-backup cleanup.
+      }
+    } catch (_) {
+      if (!await file.exists() && await backup.exists()) {
+        await backup.rename(file.path);
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _recoverIndex(File file) async {
+    final backup = File('${file.path}.backup');
+    if (!await file.exists() && await backup.exists()) {
+      await backup.rename(file.path);
+    } else if (await backup.exists()) {
+      try {
+        if (jsonDecode(await file.readAsString()) is! List) {
+          throw const FormatException('Invalid shelf index');
+        }
+        await backup.delete();
+      } on FormatException {
+        Object? backupData;
+        try {
+          backupData = jsonDecode(await backup.readAsString());
+        } on FormatException {
+          return;
+        }
+        if (backupData is List) {
+          final corrupt = File('${file.path}.corrupt');
+          if (await corrupt.exists()) await corrupt.delete();
+          await file.rename(corrupt.path);
+          await backup.rename(file.path);
+        }
+      }
+    }
+  }
+
+  /// Promotes staged body files before publishing their shell in the index.
+  /// A journal permits startup to remove files from interrupted commits.
+  Future<List<ImportedBook>> commitImport(
+    ImportedBook book,
+    Directory staging,
+    List<ImportedBook> fallback,
+  ) => _locked(() => _queueCommit(book, staging, fallback));
+
+  Future<List<ImportedBook>> _queueCommit(
+    ImportedBook book,
+    Directory staging,
+    List<ImportedBook> fallback,
+  ) async {
+    final previous = _commitTail;
+    final done = Completer<void>();
+    _commitTail = done.future;
+    await previous;
+    try {
+      return await _commitImport(book, staging, fallback);
+    } finally {
+      done.complete();
+    }
+  }
+
+  Future<List<ImportedBook>> _commitImport(
+    ImportedBook book,
+    Directory staging,
+    List<ImportedBook> fallback,
+  ) async {
+    final indexFile = await _file();
+    final current = await indexFile.exists() ? await load() : fallback;
+    if (current.any((item) => item.storageId == book.storageId)) return current;
+    if (current.length >= BookImporter.maxBookCount) {
+      throw const BookImportException('书架已满，请先删除部分书籍。');
+    }
+    final root = await _booksDir();
+    await root.create(recursive: true);
+    final files = await staging
+        .list()
+        .where((e) => e is File && e.uri.pathSegments.last != '.lease')
+        .cast<File>()
+        .toList();
+    final journal = File(
+      '${root.path}${Platform.pathSeparator}.import-journal.json',
+    );
+    final names = [for (final f in files) f.uri.pathSegments.last];
+    await journal.writeAsString(
+      jsonEncode({'id': book.storageId, 'files': names}),
+      flush: true,
+    );
+    _activeCommits.add(root.path);
+    try {
+      for (final file in files) {
+        final name = file.uri.pathSegments.last;
+        final target = File('${root.path}${Platform.pathSeparator}$name');
+        // No indexed file is overwritten: duplicate imports return above.
+        if (await target.exists()) await target.delete();
+        await file.rename(target.path);
+      }
+      final updated = [book, ...current];
+      await saveIndex(updated);
+      try {
+        await journal.delete();
+      } on FileSystemException {
+        // The published index is authoritative. Startup can remove the marker.
+      }
+      return updated;
+    } catch (_) {
+      _activeCommits.remove(root.path);
+      await recoverImports();
+      rethrow;
+    } finally {
+      _activeCommits.remove(root.path);
+    }
+  }
+
+  Future<void> recoverImports() => _locked(_recoverImports);
+
+  Future<void> _recoverImports() async {
+    final root = await _booksDir();
+    if (_activeCommits.contains(root.path)) return;
+    if (await root.exists()) {
+      await for (final entry in root.list()) {
+        if (entry is Directory &&
+            entry.uri.pathSegments
+                .where((e) => e.isNotEmpty)
+                .last
+                .startsWith('.import-') &&
+            !_activeStaging.contains(entry.path)) {
+          final lease = File('${entry.path}${Platform.pathSeparator}.lease');
+          final modified = await lease.exists()
+              ? (await lease.stat()).modified
+              : (await entry.stat()).modified;
+          // Engine-local statics cannot establish ownership in another engine.
+          // Fresh work is never treated as abandoned; old work additionally
+          // needs an uncontended OS lease before startup can reclaim it.
+          if (DateTime.now().difference(modified) < const Duration(hours: 24))
+            continue;
+          RandomAccessFile? handle;
+          try {
+            handle = await lease.open(mode: FileMode.append);
+            await handle.lock(FileLock.exclusive);
+            await handle.close();
+            handle = null;
+            await entry.delete(recursive: true);
+          } on FileSystemException {
+            // Another process still owns the lease, or cleanup can be retried.
+          } finally {
+            await handle?.close();
+          }
+        }
+      }
+    }
+    final journal = File(
+      '${root.path}${Platform.pathSeparator}.import-journal.json',
+    );
+    if (!await journal.exists()) return;
+    Map<String, dynamic> data;
+    try {
+      final decoded = jsonDecode(await journal.readAsString());
+      if (decoded is! Map<String, dynamic>)
+        throw const FormatException('Invalid import journal');
+      data = decoded;
+      if (data['id'] is! String || data['files'] is! List)
+        throw const FormatException('Invalid import journal');
+    } on FormatException {
+      // A truncated write precedes file promotion. Keep unknown body files,
+      // rather than infer targets from an incomplete journal.
+      await journal.delete();
+      return;
+    }
+    final index = await _file();
+    await _recoverIndex(index);
+    List raw;
+    try {
+      final decoded = await index.exists()
+          ? jsonDecode(await index.readAsString())
+          : const [];
+      if (decoded is! List) return;
+      raw = decoded;
+    } on FormatException {
+      // Unknown index state: preserve files rather than delete possibly indexed
+      // books. load() can still apply its existing corrupt-index fallback.
+      return;
+    }
+    final committed = raw.any((e) => e is Map && e['id'] == data['id']);
+    if (!committed) {
+      for (final value in data['files'] as List) {
+        if (value is! String) continue;
+        final name = value;
+        final stem = (data['id'] as String).replaceAll(
+          RegExp(r'[^a-zA-Z0-9_\-]'),
+          '_',
+        );
+        if (!{
+          '$stem.src',
+          '$stem.json',
+          '$stem.catalog.json',
+          '$stem.original.epub',
+        }.contains(name))
+          continue;
+        final file = File('${root.path}${Platform.pathSeparator}$name');
+        if (await file.exists()) await file.delete();
+      }
+    }
+    await journal.delete();
+  }
+
+  /// Original EPUB retained for the renderer, independent of paragraph JSON.
+  Future<String> originalEpubPath(String storageId) async {
+    final root = await _booksDir();
+    final safe = storageId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
+    return '${root.path}${Platform.pathSeparator}$safe.original.epub';
+  }
+
+  Future<void> deleteBook(ImportedBook book) =>
+      _locked(() => _deleteBook(book));
+
+  Future<void> _deleteBook(ImportedBook book) async {
+    final original = File(await originalEpubPath(book.storageId));
+    for (final suffix in ['.reader.json', '.reader.json.tmp']) {
+      final state = File('${original.path}$suffix');
+      if (await state.exists()) await state.delete();
+    }
+    if (await original.exists()) await original.delete();
     final content = await _bookContentFile(book.storageId);
     if (await content.exists()) await content.delete();
     final src = await _bookSourceFile(book.storageId);
@@ -717,7 +1013,9 @@ class BookLibrary {
     return file;
   }
 
-  Future<void> clearBooks() async {
+  Future<void> clearBooks() => _locked(_clearBooks);
+
+  Future<void> _clearBooks() async {
     final file = await _file();
     if (await file.exists()) await file.delete();
     final directory = await _booksDir();

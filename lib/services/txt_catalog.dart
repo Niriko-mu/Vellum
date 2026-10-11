@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:charset/charset.dart' show gbk;
 
@@ -75,6 +76,190 @@ class TxtChapterRef {
 /// Catalog state, paralleling Fanqie's `analyse()` return codes:
 /// `0` → ready, `2` → TOC still being filled (synthetic / pending).
 enum TxtCatalogStatus { ready, synthetic, pending }
+
+/// File counterpart of [scanTxtCatalog], used by import/migration workers.
+/// Only a 64 KiB source block and one bounded decoded block are resident.
+TxtCatalog scanTxtCatalogFile(
+  String path, {
+  HtmlTextPipeline pipeline = const HtmlTextPipeline(),
+  int syntheticChapterBytes = 5000,
+  int maxTitleLength = 40,
+}) {
+  final handle = File(path).openSync();
+  try {
+    final length = handle.lengthSync();
+    if (length == 0)
+      return TxtCatalog(
+        encoding: 'utf-8',
+        chapters: [],
+        status: TxtCatalogStatus.synthetic,
+      );
+    final probe = handle.readSync(length.clamp(0, 64 * 1024));
+    var encoding = detectTxtEncoding(probe);
+    if (!encoding.startsWith('utf-16')) {
+      final decoder = utf8.decoder.startChunkedConversion(
+        StringConversionSink.fromStringSink(_DiscardTextSink()),
+      );
+      handle.setPositionSync(0);
+      try {
+        var remaining = length;
+        while (remaining > 0) {
+          final bytes = handle.readSync(remaining.clamp(0, 64 * 1024));
+          decoder.add(bytes);
+          remaining -= bytes.length;
+        }
+        decoder.close();
+        encoding = 'utf-8';
+      } on FormatException {
+        encoding = 'gbk';
+      }
+    }
+    final wide = encoding.startsWith('utf-16');
+    final width = wide ? 2 : 1;
+    final titles = <({String title, int lineStart, int contentStart})>[];
+    var lineStart = 0;
+    var lineBytes = <int>[];
+    var tooLong = false;
+    var previousCr = false;
+    handle.setPositionSync(0);
+    var offset = 0;
+    while (offset < length) {
+      final chunk = handle.readSync((length - offset).clamp(0, 64 * 1024));
+      final data = ByteData.sublistView(chunk);
+      for (var i = 0; i + width <= chunk.length; i += width) {
+        final unit = wide
+            ? data.getUint16(
+                i,
+                encoding == 'utf-16le' ? Endian.little : Endian.big,
+              )
+            : chunk[i];
+        final pos = offset + i;
+        if (previousCr && unit == 10) {
+          if (titles.isNotEmpty && titles.last.contentStart == pos) {
+            final last = titles.removeLast();
+            titles.add((
+              title: last.title,
+              lineStart: last.lineStart,
+              contentStart: pos + width,
+            ));
+          }
+          lineStart = pos + width;
+          previousCr = false;
+          continue;
+        }
+        previousCr = false;
+        if (unit == 10 || unit == 13) {
+          if (!tooLong) {
+            final line = decodeTxtWithEncoding(
+              Uint8List.fromList(lineBytes),
+              encoding,
+            ).trim();
+            if (_isChapterTitle(line, pipeline, maxTitleLength)) {
+              titles.add((
+                title: pipeline.chapterTitle(line),
+                lineStart: lineStart,
+                contentStart: pos + width,
+              ));
+            }
+          }
+          lineBytes = [];
+          tooLong = false;
+          lineStart = pos + width;
+          previousCr = unit == 13;
+        } else if (!tooLong) {
+          if (lineBytes.length + width > maxTitleLength * 4 + 4) {
+            lineBytes = [];
+            tooLong = true;
+          } else {
+            lineBytes.addAll(chunk.sublist(i, i + width));
+          }
+        }
+      }
+      offset += chunk.length;
+    }
+    if (!tooLong && lineBytes.isNotEmpty) {
+      final line = decodeTxtWithEncoding(
+        Uint8List.fromList(lineBytes),
+        encoding,
+      ).trim();
+      if (_isChapterTitle(line, pipeline, maxTitleLength))
+        titles.add((
+          title: pipeline.chapterTitle(line),
+          lineStart: lineStart,
+          contentStart: length,
+        ));
+    }
+    final ranges = <({String title, int start, int end})>[];
+    if (titles.isEmpty) {
+      ranges.add((title: '', start: 0, end: length));
+    } else {
+      if (titles.first.lineStart > 0)
+        ranges.add((title: '前言', start: 0, end: titles.first.lineStart));
+      for (var i = 0; i < titles.length; i++) {
+        ranges.add((
+          title: titles[i].title,
+          start: titles[i].contentStart,
+          end: i + 1 < titles.length ? titles[i + 1].lineStart : length,
+        ));
+      }
+    }
+    final chapters = <TxtChapterRef>[];
+    var syntheticNumber = 1;
+    for (final range in ranges) {
+      var position = range.start;
+      while (position < range.end) {
+        handle.setPositionSync(position);
+        final stride = titles.isEmpty
+            ? syntheticChapterBytes.clamp(4, 64 * 1024)
+            : 64 * 1024;
+        final bytes = handle.readSync(
+          (range.end - position).clamp(0, stride + 4),
+        );
+        // Reuse the exact same newline/codepoint boundary policy as byte imports.
+        final blocks = _boundedRanges(bytes, encoding, 0, bytes.length, stride);
+        final block = blocks.first;
+        final body = Uint8List.sublistView(bytes, 0, block.end);
+        final text = decodeTxtWithEncoding(body, encoding);
+        final paragraphs = splitTxtParagraphs(text, pipeline);
+        if (paragraphs.isNotEmpty) {
+          chapters.add(
+            TxtChapterRef(
+              index: chapters.length,
+              title: titles.isEmpty
+                  ? '第${syntheticNumber++}章'
+                  : (position == range.start ? range.title : ''),
+              startOffset: position,
+              byteLength: block.end,
+              paragraphCount: paragraphs.length,
+              charCount: text.length,
+            ),
+          );
+        }
+        position += block.end;
+      }
+    }
+    return TxtCatalog(
+      encoding: encoding,
+      chapters: chapters,
+      status: titles.isEmpty
+          ? TxtCatalogStatus.synthetic
+          : TxtCatalogStatus.ready,
+    );
+  } finally {
+    handle.closeSync();
+  }
+}
+
+class _DiscardTextSink implements StringSink {
+  @override
+  void write(Object? object) {}
+  @override
+  void writeAll(Iterable<Object?> objects, [String separator = '']) {}
+  @override
+  void writeCharCode(int charCode) {}
+  @override
+  void writeln([Object? object = '']) {}
+}
 
 /// Byte-offset catalog for a TXT book.
 class TxtCatalog {
@@ -226,37 +411,43 @@ TxtCatalog scanTxtCatalog(
     );
   }
   final encoding = detectTxtEncoding(bytes);
-  final codec = _codecFor(encoding);
 
   // --- 2. Line scan: find chapter title byte offsets ---
-  final titleAt = <({String title, int contentStart})>[];
+  final titleAt = <({String title, int lineStart, int contentStart})>[];
   var pos = 0;
   while (pos < bytes.length) {
-    var nl = bytes.indexOf(0x0A, pos);
-    if (nl < 0) nl = bytes.length;
+    final boundary = _lineEnd(bytes, pos, encoding);
+    final nl = boundary.end;
     final lineBytes = nl > pos
         ? Uint8List.sublistView(bytes, pos, nl)
         : Uint8List(0);
-    final line = _decodeLine(lineBytes, encoding, codec);
-    if (line != null && _isChapterTitle(line, pipeline, maxTitleLength)) {
+    final line = lineBytes.length > maxTitleLength * 4 + 4
+        ? ''
+        : decodeTxtWithEncoding(lineBytes, encoding).trim();
+    if (_isChapterTitle(line, pipeline, maxTitleLength)) {
       titleAt.add((
         title: pipeline.chapterTitle(line),
-        contentStart: nl < bytes.length ? nl + 1 : nl,
+        lineStart: pos,
+        contentStart: boundary.next,
       ));
     }
-    pos = nl < bytes.length ? nl + 1 : bytes.length;
+    pos = boundary.next;
   }
 
   // --- 3. Build raw chapter ranges ---
   var raw = <({String title, int start, int end})>[];
   if (titleAt.isEmpty) {
-    raw = _syntheticRanges(bytes.length, syntheticChapterBytes);
+    raw = _boundedRanges(
+      bytes,
+      encoding,
+      0,
+      bytes.length,
+      syntheticChapterBytes,
+      synthetic: true,
+    );
   } else {
     // Content sitting before the first title line: Fanqie names it「前言」.
-    final firstTitleLineStart = _lineStartBefore(
-      bytes,
-      titleAt.first.contentStart,
-    );
+    final firstTitleLineStart = titleAt.first.lineStart;
     if (firstTitleLineStart > 0 &&
         _hasVisibleContent(bytes, 0, firstTitleLineStart)) {
       raw.add((title: '前言', start: 0, end: firstTitleLineStart));
@@ -264,7 +455,7 @@ TxtCatalog scanTxtCatalog(
     for (var i = 0; i < titleAt.length; i++) {
       final start = titleAt[i].contentStart;
       final end = i + 1 < titleAt.length
-          ? _lineStartBefore(bytes, titleAt[i + 1].contentStart)
+          ? titleAt[i + 1].lineStart
           : bytes.length;
       raw.add((
         title: titleAt[i].title,
@@ -274,6 +465,19 @@ TxtCatalog scanTxtCatalog(
     }
   }
 
+  // Bound every decode, including novels containing one enormous chapter.
+  raw = [
+    for (final range in raw)
+      ..._boundedRanges(
+        bytes,
+        encoding,
+        range.start,
+        range.end,
+        64 * 1024,
+        title: range.title,
+      ),
+  ];
+
   // --- 4. Measure paragraphs + merge empty chapters (Fanqie t()) ---
   final measured = <TxtChapterRef>[];
   for (var i = 0; i < raw.length; i++) {
@@ -281,14 +485,15 @@ TxtCatalog scanTxtCatalog(
     final length = range.end - range.start;
     final text = length > 0
         ? _sanitize(
-            pipeline.decodePlainText(
+            decodeTxtWithEncoding(
               Uint8List.sublistView(bytes, range.start, range.end),
+              encoding,
             ),
           )
         : '';
     final paragraphs = text.isEmpty
         ? const <String>[]
-        : pipeline.splitParagraphs(text);
+        : splitTxtParagraphs(text, pipeline);
     measured.add(
       TxtChapterRef(
         index: i,
@@ -301,7 +506,9 @@ TxtCatalog scanTxtCatalog(
     );
   }
 
-  final merged = _mergeEmptyChapters(measured);
+  // Empty title-only sections do not contain body paragraphs. Dropping them
+  // preserves the exact offsets/counts of the following readable section.
+  final merged = measured.where((chapter) => !chapter.isEmptyContent).toList();
   final reindexed = [
     for (var i = 0; i < merged.length; i++) merged[i].copyWith(index: i),
   ];
@@ -330,6 +537,30 @@ String detectTxtEncoding(Uint8List bytes) {
   if (bytes.length >= 2 && bytes[0] == 0xfe && bytes[1] == 0xff) {
     return 'utf-16be';
   }
+  // BOM-less UTF-16 with ASCII/line breaks has NULs concentrated on one
+  // byte lane. Require strong evidence to avoid treating ordinary GBK as wide.
+  var evenNulls = 0;
+  var oddNulls = 0;
+  final probeLength = bytes.length.clamp(0, 4096);
+  for (var i = 0; i < probeLength; i++) {
+    if (bytes[i] == 0) {
+      if (i.isEven) {
+        evenNulls++;
+      } else {
+        oddNulls++;
+      }
+    }
+  }
+  if (oddNulls >= 4 &&
+      oddNulls > evenNulls * 10 &&
+      oddNulls * 32 >= probeLength) {
+    return 'utf-16le';
+  }
+  if (evenNulls >= 4 &&
+      evenNulls > oddNulls * 10 &&
+      evenNulls * 32 >= probeLength) {
+    return 'utf-16be';
+  }
   if (bytes.length >= 3 &&
       bytes[0] == 0xef &&
       bytes[1] == 0xbb &&
@@ -352,7 +583,11 @@ String decodeTxtWithEncoding(Uint8List bytes, String encoding) {
     case 'utf-16le':
     case 'utf-16be':
       final endian = encoding == 'utf-16le' ? Endian.little : Endian.big;
-      final body = bytes.length >= 2 ? bytes.sublist(2) : bytes;
+      final hasBom =
+          bytes.length >= 2 &&
+          ((bytes[0] == 0xff && bytes[1] == 0xfe) ||
+              (bytes[0] == 0xfe && bytes[1] == 0xff));
+      final body = hasBom ? Uint8List.sublistView(bytes, 2) : bytes;
       final units = <int>[];
       final data = ByteData.sublistView(body);
       for (var i = 0; i + 1 < body.length; i += 2) {
@@ -369,15 +604,23 @@ String decodeTxtWithEncoding(Uint8List bytes, String encoding) {
 
 String _sanitize(String text) => text.replaceAll('﻿', '').replaceAll('　', ' ');
 
-Object _codecFor(String encoding) => encoding;
-
-String? _decodeLine(Uint8List lineBytes, String encoding, Object _) {
-  if (lineBytes.isEmpty) return '';
-  try {
-    return decodeTxtWithEncoding(lineBytes, encoding).trim();
-  } catch (_) {
-    return null;
+/// Bound layout work for TXT files with no line breaks. Unicode surrogate
+/// pairs remain intact, and scanning and seeking use exactly the same splits.
+List<String> splitTxtParagraphs(String text, HtmlTextPipeline pipeline) {
+  final result = <String>[];
+  for (final paragraph in pipeline.splitParagraphs(text)) {
+    var start = 0;
+    while (start < paragraph.length) {
+      var end = (start + 2048).clamp(start, paragraph.length);
+      if (end < paragraph.length) {
+        final last = paragraph.codeUnitAt(end - 1);
+        if (last >= 0xd800 && last <= 0xdbff) end--;
+      }
+      result.add(paragraph.substring(start, end));
+      start = end;
+    }
   }
+  return result;
 }
 
 bool _isChapterTitle(
@@ -398,104 +641,100 @@ bool _isChapterTitle(
   return HtmlTextPipeline.chapterPattern.hasMatch(value);
 }
 
-List<({String title, int start, int end})> _syntheticRanges(
-  int totalBytes,
-  int stride,
-) {
-  final ranges = <({String title, int start, int end})>[];
-  if (totalBytes <= 0) return ranges;
-  final step = stride < 1 ? 1 : stride;
-  var offset = 0;
+({int end, int next}) _lineEnd(Uint8List bytes, int start, String encoding) {
+  final wide = encoding.startsWith('utf-16');
+  final step = wide ? 2 : 1;
+  final data = ByteData.sublistView(bytes);
+  int unit(int pos) => wide
+      ? data.getUint16(pos, encoding == 'utf-16le' ? Endian.little : Endian.big)
+      : bytes[pos];
+  for (var pos = start; pos + step <= bytes.length; pos += step) {
+    final value = unit(pos);
+    if (value != 10 && value != 13) continue;
+    var next = pos + step;
+    if (value == 13 && next + step <= bytes.length && unit(next) == 10) {
+      next += step;
+    }
+    return (end: pos, next: next);
+  }
+  return (end: bytes.length, next: bytes.length);
+}
+
+List<({String title, int start, int end})> _boundedRanges(
+  Uint8List bytes,
+  String encoding,
+  int start,
+  int end,
+  int stride, {
+  String title = '',
+  bool synthetic = false,
+}) {
+  final result = <({String title, int start, int end})>[];
+  final step = stride < 4 ? 4 : stride;
+  var pos = start;
   var number = 1;
-  while (offset < totalBytes) {
-    var end = offset + step;
-    if (end > totalBytes) end = totalBytes;
-    ranges.add((title: '第$number章', start: offset, end: end));
-    offset = end;
-    number++;
-  }
-  return ranges;
-}
-
-/// Merges chapters that carry a title but no readable content into the next
-/// one (Fanqie `t()`). The empty chapter's title is dropped; its byte range is
-/// absorbed so nothing is skipped when seeking. Trailing empty chapters are
-/// dropped.
-List<TxtChapterRef> _mergeEmptyChapters(List<TxtChapterRef> chapters) {
-  if (chapters.length <= 1) return chapters;
-  final result = <TxtChapterRef>[];
-  var i = 0;
-  while (i < chapters.length) {
-    if (!chapters[i].isEmptyContent) {
-      result.add(chapters[i]);
-      i++;
-      continue;
+  while (pos < end) {
+    var limit = (pos + step).clamp(pos, end);
+    if (limit < end) {
+      // Prefer a complete line within this bounded window.
+      final wide = encoding.startsWith('utf-16');
+      final width = wide ? 2 : 1;
+      var newline = -1;
+      final data = ByteData.sublistView(bytes);
+      for (var i = pos; i + width <= limit; i += width) {
+        final value = wide
+            ? data.getUint16(
+                i,
+                encoding == 'utf-16le' ? Endian.little : Endian.big,
+              )
+            : bytes[i];
+        if (value == 10) newline = i + width;
+      }
+      if (newline > pos) {
+        limit = newline;
+      } else if (wide) {
+        limit -= (limit - pos) % 2;
+        final previous = data.getUint16(
+          limit - 2,
+          encoding == 'utf-16le' ? Endian.little : Endian.big,
+        );
+        if (previous >= 0xd800 && previous <= 0xdbff) limit -= 2;
+      } else if (encoding == 'utf-8') {
+        while (limit > pos && bytes[limit] >= 0x80 && bytes[limit] <= 0xbf) {
+          limit--;
+        }
+      } else {
+        // GBK lead/trail bytes must be walked from a known boundary.
+        var i = pos;
+        var safe = pos;
+        while (i < limit) {
+          final size = bytes[i] >= 0x81 && bytes[i] <= 0xfe ? 2 : 1;
+          if (i + size > limit) break;
+          i += size;
+          safe = i;
+        }
+        limit = safe;
+      }
     }
-    // Collect a run of empty chapters and fold them into the next non-empty.
-    var j = i + 1;
-    while (j < chapters.length && chapters[j].isEmptyContent) {
-      j++;
-    }
-    if (j >= chapters.length) break; // trailing empties → drop
-    final target = chapters[j];
-    final start = chapters[i].startOffset;
-    final end = target.startOffset + target.byteLength;
-    result.add(
-      target.copyWith(
-        startOffset: start,
-        byteLength: end > start ? end - start : 0,
-      ),
-    );
-    i = j + 1;
+    result.add((
+      title: synthetic ? '第${number++}章' : (pos == start ? title : ''),
+      start: pos,
+      end: limit,
+    ));
+    pos = limit;
   }
-  return result.isEmpty ? chapters : result;
+  return result;
 }
 
-bool _hasVisibleContent(Uint8List bytes, int start, int end) {
-  if (end <= start) return false;
-  for (var i = start; i < end && i < bytes.length; i++) {
-    final b = bytes[i];
-    // Whitespace only: space, tab, CR, LF.
-    if (b == 0x20 || b == 0x09 || b == 0x0D || b == 0x0A) continue;
-    return true;
-  }
-  return false;
-}
-
-int _lineStartBefore(Uint8List bytes, int contentStart) {
-  // Walk back to just after the previous newline (or 0).
-  var i = contentStart - 1;
-  while (i > 0 && bytes[i - 1] != 0x0A) {
-    i--;
-  }
-  return i < 0 ? 0 : i;
-}
+bool _hasVisibleContent(Uint8List bytes, int start, int end) => bytes
+    .sublist(start, end)
+    .any((b) => b != 0x20 && b != 9 && b != 13 && b != 10);
 
 bool _looksLikeUtf8(List<int> bytes) {
-  const limitProbe = 64 * 1024;
-  final limit = bytes.length < limitProbe ? bytes.length : limitProbe;
-  var index = 0;
-  while (index < limit) {
-    final byte = bytes[index];
-    if (byte <= 0x7f) {
-      index++;
-      continue;
-    }
-    if (byte >= 0xf5) return false;
-    var continuation = 0;
-    if (byte >= 0xe0 && byte <= 0xef) {
-      continuation = 2;
-    } else if (byte >= 0xc0 && byte <= 0xdf) {
-      continuation = 1;
-    } else {
-      return false;
-    }
-    if (index + continuation >= limit) return true;
-    for (var step = 1; step <= continuation; step++) {
-      final next = bytes[index + step];
-      if (next < 0x80 || next > 0xbf) return false;
-    }
-    index += continuation + 1;
+  try {
+    utf8.decode(bytes, allowMalformed: false);
+    return true;
+  } on FormatException {
+    return false;
   }
-  return true;
 }

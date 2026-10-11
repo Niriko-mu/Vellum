@@ -9,20 +9,28 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.core.content.FileProvider
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.EventChannel
 import java.io.File
 
-class MainActivity : FlutterActivity() {
+class MainActivity : AudioServiceActivity() {
     private val channelName = "vellum/device"
     private var channel: MethodChannel? = null
+    private var localBookScanner: LocalBookScanner? = null
 
     /** Volume buttons turn pages instead of changing the volume. */
     private var volumeKeyPaging = false
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val scanner = LocalBookScanner(this)
+        localBookScanner = scanner
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "vellum/local_books")
+            .setMethodCallHandler(scanner::handle)
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "vellum/local_books/scan")
+            .setStreamHandler(scanner)
         val methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
         channel = methodChannel
         methodChannel.setMethodCallHandler { call, result ->
@@ -51,6 +59,16 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (localBookScanner?.activityResult(requestCode, resultCode, data) == true) return
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onDestroy() {
+        localBookScanner?.close()
+        super.onDestroy()
     }
 
     /**

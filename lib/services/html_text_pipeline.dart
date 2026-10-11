@@ -313,7 +313,14 @@ class HtmlTextPipeline {
   }
 
   String htmlToTextFast(String source) {
-    final withInline = source
+    final visible = source.replaceAll(
+      RegExp(
+        r'<(head|script|style)\b[^>]*>[\s\S]*?</\1\s*>',
+        caseSensitive: false,
+      ),
+      '',
+    );
+    final withInline = visible
         .replaceAllMapped(_openBoldTag, (_) => '[[b]]')
         .replaceAllMapped(_closeBoldTag, (_) => '[[/b]]')
         .replaceAllMapped(_openItalicTag, (_) => '[[i]]')
@@ -437,7 +444,6 @@ class HtmlTextPipeline {
 
   /// Byte window used when sniffing UTF-8 validity before falling back to GBK
   /// (Fanqie samples a large window; 64 KiB is a good balance for TXT novels).
-  static const int _utf8ProbeLimit = 64 * 1024;
 
   /// Three-stage plain-text decode, following Fanqie's encoding sniff:
   /// BOM → UTF-8 validity probe → GBK fallback.
@@ -479,34 +485,12 @@ class HtmlTextPipeline {
   /// continuation byte, 0xE0–0xEF by two. Control bytes above 0xF4 are treated
   /// as non-UTF-8 so GB18030/GBK payloads fall through to the GBK decoder.
   bool _looksLikeUtf8(List<int> bytes) {
-    final limit = bytes.length < _utf8ProbeLimit
-        ? bytes.length
-        : _utf8ProbeLimit;
-    var index = 0;
-    while (index < limit) {
-      final byte = bytes[index];
-      if (byte <= 0x7f) {
-        index++;
-        continue;
-      }
-      if (byte >= 0xf5) return false;
-      var continuation = 0;
-      if (byte >= 0xe0 && byte <= 0xef) {
-        continuation = 2;
-      } else if (byte >= 0xc0 && byte <= 0xdf) {
-        continuation = 1;
-      } else {
-        // 0x80–0xBF as a lead byte, or an unexpected 5/6-byte lead, is invalid.
-        return false;
-      }
-      if (index + continuation >= limit) return true;
-      for (var step = 1; step <= continuation; step++) {
-        final next = bytes[index + step];
-        if (next < 0x80 || next > 0xbf) return false;
-      }
-      index += continuation + 1;
+    try {
+      utf8.decode(bytes, allowMalformed: false);
+      return true;
+    } on FormatException {
+      return false;
     }
-    return true;
   }
 
   /// Strips BOM residue and ideographic spaces that break chapter matching and

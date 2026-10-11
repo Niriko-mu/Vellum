@@ -16,11 +16,10 @@ import 'pages/update_sheet.dart';
 
 import 'pages/writing_page.dart';
 
-import 'reader/reader_page.dart';
+import 'reader/book_reading_host.dart';
+import 'pages/book_batch_import_page.dart';
 
 import 'services/book_importer.dart';
-
-import 'services/book_import_service.dart' show BookImportService;
 
 import 'services/book_library.dart';
 import 'services/font_registry.dart';
@@ -448,47 +447,52 @@ class _LibraryShellState extends State<LibraryShell>
     _queueWidgetShelfSync(immediate: true);
   }
 
-  void _setImportStage(String stage) {
-    if (mounted) setState(() => _importStage = stage);
-  }
-
   Future<void> _importBook() async {
     if (_importing) return;
-
-    const importer = BookImportService();
-
-    setState(() {
-      _importing = true;
-
-      _importStage = '正在打开文件选择器…';
-    });
-
+    final scan = await showCupertinoModalPopup<bool>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('导入本地书'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('选择文件（可多选）'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('扫描授权文件夹'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+      ),
+    );
+    if (scan == null || !mounted) return;
+    setState(() => _importing = true);
     try {
-      final result = await importer.importAndPersist(
-        library: _library,
-        existing: _books,
-        onStage: _setImportStage,
+      final updated = await Navigator.of(context).push<List<ImportedBook>>(
+        CupertinoPageRoute(
+          builder: (_) => BookBatchImportPage(
+            library: _library,
+            existing: List.of(_books),
+            scanDirectory: scan,
+          ),
+        ),
       );
-
-      if (result == null) return;
-      final book = result.book;
-      final updated = result.library;
-
+      final latest = updated ?? await _library.load();
       if (!mounted) return;
-
       setState(() {
         _books
           ..clear()
-          ..addAll(updated);
+          ..addAll(latest);
       });
-
-      _queueWidgetShelfSync(currentBookId: book.storageId, immediate: true);
-
-      await _openBook(book);
+      _queueWidgetShelfSync(immediate: true);
     } on BookImportException catch (error) {
       if (mounted) await _showError(error.message);
     } catch (error) {
-      if (mounted) await _showError('导入失败：');
+      if (mounted) await _showError('导入失败：$error');
     } finally {
       if (mounted) {
         setState(() {
@@ -525,6 +529,11 @@ class _LibraryShellState extends State<LibraryShell>
 
   Future<void> _openBook(ImportedBook book) async {
     final full = await _library.loadBookContent(book);
+    final originalPath = book.format == BookFormat.epub
+        ? await _library.originalEpubPath(book.storageId)
+        : null;
+    final hasOriginal =
+        originalPath != null && await File(originalPath).exists();
 
     final state = await _library.loadReadingState(full);
 
@@ -537,8 +546,9 @@ class _LibraryShellState extends State<LibraryShell>
 
     await Navigator.of(context).push(
       CupertinoPageRoute(
-        builder: (_) => ReaderPage(
+        builder: (_) => BookReadingHost(
           book: full,
+          originalPath: hasOriginal ? originalPath : null,
 
           initialState: state,
 

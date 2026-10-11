@@ -1,3 +1,4 @@
+import 'package:vellum/reader/reader_directory_panel_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/pages/notes_import_sheet.dart';
@@ -29,6 +30,19 @@ class _MemoryNotesLibrary extends NotesLibrary {
     _notes
       ..clear()
       ..addAll(notes);
+  }
+}
+
+Future<void> settle(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  final panel = find.byType(ReaderDirectoryPanel);
+  if (panel.evaluate().isNotEmpty) {
+    final state = tester.state<ReaderDirectoryPanelState>(panel);
+    if (state.results.isEmpty && state.searchController.text.length >= 2) {
+      // Worker I/O must run outside the widget test fake clock.
+      await tester.runAsync(() => state.runSearch(state.searchController.text));
+    }
+    await tester.pumpAndSettle();
   }
 }
 
@@ -66,15 +80,15 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await settle(tester);
       return jumps;
     }
 
     Future<void> type(WidgetTester tester, String query) async {
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), query);
-      await tester.pumpAndSettle();
+      await settle(tester);
     }
 
     testWidgets('opening search focuses the field so the keyboard can appear', (
@@ -82,7 +96,7 @@ void main() {
     ) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       final field = tester.widget<CupertinoTextField>(
         find.byType(CupertinoTextField),
@@ -101,13 +115,13 @@ void main() {
     ) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.tap(find.text('取消'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.byType(EditableText), findsNothing);
 
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       final field = tester.widget<EditableText>(find.byType(EditableText));
       expect(field.focusNode.hasFocus, isTrue);
     });
@@ -118,7 +132,7 @@ void main() {
       expect(find.textContaining('2 段 · 2 处'), findsOneWidget);
 
       await tester.tap(find.byIcon(CupertinoIcons.xmark_circle_fill));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       final field = tester.widget<EditableText>(find.byType(EditableText));
       expect(field.focusNode.hasFocus, isTrue);
@@ -130,12 +144,12 @@ void main() {
     ) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       // Deliberately no second tap on the field: this is the platform's own
       // keyboard route, so a field without focus would never see it.
       tester.testTextInput.enterText('天下');
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(find.textContaining('2 段 · 2 处'), findsOneWidget);
       expect(
@@ -149,7 +163,7 @@ void main() {
     ) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       final node = tester
           .widget<EditableText>(find.byType(EditableText))
           .focusNode;
@@ -169,14 +183,14 @@ void main() {
     testWidgets('a deliberate dismissal is not fought', (tester) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       final node = tester
           .widget<EditableText>(find.byType(EditableText))
           .focusNode;
 
       // 取消 closes search; the field must stay gone rather than bouncing back.
       await tester.tap(find.text('取消'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       node.unfocus();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(EditableText), findsNothing);
@@ -190,7 +204,7 @@ void main() {
 
       // 书签 tab has nothing to search.
       await tester.tap(find.text('书签'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.byIcon(CupertinoIcons.search), findsNothing);
     });
 
@@ -199,11 +213,11 @@ void main() {
     ) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('搜索全书内容'), findsOneWidget);
 
       await tester.enterText(find.byType(CupertinoTextField), '天下');
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       // Summary counts paragraphs and occurrences.
       expect(find.textContaining('2 段 · 2 处'), findsOneWidget);
@@ -257,16 +271,16 @@ void main() {
       expect(find.byIcon(CupertinoIcons.chevron_down), findsOneWidget);
 
       await tester.tap(find.byIcon(CupertinoIcons.chevron_down));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('2/2'), findsOneWidget);
 
       // Down again stays put; up walks back.
       await tester.tap(find.byIcon(CupertinoIcons.chevron_down));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('2/2'), findsOneWidget);
 
       await tester.tap(find.byIcon(CupertinoIcons.chevron_up));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('1/2'), findsOneWidget);
     });
 
@@ -286,49 +300,50 @@ void main() {
     ) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(find.text('输入至少 2 个字开始搜索'), findsOneWidget);
       await tester.enterText(find.byType(CupertinoTextField), '天');
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('再输入 1 个字'), findsOneWidget);
     });
 
     testWidgets('the scan waits for a typing pause', (tester) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '天下');
       // Immediately after typing there is no scan result yet.
       await tester.pump();
       expect(find.textContaining('2 段 ·'), findsNothing);
 
       await tester.pump(const Duration(milliseconds: 250));
+      await settle(tester);
       expect(find.textContaining('2 段 · 2 处'), findsOneWidget);
     });
 
     testWidgets('a query with no hits says so', (tester) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '不存在的内容');
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('没有找到「不存在的内容」'), findsOneWidget);
     });
 
     testWidgets('tapping a hit jumps to its paragraph', (tester) async {
       final jumps = await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '文德');
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       // One hit, in the second chapter's paragraph. The chapter name is a group
       // header now, so the row itself is the tap target.
       expect(find.text('第二章 定鼎'), findsOneWidget);
       expect(find.textContaining('第 4 段'), findsOneWidget);
       await tester.tap(find.textContaining('第 4 段'));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(jumps, [3]);
       // The panel leaves search mode so the jump is visible.
@@ -338,12 +353,12 @@ void main() {
     testWidgets('取消 restores the catalogue list', (tester) async {
       await pumpPanel(tester);
       await tester.tap(find.byIcon(CupertinoIcons.search));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '天下');
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       await tester.tap(find.text('取消'));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(find.text('搜索全书内容'), findsNothing);
       expect(find.text('第一章 起兵'), findsOneWidget);
@@ -399,7 +414,7 @@ void main() {
         ),
       );
       await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       return outcome;
     }
 
@@ -448,11 +463,11 @@ void main() {
 
       // Association row → book picker.
       await tester.tap(find.text('未关联笔记').first);
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('选择书籍'), findsOneWidget);
 
       await tester.tap(find.text('资治通鉴'));
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       // Back on the import sheet with the picked book.
       expect(find.text('导入到《资治通鉴》'), findsOneWidget);
@@ -467,7 +482,7 @@ void main() {
       await pumpSheet(tester, import: import, match: match);
 
       await tester.tap(find.text('导入到《史记》'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       // The sheet is gone; the caller received the target book.
       expect(find.text('导入到《史记》'), findsNothing);
     });
@@ -519,11 +534,11 @@ void main() {
       expect(find.text('关联书籍'), findsOneWidget);
 
       await tester.tap(find.text('关联书籍'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text('关联到哪本书'), findsOneWidget);
 
       await tester.tap(find.text('史记'));
-      await tester.pumpAndSettle();
+      await settle(tester);
       await tester.pump(const Duration(milliseconds: 50));
 
       // The note now belongs to the picked book and left the orphan list.

@@ -1,3 +1,4 @@
+import 'package:vellum/reader/reader_directory_panel_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/reader/reader_control_panels.dart';
@@ -50,6 +51,16 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(CupertinoTextField), '天下');
       await tester.pump(const Duration(milliseconds: 250));
+      final searchPanel = find.byType(ReaderDirectoryPanel);
+      if (searchPanel.evaluate().isNotEmpty) {
+        final state = tester.state<ReaderDirectoryPanelState>(
+          searchPanel.first,
+        );
+        await tester.runAsync(
+          () => state.runSearch(state.searchController.text),
+        );
+        await tester.pump();
+      }
     }
   }
 

@@ -6,6 +6,57 @@
 /// long sentence-free runs are hard-cut inside [buildSpeakableSegments].
 library;
 
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show compute;
+import 'book_search.dart' show bookContentPathFor;
+import 'txt_catalog.dart';
+import 'txt_seek_source.dart';
+
+Future<List<SpeakableSegment>> buildSpeakableSegmentsInBackground(
+  List<String> paragraphs,
+) {
+  final message = <String, dynamic>{};
+  if (paragraphs is TxtParagraphList) {
+    message['txtPath'] = paragraphs.source.file.path;
+    message['catalog'] = paragraphs.catalog.toJson();
+  } else if (bookContentPathFor(paragraphs) case final String path) {
+    message['contentPath'] = path;
+  } else {
+    message['paragraphs'] = paragraphs;
+  }
+  return compute(_buildSpeakableWorker, message);
+}
+
+List<SpeakableSegment> _buildSpeakableWorker(Map<String, dynamic> message) {
+  TxtSeekSource? source;
+  try {
+    List<String> paragraphs;
+    if (message['txtPath'] case final String path) {
+      source = TxtSeekSource(
+        file: File(path),
+        catalog: TxtCatalog.fromJson(
+          message['catalog'] as Map<String, dynamic>,
+        ),
+      );
+      paragraphs = TxtParagraphList(source);
+    } else if (message['contentPath'] case final String path) {
+      final raw =
+          jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
+      paragraphs = (raw['paragraphs'] as List<dynamic>).cast<String>();
+    } else {
+      paragraphs = message['paragraphs'] as List<String>;
+    }
+    return buildSpeakableSegments(
+      paragraphs,
+      maxSegments: 50000,
+      maxTotalChars: 8 * 1024 * 1024,
+    );
+  } finally {
+    source?.close();
+  }
+}
+
 class SpeakableSegment {
   const SpeakableSegment({
     required this.paragraphIndex,
@@ -48,14 +99,22 @@ final RegExp _sentenceEnd = RegExp(r'[。！？!?…；;]["\x27”’)\]]?');
 List<SpeakableSegment> buildSpeakableSegments(
   List<String> paragraphs, {
   int maxChars = 1800,
+  int? maxSegments,
+  int? maxTotalChars,
 }) {
   final segments = <SpeakableSegment>[];
+  var totalChars = 0;
   for (var index = 0; index < paragraphs.length; index++) {
     final text = speakableText(paragraphs[index]);
     if (text.isEmpty) continue;
     var sentenceIndex = 0;
     for (final sentence in _splitSentences(text, maxChars)) {
       if (sentence.isEmpty) continue;
+      totalChars += sentence.length;
+      if ((maxSegments != null && segments.length >= maxSegments) ||
+          (maxTotalChars != null && totalChars > maxTotalChars)) {
+        throw const FormatException('听书内容超过安全大小，请将电子书拆分后朗读。');
+      }
       segments.add(
         SpeakableSegment(
           paragraphIndex: index,
@@ -90,7 +149,11 @@ List<SpeakableSegment> buildSpeakableSegments(
 }
 
 bool _isSpace(int unit) =>
-    unit == 0x20 || unit == 0x09 || unit == 0x0a || unit == 0x0d || unit == 0x3000;
+    unit == 0x20 ||
+    unit == 0x09 ||
+    unit == 0x0a ||
+    unit == 0x0d ||
+    unit == 0x3000;
 
 /// Splits [text] on sentence ends; a terminator-free run is hard-cut at
 /// [maxChars].
