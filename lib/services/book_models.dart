@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
 import 'txt_catalog.dart';
+import 'lazy_paragraphs.dart';
 
 enum BookFormat { epub, mobi, txt }
 
@@ -61,13 +62,17 @@ class ImportedBook {
 
   /// `inline` — paragraphs live in the content JSON (EPUB/MOBI, legacy TXT).
   /// `seek` — paragraphs are served from the source file + [catalog].
+  /// `chunked` — MOBI/EPUB body blocks and images are served from disk.
   final String contentMode;
 
   bool get usesSeek => contentMode == 'seek' && catalog != null;
+  bool get usesLazyContent => usesSeek || contentMode == 'chunked';
 
   /// Total decoded characters — O(1) when a TXT catalog is present, so the
   /// reader does not have to iterate every paragraph at open.
   int get totalCharCount {
+    final body = paragraphs;
+    if (body is LazyParagraphs) return body.totalCharacters;
     final catalogChars = catalog?.totalCharCount ?? 0;
     if (catalogChars > 0) return catalogChars;
     var total = 0;

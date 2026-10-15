@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:crypto/crypto.dart';
 import 'book_importer.dart';
 import 'book_library.dart';
+import 'chunked_book_store.dart';
+import 'book_cover.dart';
 import 'txt_catalog.dart' show scanTxtCatalogFile;
 
 class ImportProgress {
@@ -191,10 +193,11 @@ Future<ImportedBook> decodeAndPersistBook(Map<String, dynamic> message) async {
     throw const BookImportException('书架已满（上限 200 本），请先删除部分书籍。');
   }
   stage('正在解析章节与正文…');
-  final book = const BookImporter().decode(
+  var book = const BookImporter().decode(
     filename: message['filename'] as String,
     bytes: bytes,
   );
+  book = book.copyWith(coverBytes: optimizeBookCover(book.coverBytes));
   port?.send(const ImportProgress('解析完成，正在保存…', 0.7));
   final root = Directory(message['storageDirectory'] as String);
   await root.create(recursive: true);
@@ -209,10 +212,7 @@ Future<ImportedBook> decodeAndPersistBook(Map<String, dynamic> message) async {
       (sink) async => sink.write(jsonEncode(book.catalog!.toJson())),
     );
   } else {
-    await _replaceFile(
-      '${root.path}/$stem.json',
-      (sink) async => writeBookContentJson(book, sink.write),
-    );
+    await writeChunkedBook(book, '${root.path}/$stem.json');
   }
   if (format == BookFormat.epub) {
     await _replaceFile(
@@ -221,7 +221,9 @@ Future<ImportedBook> decodeAndPersistBook(Map<String, dynamic> message) async {
     );
   }
   port?.send(const ImportProgress('文件已保存，正在提交书架…', 0.9));
-  return book.asIndexShell();
+  return book
+      .copyWith(contentMode: book.usesSeek ? 'seek' : 'chunked')
+      .asIndexShell();
 }
 
 Future<void> _worker(Map<String, dynamic> message) async {

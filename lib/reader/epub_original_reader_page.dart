@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../services/book_models.dart';
+import '../services/chunked_book_store.dart';
 import '../services/library_models.dart';
 import '../services/notes_library.dart';
 import '../services/epub_original_service.dart';
@@ -15,12 +15,10 @@ String _anchor(String text) =>
     String.fromCharCodes(text.replaceAll(RegExp(r'\s+'), '').runes.take(80));
 
 Map<String, int> _readAnchors(String path) {
-  final json = jsonDecode(File(path).readAsStringSync()) as Map;
-  final paragraphs = json['paragraphs'] as List? ?? [];
+  final paragraphs = readPersistedParagraphs(path);
   return {
     for (var i = 0; i < paragraphs.length; i++)
-      if ((paragraphs[i] as String).trim().isNotEmpty)
-        _anchor(paragraphs[i] as String): i,
+      if (paragraphs[i].trim().isNotEmpty) _anchor(paragraphs[i]): i,
   };
 }
 

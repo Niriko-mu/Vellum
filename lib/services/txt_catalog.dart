@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:io';
 
-import 'package:charset/charset.dart' show gbk;
+import 'gb18030.dart';
 
 import 'html_text_pipeline.dart';
 
@@ -595,7 +595,8 @@ String decodeTxtWithEncoding(Uint8List bytes, String encoding) {
       }
       return _sanitize(String.fromCharCodes(units));
     case 'gbk':
-      return _sanitize(gbk.decode(bytes, allowMalformed: true));
+    case 'gb18030':
+      return _sanitize(decodeGb18030(bytes));
     case 'utf-8':
     default:
       return _sanitize(utf8.decode(bytes, allowMalformed: true));
@@ -704,11 +705,11 @@ List<({String title, int start, int end})> _boundedRanges(
           limit--;
         }
       } else {
-        // GBK lead/trail bytes must be walked from a known boundary.
+        // Walk GBK pairs and GB18030 four-byte sequences from a known boundary.
         var i = pos;
         var safe = pos;
         while (i < limit) {
-          final size = bytes[i] >= 0x81 && bytes[i] <= 0xfe ? 2 : 1;
+          final size = gb18030SequenceLength(bytes, i);
           if (i + size > limit) break;
           i += size;
           safe = i;

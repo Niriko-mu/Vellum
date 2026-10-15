@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/cupertino.dart';
 
 import '../services/book_importer.dart';
+import '../services/lazy_paragraphs.dart';
 import '../util/text_slices.dart';
 import 'reader_markup.dart';
 import 'reader_models.dart';
@@ -393,6 +394,7 @@ class ProgressiveBookPager {
 
   /// Total characters in the book.
   int _countChars() {
+    if (book.usesLazyContent) return book.totalCharCount;
     final total = book.paragraphs.length;
     var sum = 0;
     for (var i = 0; i < total; i++) {
@@ -403,6 +405,10 @@ class ProgressiveBookPager {
 
   /// Characters before [paragraphIndex].
   int _charsBefore(int paragraphIndex) {
+    final paragraphs = book.paragraphs;
+    if (paragraphs is LazyParagraphs) {
+      return paragraphs.charactersBefore(paragraphIndex);
+    }
     final limit = paragraphIndex.clamp(0, book.paragraphs.length);
     var sum = 0;
     for (var i = 0; i < limit; i++) {
@@ -513,7 +519,7 @@ class ProgressiveBookPager {
     final availableHeight = _config.usableHeight;
     final contentWidth = _config.contentWidth;
     final source = book.paragraphs[index];
-    final hasImage = book.imageBytes[index] != null;
+    final hasImage = book.imageBytes.containsKey(index);
     final hasBlockImage =
         hasImage && ReaderMarkup.isStandaloneImageParagraph(source);
     final hasLink = book.linkTargets[index] != null;

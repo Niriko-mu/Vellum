@@ -8,6 +8,13 @@ const _pipeline = HtmlTextPipeline();
 /// Titles are cleaned here rather than only in the decoders, so books imported
 /// before that cleanup existed are repaired as well.
 List<MapEntry<int, String>> chapterEntries(ImportedBook book) {
+  // Lazy books already had TOC cleanup performed in the import/migration
+  // worker. Re-running anchor repair here would read every chapter at open.
+  if (book.usesLazyContent) {
+    return [
+      for (final e in book.tocEntries) MapEntry(e.paragraphIndex, e.title),
+    ];
+  }
   if (book.tocEntries.isNotEmpty) {
     final entries = <MapEntry<int, String>>[];
     for (final raw in book.tocEntries) {

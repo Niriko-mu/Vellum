@@ -15,6 +15,9 @@ import 'txt_catalog.dart';
 import 'txt_seek_source.dart';
 import 'book_search.dart';
 import 'library_file_mutex.dart';
+import 'chunked_book_store.dart';
+import 'lazy_paragraphs.dart';
+import 'book_cover.dart';
 
 export 'font_storage.dart';
 export 'library_models.dart';
@@ -46,6 +49,8 @@ void writeBookContentJson(
     ..write(jsonEncode(book.storageId))
     ..write(',"title":')
     ..write(jsonEncode(book.title))
+    ..write(',"author":')
+    ..write(jsonEncode(book.author))
     ..write(',"format":')
     ..write(jsonEncode(book.format.name))
     ..write(',"paragraphs":[');
@@ -189,12 +194,28 @@ ImportedBook _decodeBookContent(Map<String, dynamic> data) {
 /// JSON decoding is CPU-heavy for large novels. Keep it off the UI isolate so
 /// the reader can present its chrome and loading state while the body is being
 /// materialized.
-ImportedBook _decodeBookContentJson(String raw) =>
-    _decodeBookContent(jsonDecode(raw) as Map<String, dynamic>);
-
 /// Reads and decodes a content file inside the worker isolate.
-ImportedBook _loadBookContentFile(String path) =>
-    _decodeBookContentJson(File(path).readAsStringSync());
+Future<ImportedBook> _loadBookContentFile(String path) async {
+  final file = File(path);
+  final backup = File('$path.legacy');
+  if (!await file.exists() && await backup.exists()) {
+    await backup.rename(path);
+  }
+  final data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+  if (data['contentMode'] != 'chunked') {
+    // Retry an interrupted migration, retaining the original JSON until the
+    // complete immutable body and manifest have both been flushed.
+    final body = File('$path.body');
+    if (await body.exists()) await body.delete();
+    await writeChunkedBook(_decodeBookContent(data), path);
+    return openChunkedBook(
+      path,
+      jsonDecode(await file.readAsString()) as Map<String, dynamic>,
+    );
+  }
+  if (await backup.exists()) await backup.delete();
+  return openChunkedBook(path, data);
+}
 
 Future<TxtCatalog> _migrateTxtCatalog(String path) async =>
     scanTxtCatalogFile(path);
@@ -293,8 +314,11 @@ class BookLibrary {
     return result;
   }
 
-  Future<ImportedBook> loadBookContent(ImportedBook book) async {
-    if (book.paragraphs is TxtParagraphList) return book;
+  Future<ImportedBook> loadBookContent(ImportedBook book) =>
+      _locked(() => _loadBookContent(book));
+
+  Future<ImportedBook> _loadBookContent(ImportedBook book) async {
+    if (book.paragraphs is LazyParagraphs) return book;
     if (book.hasContentLoaded && !book.usesSeek) return book;
 
     // Seek-mode TXT: rebuild a paragraph list from catalog + source file.
@@ -347,7 +371,7 @@ class BookLibrary {
 
     if (book.hasContentLoaded) return book;
     final file = await _bookContentFile(book.storageId);
-    if (await file.exists()) {
+    if (await file.exists() || await File('${file.path}.legacy').exists()) {
       try {
         final full = await compute(_loadBookContentFile, file.path);
         registerBookSearchPath(full.paragraphs, file.path);
@@ -371,7 +395,9 @@ class BookLibrary {
     bool clearCoverText = false,
   }) async {
     final updated = book.copyWith(
-      coverBytes: coverBytes,
+      coverBytes: coverBytes == null
+          ? null
+          : await compute(optimizeBookCover, coverBytes),
       coverText: coverText,
       clearCoverImage: clearCoverImage,
       clearCoverText: clearCoverText,
@@ -528,6 +554,7 @@ class BookLibrary {
   /// Seek-mode TXT books persist a raw source file + catalog sidecar instead
   /// of a full paragraphs JSON (Fanqie keeps the original file and seeks).
   Future<void> saveBookContent(ImportedBook book) async {
+    if (book.paragraphs is ChunkedParagraphList) return;
     final dir = await _booksDir();
     if (!await dir.exists()) await dir.create(recursive: true);
 
@@ -782,6 +809,7 @@ class BookLibrary {
         if (!{
           '$stem.src',
           '$stem.json',
+          '$stem.json.body',
           '$stem.catalog.json',
           '$stem.original.epub',
         }.contains(name))
@@ -812,6 +840,10 @@ class BookLibrary {
     if (await original.exists()) await original.delete();
     final content = await _bookContentFile(book.storageId);
     if (await content.exists()) await content.delete();
+    for (final suffix in ['.body', '.body.next', '.next', '.legacy']) {
+      final file = File('${content.path}$suffix');
+      if (await file.exists()) await file.delete();
+    }
     final src = await _bookSourceFile(book.storageId);
     if (await src.exists()) await src.delete();
     final cat = await _bookCatalogFile(book.storageId);
@@ -862,7 +894,7 @@ class BookLibrary {
     if (!await file.exists()) return display;
     try {
       final raw = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      final value = raw[_key(book)];
+      final value = raw[_key(book)] ?? raw[_legacyKey(book)];
       if (value is! Map<String, dynamic>) return display;
       return _mergeProgress(display, ReadingState.fromJson(value));
     } catch (_) {
@@ -897,6 +929,7 @@ class BookLibrary {
       }
     }
     // Progress only — display prefs live in the shared preferences file.
+    states.remove(_legacyKey(book));
     states[_key(book)] = {
       'position': state.position,
       'page': state.page,
@@ -940,6 +973,7 @@ class BookLibrary {
       final states =
           jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       states.remove(_key(book));
+      states.remove(_legacyKey(book));
       await file.writeAsString(jsonEncode(states));
     } catch (_) {}
   }
@@ -1041,7 +1075,8 @@ class BookLibrary {
   Future<void> deleteFontByName(String name) => fonts.deleteFontByName(name);
   Future<void> clearFont() => fonts.clearFont();
 
-  String _key(ImportedBook book) => '${book.format.name}:${book.title}';
+  String _key(ImportedBook book) => book.storageId;
+  String _legacyKey(ImportedBook book) => '${book.format.name}:${book.title}';
 
   Future<Directory> _booksDir() async => Directory(
     '${(await getApplicationDocumentsDirectory()).path}${Platform.pathSeparator}vellum_books',

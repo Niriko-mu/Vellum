@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/widgets.dart';
 
 import '../services/book_importer.dart';
-import '../services/txt_seek_source.dart';
+import '../services/lazy_paragraphs.dart';
 import 'reader_models.dart';
 import 'reader_pagination.dart';
 
@@ -76,7 +76,7 @@ class ReaderPaginationController {
     );
     final watch = Stopwatch()..start();
     final int page;
-    if (safe > anchorFoldParagraphs || (_book.usesSeek && safe > 0)) {
+    if (safe > anchorFoldParagraphs || (_book.usesLazyContent && safe > 0)) {
       pager.paginateFrom(safe, minPages: initialPages);
       page = 0;
     } else {
@@ -176,11 +176,9 @@ class ReaderPaginationController {
         return;
       }
       final paragraphs = _book.paragraphs;
-      if (paragraphs is TxtParagraphList) {
+      if (paragraphs is LazyParagraphs) {
         try {
-          await paragraphs.source.prefetchAroundParagraph(
-            localPager.nextParagraph,
-          );
+          await paragraphs.prefetchAroundParagraph(localPager.nextParagraph);
         } catch (_) {
           _busy = false;
           return;
@@ -199,13 +197,10 @@ class ReaderPaginationController {
           localPager.pageCount < targetPages &&
           sw.elapsedMilliseconds < 12) {
         var sliceSize = 20;
-        if (paragraphs is TxtParagraphList) {
+        if (paragraphs is LazyParagraphs) {
           final next = localPager.nextParagraph;
-          final chapter = paragraphs.catalog.chapterForParagraph(next);
-          if (!paragraphs.source.isCached(chapter.index)) break;
-          final end =
-              paragraphs.catalog.paragraphStartOf(chapter.index) +
-              chapter.paragraphCount;
+          if (!paragraphs.isParagraphCached(next)) break;
+          final end = paragraphs.blockEndForParagraph(next);
           sliceSize = (end - next).clamp(1, 20);
         }
         localPager.paginateSlice(maxParagraphs: sliceSize);
@@ -293,7 +288,7 @@ class ReaderPaginationController {
     }
     if (total > 0 &&
         (paragraphIndex > anchorFoldParagraphs ||
-            (_book.usesSeek && paragraphIndex > pager.nextParagraph))) {
+            (_book.usesLazyContent && paragraphIndex > pager.nextParagraph))) {
       cancel();
       pager.paginateFrom(paragraphIndex, minPages: initialPages);
       return 0;

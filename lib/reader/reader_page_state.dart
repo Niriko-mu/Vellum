@@ -1,4 +1,4 @@
-import '../services/txt_seek_source.dart';
+import '../services/lazy_paragraphs.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -204,6 +204,7 @@ class ReaderPageState extends State<ReaderPage>
     // opens immediately; users can still switch to page mode after opening.
     final largeMobi =
         widget.book.format == BookFormat.mobi &&
+        !widget.book.usesLazyContent &&
         widget.book.paragraphs.length > 5000;
     readingMode = !largeMobi && widget.initialState.mode == 'page'
         ? ReadingMode.page
@@ -264,9 +265,9 @@ class ReaderPageState extends State<ReaderPage>
     loadPaper();
     syncPlatformSettings();
     final paragraphs = widget.book.paragraphs;
-    if (paragraphs is TxtParagraphList) {
+    if (paragraphs is LazyParagraphs) {
       txtReady = false;
-      paragraphs.source
+      paragraphs
           .prefetchAroundParagraph(widget.initialState.paragraphIndex)
           .then(
             (_) {
@@ -439,7 +440,7 @@ class ReaderPageState extends State<ReaderPage>
     // Stops the background pagination loop before it schedules another yield.
     pagination.dispose();
     final paragraphs = widget.book.paragraphs;
-    if (paragraphs is TxtParagraphList) paragraphs.source.close();
+    if (paragraphs is LazyParagraphs) paragraphs.close();
     WidgetsBinding.instance.removeObserver(this);
     tapTimer?.cancel();
     ttsStateSub?.cancel();

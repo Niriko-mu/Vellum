@@ -52,7 +52,10 @@ class TtsCache {
     final file = File(
       '${(await directory()).path}${Platform.pathSeparator}$key.mp3',
     );
-    return await file.exists() ? file : null;
+    if (!await file.exists()) return null;
+    // Pruning uses modified time as the last-use marker, including cache hits.
+    await file.setLastModified(DateTime.now());
+    return file;
   }
 
   /// Persists [bytes] under [key] and prunes the cache to its cap.

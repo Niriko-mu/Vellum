@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/services/book_import_service.dart';
+import 'package:vellum/services/chunked_book_store.dart';
 
 void main() {
   Future<Directory> tempStorage() async =>
@@ -49,7 +50,7 @@ void main() {
     },
   );
 
-  test('inline imports persist content but return only the shelf metadata', () async {
+  test('EPUB imports persist chunks but return only the shelf metadata', () async {
     final storage = await tempStorage();
     addTearDown(() => storage.delete(recursive: true));
     final archive = Archive()
@@ -83,7 +84,7 @@ void main() {
 
     expect(shell.paragraphs, isEmpty);
     expect(shell.metaParagraphCount, 2000);
-    expect(shell.contentMode, 'inline');
+    expect(shell.contentMode, 'chunked');
     final content = File(
       '${storage.path}${Platform.pathSeparator}'
       '${shell.storageId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')}.json',
@@ -93,7 +94,10 @@ void main() {
     expect(original.readAsBytesSync(), bytes);
     final decoded =
         jsonDecode(content.readAsStringSync()) as Map<String, dynamic>;
-    expect((decoded['paragraphs'] as List).length, 2000);
+    expect(decoded.containsKey('paragraphs'), isFalse);
+    expect(decoded['paragraphCount'], 2000);
+    final loaded = openChunkedBook(content.path, decoded);
+    expect(loaded.paragraphs.last, contains('第2000段正文'));
     expect(
       storage.listSync().where((entity) => entity.path.endsWith('.importing')),
       isEmpty,

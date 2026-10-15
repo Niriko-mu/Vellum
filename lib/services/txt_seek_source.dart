@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show compute;
 
 import 'html_text_pipeline.dart';
 import 'txt_catalog.dart';
+import 'lazy_paragraphs.dart';
 
 /// Chapter-at-a-time text cache backed by a seekable TXT source file.
 ///
@@ -139,13 +140,51 @@ class TxtSeekSource {
 /// Drop-in replacement for `ImportedBook.paragraphs` on seek-mode TXT books:
 /// `length` is O(1) from the catalog; `operator []` seeks and decodes only the
 /// chapter that owns the paragraph.
-class TxtParagraphList extends ListBase<String> {
+class TxtParagraphList extends ListBase<String> implements LazyParagraphs {
   TxtParagraphList(this.source);
 
   final TxtSeekSource source;
   final Map<int, int> _chapterStart = {};
 
   TxtCatalog get catalog => source.catalog;
+
+  @override
+  Future<void> prefetchAroundParagraph(int index) =>
+      source.prefetchAroundParagraph(index);
+
+  @override
+  bool isParagraphCached(int index) =>
+      source.isCached(catalog.chapterForParagraph(index).index);
+
+  @override
+  int blockEndForParagraph(int index) {
+    final chapter = catalog.chapterForParagraph(index);
+    return catalog.paragraphStartOf(chapter.index) + chapter.paragraphCount;
+  }
+
+  @override
+  int get totalCharacters => catalog.totalCharCount;
+
+  @override
+  int charactersBefore(int index) {
+    var count = 0;
+    for (final chapter in catalog.chapters) {
+      final start = catalog.paragraphStartOf(chapter.index);
+      if (start >= index) break;
+      if (start + chapter.paragraphCount <= index) {
+        count += chapter.charCount;
+      } else {
+        for (var i = start; i < index; i++) {
+          count += this[i].length;
+        }
+        break;
+      }
+    }
+    return count;
+  }
+
+  @override
+  void close() => source.close();
 
   @override
   int get length => catalog.totalParagraphs;

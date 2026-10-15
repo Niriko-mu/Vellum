@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vellum/services/writing_library.dart';
 import 'package:vellum/vellum.dart';
 
 /// In-memory library so the editor can auto-save without path_provider.
@@ -60,6 +59,84 @@ void main() {
     expect(find.text('第一段'), findsOneWidget);
     expect(find.textContaining('字'), findsWidgets);
   });
+
+  testWidgets('draft search matches body text and recovers when cleared', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final documents = [
+      WritingDocument(
+        id: 'one',
+        title: '第一篇',
+        body: '海边的灯塔',
+        createdAt: now,
+        updatedAt: now,
+      ),
+      WritingDocument(
+        id: 'two',
+        title: '第二篇',
+        body: '山间的来信',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ];
+    await tester.pumpWidget(
+      CupertinoApp(home: WritingPage(initialDocuments: documents)),
+    );
+    await tester.enterText(find.byType(CupertinoSearchTextField), '灯塔');
+    await tester.pumpAndSettle();
+    expect(find.text('第一篇'), findsOneWidget);
+    expect(find.text('第二篇'), findsNothing);
+    await tester.enterText(find.byType(CupertinoSearchTextField), '无匹配的文字');
+    await tester.pumpAndSettle();
+    expect(find.text('未找到相关文稿'), findsOneWidget);
+    await tester.enterText(find.byType(CupertinoSearchTextField), '');
+    await tester.pumpAndSettle();
+    expect(find.text('第一篇'), findsOneWidget);
+    expect(find.text('第二篇'), findsOneWidget);
+  });
+
+  testWidgets(
+    'writing supports narrow dark screens with large text and keyboard',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final now = DateTime.now();
+      final doc = WritingDocument(
+        id: 'narrow',
+        title: '窄屏长标题测试文稿',
+        body: '正文内容。' * 40,
+        createdAt: now,
+        updatedAt: now,
+      );
+      Widget shell(Widget child, {bool keyboard = false}) => CupertinoApp(
+        theme: const CupertinoThemeData(brightness: Brightness.dark),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: const TextScaler.linear(1.7),
+            viewInsets: EdgeInsets.only(bottom: keyboard ? 240 : 0),
+          ),
+          child: child!,
+        ),
+        home: child,
+      );
+      await tester.pumpWidget(shell(WritingPage(initialDocuments: [doc])));
+      await tester.pumpAndSettle();
+      expect(find.text(doc.title), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(
+        shell(
+          WritingEditorPage(document: doc, library: _MemoryWritingLibrary()),
+          keyboard: true,
+        ),
+      );
+      await tester.pump();
+      expect(find.byIcon(CupertinoIcons.textformat_size), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('edits auto-save after a typing pause, no save button', (
     tester,

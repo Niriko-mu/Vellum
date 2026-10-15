@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../services/book_library.dart';
-import '../services/txt_seek_source.dart';
+import '../services/lazy_paragraphs.dart';
 import 'reader_models.dart';
 import 'reader_pagination.dart';
 import 'reader_page_pagination_controller.dart';
@@ -377,8 +377,8 @@ extension ReaderPagePagination on ReaderPageState {
       if (totalParas <= 0) return;
       final para = (target * (totalParas - 1)).round().clamp(0, totalParas - 1);
       final paragraphs = widget.book.paragraphs;
-      if (paragraphs is TxtParagraphList) {
-        await paragraphs.source.prefetchAroundParagraph(para);
+      if (paragraphs is LazyParagraphs) {
+        await paragraphs.prefetchAroundParagraph(para);
         if (!mounted || generation != jumpGeneration) return;
       }
       // Past the anchor threshold this jumps the pagination window to the target
@@ -563,8 +563,8 @@ extension ReaderPagePagination on ReaderPageState {
       }
     }
     final paragraphs = widget.book.paragraphs;
-    if (paragraphs is TxtParagraphList) {
-      await paragraphs.source.prefetchAroundParagraph(target);
+    if (paragraphs is LazyParagraphs) {
+      await paragraphs.prefetchAroundParagraph(target);
       if (!mounted || generation != jumpGeneration) return;
     }
     if (readingMode == ReadingMode.page) {

@@ -6,12 +6,12 @@
 /// long sentence-free runs are hard-cut inside [buildSpeakableSegments].
 library;
 
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show compute;
 import 'book_search.dart' show bookContentPathFor;
 import 'txt_catalog.dart';
 import 'txt_seek_source.dart';
+import 'chunked_book_store.dart';
 
 Future<List<SpeakableSegment>> buildSpeakableSegmentsInBackground(
   List<String> paragraphs,
@@ -41,9 +41,7 @@ List<SpeakableSegment> _buildSpeakableWorker(Map<String, dynamic> message) {
       );
       paragraphs = TxtParagraphList(source);
     } else if (message['contentPath'] case final String path) {
-      final raw =
-          jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
-      paragraphs = (raw['paragraphs'] as List<dynamic>).cast<String>();
+      paragraphs = readPersistedParagraphs(path);
     } else {
       paragraphs = message['paragraphs'] as List<String>;
     }

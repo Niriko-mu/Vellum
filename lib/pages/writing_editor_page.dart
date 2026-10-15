@@ -14,6 +14,7 @@ import '../services/writing_library.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/markdown_preview.dart';
 import 'writing_typography_sheet.dart';
+import 'writing_style.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingEditorPage extends StatefulWidget {
@@ -90,17 +91,16 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
   Future<void> _loadFonts() async {
     if (Platform.environment['FLUTTER_TEST'] == 'true') return;
     try {
-      final fonts = await _fontStorage
-          .listFonts()
-          .timeout(const Duration(seconds: 2));
+      final fonts = await _fontStorage.listFonts().timeout(
+        const Duration(seconds: 2),
+      );
       if (mounted) setState(() => _installedFonts = fonts);
     } catch (_) {}
   }
 
   /// 小说排版 only applies to 纯文本 drafts. Markdown owns its own rules
   /// (headings, lists, fences), so the novel switch is inert in MD mode.
-  bool get _novelModeActive =>
-      _typo.novelMode && _format == WritingFormat.txt;
+  bool get _novelModeActive => _typo.novelMode && _format == WritingFormat.txt;
 
   void _applyTypo(WritingTypography next) {
     final novelTurnedOn = next.novelMode && !_typo.novelMode;
@@ -376,18 +376,55 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
     }
   }
 
+  void _showMoreActions() {
+    FocusScope.of(context).unfocus();
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (sheetContext) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(sheetContext);
+              unawaited(_exportFile());
+            },
+            child: const Text('导出文稿'),
+          ),
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(sheetContext);
+              unawaited(_confirmDelete());
+            },
+            child: const Text('删除文稿'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(sheetContext),
+          child: const Text('取消'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final muted = VellumTheme.mutedOf(context);
     final ink = VellumTheme.inkOf(context);
     final accent = VellumTheme.accentOf(context);
+    final paper = WritingStyle.paper(context);
     final previewDoc = _document.copyWith(
       title: _titleController.text,
       body: _bodyController.text,
       format: _format,
     );
+    final updated = _document.updatedAt.toLocal();
+    final date =
+        '${updated.month}月${updated.day}日 '
+        '${updated.hour.toString().padLeft(2, '0')}:'
+        '${updated.minute.toString().padLeft(2, '0')}';
 
     return CupertinoPageScaffold(
+      backgroundColor: paper,
       navigationBar: CupertinoNavigationBar(
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -397,35 +434,30 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
             if (!context.mounted) return;
             Navigator.pop(context);
           },
-          child: const Text('完成'),
+          child: Text('完成', style: TextStyle(color: accent, fontSize: 16)),
         ),
-        backgroundColor: VellumTheme.shellOf(context),
+        backgroundColor: paper,
         border: null,
-        middle: Text(_format.label),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              minimumSize: const Size(40, 40),
-              onPressed: _showTypoSheet,
-              child: const Icon(CupertinoIcons.textformat_size, size: 20),
-            ),
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              minimumSize: const Size(40, 40),
-              onPressed: _confirmDelete,
-              child: Icon(
-                CupertinoIcons.delete,
-                size: 20,
-                color: VellumTheme.mutedOf(context),
+            if (_canPreview)
+              CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                onPressed: _togglePreview,
+                child: Text(
+                  _previewing ? '编辑' : '预览',
+                  style: TextStyle(color: accent, fontSize: 15),
+                ),
               ),
-            ),
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              minimumSize: const Size(40, 40),
-              onPressed: _exportFile,
-              child: Icon(CupertinoIcons.share_up, size: 20, color: accent),
+            Semantics(
+              label: '更多操作',
+              button: true,
+              child: CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                onPressed: _showMoreActions,
+                child: Icon(CupertinoIcons.ellipsis, size: 24, color: ink),
+              ),
             ),
           ],
         ),
@@ -434,97 +466,59 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CupertinoSlidingSegmentedControl<WritingFormat>(
-                      groupValue: _format,
-                      children: {
-                        for (final format in WritingFormat.values)
-                          format: Text(format.label),
-                      },
-                      onValueChanged: (value) {
-                        if (value != null) _setFormat(value);
-                      },
-                    ),
-                  ),
-                  if (_canPreview) ...[
-                    const SizedBox(width: 10),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: _togglePreview,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _previewing
-                              ? VellumTheme.softAccentOf(context)
-                              : VellumTheme.cardOf(context),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: _previewing
-                                ? accent
-                                : VellumTheme.lineOf(context),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _previewing
-                                  ? CupertinoIcons.pencil
-                                  : CupertinoIcons.eye,
-                              size: 16,
-                              color: _previewing ? accent : muted,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              _previewing ? '编辑' : '预览',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _previewing ? accent : ink,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
               child: CupertinoTextField(
                 controller: _titleController,
                 placeholder: '标题',
                 maxLines: 1,
+                textInputAction: TextInputAction.next,
                 style: TextStyle(
                   color: ink,
-                  fontSize: (_typo.fontSize + 4).clamp(16.0, 32.0),
+                  fontSize: 28,
                   fontFamily: _typo.fontFamily,
                   fontWeight: FontWeight.w600,
+                  height: 1.4,
                 ),
                 placeholderStyle: TextStyle(
-                  color: muted,
-                  fontWeight: FontWeight.w400,
+                  color: muted.withValues(alpha: .65),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w500,
                 ),
                 decoration: const BoxDecoration(),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 8),
               ),
             ),
-            Container(height: 1, color: VellumTheme.lineOf(context)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$date · $_saveStatusText',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: muted, fontSize: 11),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${previewDoc.characterCount} 字',
+                    style: TextStyle(color: muted, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: _previewing
                   ? MarkdownPreview(source: _bodyController.text)
                   : CupertinoTextField(
                       controller: _bodyController,
-                      placeholder: '开始写下……\n支持 Markdown，导出时按所选格式保存。',
-                      placeholderStyle: TextStyle(color: muted, height: 1.5),
+                      placeholder: '写下你的想法…',
+                      placeholderStyle: TextStyle(
+                        color: muted.withValues(alpha: .6),
+                        fontSize: _typo.fontSize,
+                        height: 1.85,
+                      ),
                       maxLines: null,
                       expands: true,
                       textAlignVertical: TextAlignVertical.top,
@@ -534,24 +528,91 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
                         fontSize: _typo.fontSize,
                         fontFamily: _typo.fontFamily,
                         fontWeight: _typo.fontWeight,
-                        height: 1.75,
+                        height: 1.85,
                       ),
                       decoration: const BoxDecoration(),
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                     ),
             ),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
               decoration: BoxDecoration(
+                color: paper,
                 border: Border(
-                  top: BorderSide(color: VellumTheme.lineOf(context)),
+                  top: BorderSide(color: muted.withValues(alpha: .1)),
                 ),
               ),
-              child: Text(
-                '${previewDoc.characterCount} 字 · ${previewDoc.wordCount} 词'
-                ' · $_saveStatusText',
-                style: TextStyle(color: muted, fontSize: 11),
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: constraints.maxWidth - 32,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Semantics(
+                          label: '排版',
+                          button: true,
+                          child: CupertinoButton(
+                            onPressed: _showTypoSheet,
+                            padding: const EdgeInsets.all(10),
+                            child: Icon(
+                              CupertinoIcons.textformat_size,
+                              size: 23,
+                              color: ink,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        CupertinoSlidingSegmentedControl<WritingFormat>(
+                          groupValue: _format,
+                          backgroundColor: WritingStyle.background(context),
+                          thumbColor: WritingStyle.isDark(context)
+                              ? WritingStyle.field(context)
+                              : CupertinoColors.white,
+                          children: {
+                            for (final format in WritingFormat.values)
+                              format: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                child: Text(
+                                  format.label,
+                                  style: TextStyle(
+                                    color: _format == format ? ink : muted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          },
+                          onValueChanged: (value) {
+                            if (value != null) _setFormat(value);
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        Semantics(
+                          label: '收起键盘',
+                          button: true,
+                          child: CupertinoButton(
+                            onPressed: () => FocusScope.of(context).unfocus(),
+                            padding: const EdgeInsets.all(10),
+                            child: Icon(
+                              CupertinoIcons.keyboard_chevron_compact_down,
+                              size: 23,
+                              color: muted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -560,9 +621,3 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
     );
   }
 }
-
-/// Bottom sheet: font, size, weight, and the novel-mode switch.
-///
-/// State is local so every tap paints immediately — the parent only receives
-/// the new value and persists it in the background. Font picking reuses the
-/// reader's [ReaderFontPickerSheet] so imported TTFs look and behave the same.

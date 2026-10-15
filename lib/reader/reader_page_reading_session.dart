@@ -22,16 +22,18 @@ class ReaderReadingSession {
   Stopwatch? _stopwatch;
   Timer? _timer;
   int _unflushedSeconds = 0;
+  bool _disposed = false;
 
   Future<void> loadToday() async {
     if (Platform.environment['FLUTTER_TEST'] == 'true') return;
     try {
       final stats = await service.load().timeout(const Duration(seconds: 2));
-      todaySeconds.value = stats.todaySeconds;
+      if (!_disposed) todaySeconds.value = stats.todaySeconds;
     } catch (_) {}
   }
 
   void start() {
+    if (_disposed) return;
     if (Platform.environment['FLUTTER_TEST'] == 'true') return;
     _stopwatch ??= Stopwatch()..start();
     if (!_stopwatch!.isRunning) _stopwatch!.start();
@@ -57,11 +59,15 @@ class ReaderReadingSession {
     if (seconds <= 0) return;
     _unflushedSeconds = 0;
     service.addSeconds(bookId: bookId, seconds: seconds).then((stats) {
-      todaySeconds.value = stats.todaySeconds;
+      // The final write is allowed to finish after leaving the reader, but
+      // its notifier belongs to the page that has already been disposed.
+      if (!_disposed) todaySeconds.value = stats.todaySeconds;
     });
   }
 
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
     _timer?.cancel();
     _stopwatch?.stop();
     flush();

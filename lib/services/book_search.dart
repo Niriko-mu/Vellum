@@ -8,11 +8,11 @@
 library;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'txt_catalog.dart';
 import 'txt_seek_source.dart';
+import 'chunked_book_store.dart';
 
 final _searchPaths = Expando<String>();
 
@@ -106,9 +106,7 @@ void _searchWorker(Map<String, dynamic> message) {
       );
       paragraphs = TxtParagraphList(source);
     } else if (message['contentPath'] case final String path) {
-      final raw =
-          jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
-      paragraphs = (raw['paragraphs'] as List<dynamic>).cast<String>();
+      paragraphs = readPersistedParagraphs(path);
     } else {
       paragraphs = message['paragraphs'] as List<String>;
     }
