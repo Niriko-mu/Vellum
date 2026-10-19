@@ -20,37 +20,39 @@ Widget renderReaderPage(ReaderPageState state, BuildContext context) =>
     state.renderReaderPage(context);
 
 extension ReaderPageSurfaceRendering on ReaderPageState {
-  ReaderPageSurface readerSurface() => ReaderPageSurface(
-    book: widget.book,
-    readingMode: readingMode,
-    scrollAnchor: scrollAnchor,
-    scrollController: scrollController,
-    pageController: pageController,
-    pageCount: pageCount,
-    pages: pages,
-    currentPage: currentPage,
-    showBookTitle: !pager.isAnchored,
-    sideInset: ReaderPageState.readerSideInset,
-    topInset: ReaderPageState.readerTopInset,
-    bottomInset: ReaderPageState.readerBottomInset,
-    fontSize: fontSize,
-    fontFamily: readerFontFamily,
-    lineSpacing: lineSpacing,
-    fontWeight: readerFontWeight,
-    ink: readerInk,
-    tocParagraphs: tocParagraphs,
-    paragraphKeys: paragraphKeys,
-    highlights: highlights,
-    spokenSentence: spokenSentence,
-    searchHighlight: searchHighlight,
-    noteCountFor: noteCountFor,
-    contextMenuBuilder: contextMenuForParagraph,
-    onOpenNotes: openNotesForParagraph,
-    onJumpToParagraph: jumpToParagraph,
-    onBookmarkPull: handleBookmarkPull,
-    onRestorePage: restorePageWhenReady,
-    onPageChanged: handleSurfacePageChanged,
-  );
+  ReaderPageSurface readerSurface({bool selectable = true}) =>
+      ReaderPageSurface(
+        book: widget.book,
+        readingMode: readingMode,
+        scrollAnchor: scrollAnchor,
+        scrollController: scrollController,
+        pageController: pageController,
+        pageCount: pageCount,
+        pages: pages,
+        currentPage: currentPage,
+        showBookTitle: !pager.isAnchored,
+        sideInset: ReaderPageState.readerSideInset,
+        topInset: ReaderPageState.readerTopInset,
+        bottomInset: ReaderPageState.readerBottomInset,
+        fontSize: fontSize,
+        fontFamily: readerFontFamily,
+        lineSpacing: lineSpacing,
+        fontWeight: readerFontWeight,
+        ink: readerInk,
+        tocParagraphs: tocParagraphs,
+        paragraphKeys: paragraphKeys,
+        highlights: highlights,
+        spokenSentence: spokenSentence,
+        searchHighlight: searchHighlight,
+        noteCountFor: noteCountFor,
+        contextMenuBuilder: contextMenuForParagraph,
+        onOpenNotes: openNotesForParagraph,
+        onJumpToParagraph: jumpToParagraph,
+        onBookmarkPull: handleBookmarkPull,
+        onRestorePage: restorePageWhenReady,
+        onPageChanged: handleSurfacePageChanged,
+        selectable: selectable,
+      );
 
   Widget renderReaderPage(BuildContext context) {
     if (readingMode == ReadingMode.page) {
@@ -614,12 +616,10 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
             ReaderPageState.readerSideInset,
             ReaderPageState.readerBottomInset,
           ),
-          // selectable:true matches the PageView builder exactly. Rendering the
-          // overlay with selectable:false used SelectableText vs Text and let
-          // the two widgets lay out differently — the page visibly "settled"
-          // (paragraph spacing shifted) the moment the animation ended.
-          // The overlay is already wrapped in IgnorePointer.
-          child: readerSurface().buildPage(context, page),
+          // The overlay is already wrapped in IgnorePointer, so selection
+          // semantics add cost without serving a purpose during the turn.
+          // Both overlay pages use the same non-selectable layout.
+          child: readerSurface(selectable: false).buildPage(context, page),
         ),
       ],
     );

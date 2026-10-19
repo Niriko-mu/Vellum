@@ -102,9 +102,9 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
     setState(() {
       _activeFontName = name;
 
-      VellumTheme.fontFamily = _useFontForUi ? family : 'Georgia';
+      VellumTheme.fontFamily = _useFontForUi ? family : 'serif';
 
-      VellumTheme.contentFontFamily = _useFontForContent ? family : 'Georgia';
+      VellumTheme.contentFontFamily = _useFontForContent ? family : 'serif';
     });
 
     await _library.saveFontPreferences(
@@ -152,9 +152,9 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
     if (_activeFontName == name) {
       _activeFontName = '';
 
-      VellumTheme.fontFamily = 'Georgia';
+      VellumTheme.fontFamily = 'serif';
 
-      VellumTheme.contentFontFamily = 'Georgia';
+      VellumTheme.contentFontFamily = 'serif';
 
       await _library.saveFontPreferences(const FontPreferences());
     }
@@ -169,16 +169,16 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
   }) async {
     final family = _activeFontName.isNotEmpty
         ? 'Font_${_activeFontName.hashCode.abs()}'
-        : 'Georgia';
+        : 'serif';
 
     setState(() {
       _useFontForUi = useForUi;
 
       _useFontForContent = useForContent;
 
-      VellumTheme.fontFamily = useForUi ? family : 'Georgia';
+      VellumTheme.fontFamily = useForUi ? family : 'serif';
 
-      VellumTheme.contentFontFamily = useForContent ? family : 'Georgia';
+      VellumTheme.contentFontFamily = useForContent ? family : 'serif';
     });
 
     await _library.saveFontPreferences(
@@ -218,7 +218,7 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
 
       fontFamily: _useFontForUi && _activeFontName.isNotEmpty
           ? 'Font_${_activeFontName.hashCode.abs()}'
-          : 'Georgia',
+          : 'serif',
     ),
 
     home: LibraryShell(

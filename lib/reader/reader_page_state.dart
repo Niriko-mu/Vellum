@@ -116,6 +116,8 @@ class ReaderPageState extends State<ReaderPage>
   int batteryLevel = -1;
   Timer? batteryRefreshTimer;
   Timer? saveTimer;
+  Timer? scrollParagraphTimer;
+  int? pendingScrollParagraph;
   Future<void> saveQueue = Future<void>.value();
   DateTime? readerPointerDownAt;
   Offset? readerPointerDownPosition;
@@ -244,9 +246,7 @@ class ReaderPageState extends State<ReaderPage>
               ? 0
               : widget.book.paragraphs.length - 1,
         );
-        if (clamped != currentParagraph) {
-          setState(() => currentParagraph = clamped);
-        }
+        _scheduleScrollParagraph(clamped);
       });
     pageController = PageController()..addListener(scheduleSave);
     loadBatteryLevel();
@@ -449,6 +449,7 @@ class ReaderPageState extends State<ReaderPage>
     batteryRefreshTimer?.cancel();
     readingSession.dispose();
     saveTimer?.cancel();
+    scrollParagraphTimer?.cancel();
     bookmarkNoticeTimer?.cancel();
     saveState();
     // Release the window-level reader settings.
@@ -758,13 +759,29 @@ class ReaderPageState extends State<ReaderPage>
     saveTimer = Timer(const Duration(milliseconds: 350), saveState);
   }
 
+  /// Scroll notifications arrive every frame. Rebuilding the entire reader
+  /// (including visible selectable paragraphs and overlays) for every one of
+  /// them makes a fast fling compete with rasterization on mid-range phones.
+  /// The paragraph index only drives chrome/progress, so update it at most
+  /// every 80 ms while scrolling and keep the latest value for the next save.
+  void _scheduleScrollParagraph(int value) {
+    pendingScrollParagraph = value;
+    if (scrollParagraphTimer?.isActive ?? false) return;
+    scrollParagraphTimer = Timer(const Duration(milliseconds: 80), () {
+      scrollParagraphTimer = null;
+      final next = pendingScrollParagraph;
+      if (next == null || next == currentParagraph || !mounted) return;
+      setState(() => currentParagraph = next);
+    });
+  }
+
   Future<void> saveState() async {
     final callback = widget.onStateChanged;
     if (callback == null) return;
     rememberCurrentChapterPosition();
     final paragraphIndex = readingMode == ReadingMode.page
         ? firstParagraphOfCurrentPage()
-        : currentParagraph;
+        : (pendingScrollParagraph ?? currentParagraph);
     resumeParagraphIndex = paragraphIndex;
     final state = ReadingState(
       fontSize: fontSize,

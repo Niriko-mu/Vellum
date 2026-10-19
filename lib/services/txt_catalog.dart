@@ -609,7 +609,10 @@ String _sanitize(String text) => text.replaceAll('﻿', '').replaceAll('　', ' 
 /// pairs remain intact, and scanning and seeking use exactly the same splits.
 List<String> splitTxtParagraphs(String text, HtmlTextPipeline pipeline) {
   final result = <String>[];
-  for (final paragraph in pipeline.splitParagraphs(text)) {
+  for (final paragraph in pipeline.splitParagraphs(
+    text,
+    preservePhysicalLines: true,
+  )) {
     var start = 0;
     while (start < paragraph.length) {
       var end = (start + 2048).clamp(start, paragraph.length);
@@ -636,10 +639,14 @@ bool _isChapterTitle(
       value.contains('，') ||
       value.contains(',') ||
       value.contains('！') ||
-      value.contains('？')) {
+      value.contains('？') ||
+      value.contains('!') ||
+      value.contains('?')) {
     return false;
   }
-  return HtmlTextPipeline.chapterPattern.hasMatch(value);
+  return HtmlTextPipeline.chapterPattern.hasMatch(value) ||
+      HtmlTextPipeline.subsectionPattern.hasMatch(value) ||
+      HtmlTextPipeline.namedSectionPattern.hasMatch(value);
 }
 
 ({int end, int next}) _lineEnd(Uint8List bytes, int start, String encoding) {

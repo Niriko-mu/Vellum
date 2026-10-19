@@ -6,8 +6,8 @@ import 'package:flutter/cupertino.dart';
 /// independent Fanqie-compatible surfaces so reading comfort is not coupled to
 /// the application's brand theme.
 abstract final class VellumTheme {
-  static String fontFamily = 'Georgia';
-  static String contentFontFamily = 'Georgia';
+  static String fontFamily = 'serif';
+  static String contentFontFamily = 'serif';
 
   // Fanqie reference accent. It remains available for comparing the extracted
   // palette, but VELLUM controls use the shared shell accent below so the

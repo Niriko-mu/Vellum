@@ -86,6 +86,50 @@ void main() {
     expect(book.paragraphs.join(), original);
   });
 
+  test('web novel TXT keeps each physical line as a paragraph', () {
+    final book = const BookImporter().decode(
+      filename: '网文.txt',
+      bytes: Uint8List.fromList(
+        utf8.encode(
+          '书名\n简介内容\n\n第一章：交错的视线\n第一段正文。\n第二段正文。\n\n一、健康检查与衬衫袖扣\n小节正文。\n序言\n开篇正文。',
+        ),
+      ),
+    );
+    expect(book.paragraphs.toList(), [
+      '书名',
+      '简介内容',
+      '第一段正文。',
+      '第二段正文。',
+      '小节正文。',
+      '开篇正文。',
+    ]);
+    expect(book.tocEntries.map((entry) => entry.title).toList(), [
+      '前言',
+      '第一章：交错的视线',
+      '一、健康检查与衬衫袖扣',
+      '序言',
+    ]);
+  });
+
+  test('web novel headings reject sentence-like lines', () {
+    final book = const BookImporter().decode(
+      filename: '网文.txt',
+      bytes: Uint8List.fromList(
+        utf8.encode(
+          '第一章 正式标题\n'
+          '这是正文，不应该被识别为目录。\n'
+          '二、真正的小节\n'
+          '这里是正文。\n'
+          '三、这不是目录，因为它是完整句子。',
+        ),
+      ),
+    );
+    expect(book.tocEntries.map((entry) => entry.title).toList(), [
+      '第一章 正式标题',
+      '二、真正的小节',
+    ]);
+  });
+
   test('GBK synthetic boundaries preserve all characters', () {
     final original = '中文测试' * 3000;
     final book = const BookImporter().decode(

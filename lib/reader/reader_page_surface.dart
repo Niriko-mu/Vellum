@@ -233,70 +233,62 @@ class ReaderPageSurface extends StatelessWidget {
     final page = pageIndex.clamp(0, pages.length - 1);
     final fragments = pages[page];
     return LayoutBuilder(
-      builder: (context, constraints) => ListView(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
-        children: [
-          SizedBox(
-            height: constraints.maxHeight,
-            child: ClipRect(
-              clipBehavior: Clip.hardEdge,
-              child: OverflowBox(
-                alignment: Alignment.topLeft,
-                minHeight: constraints.maxHeight,
-                maxHeight: double.infinity,
-                maxWidth: constraints.maxWidth,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (page == 0 && showBookTitle) _title(),
-                    if (page == 0 && showBookTitle) const SizedBox(height: 30),
-                    for (var index = 0; index < fragments.length; index++)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index == fragments.length - 1
-                              ? 0
-                              : (fragments[index].compactPadding ? 0 : 22),
-                        ),
-                        child: ReaderParagraph(
-                          book: book,
-                          paragraph: fragments[index].text,
-                          paragraphIndex: fragments[index].paragraphIndex,
-                          fontSize: fontSize,
-                          fontFamily: fontFamily,
-                          lineSpacing: lineSpacing,
-                          fontWeight: fontWeight,
-                          ink: ink,
-                          contextMenuBuilder: contextMenuBuilder(
-                            fragments[index].paragraphIndex,
-                          ),
-                          highlights: [
-                            ...?highlights[fragments[index].paragraphIndex],
-                            if (spokenSentence.isNotEmpty) spokenSentence,
-                          ],
-                          searchHighlight: searchHighlight,
-                          isChapterHeading: tocParagraphs.contains(
-                            fragments[index].paragraphIndex,
-                          ),
-                          noteCount: noteCountFor(
-                            fragments[index].paragraphIndex,
-                          ),
-                          onOpenNotes: () =>
-                              onOpenNotes(fragments[index].paragraphIndex),
-                          showImage: fragments[index].showImage,
-                          showLinkAction: fragments[index].showLinkAction,
-                          indentFirstLine: fragments[index].indentFirstLine,
-                          selectable: selectable,
-                          onJumpToParagraph: onJumpToParagraph,
-                        ),
+      builder: (context, constraints) => SizedBox(
+        height: constraints.maxHeight,
+        child: ClipRect(
+          clipBehavior: Clip.hardEdge,
+          child: OverflowBox(
+            alignment: Alignment.topLeft,
+            minHeight: constraints.maxHeight,
+            maxHeight: double.infinity,
+            maxWidth: constraints.maxWidth,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (page == 0 && showBookTitle) _title(),
+                if (page == 0 && showBookTitle) const SizedBox(height: 30),
+                for (var index = 0; index < fragments.length; index++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == fragments.length - 1
+                          ? 0
+                          : (fragments[index].compactPadding ? 0 : 22),
+                    ),
+                    child: ReaderParagraph(
+                      book: book,
+                      paragraph: fragments[index].text,
+                      paragraphIndex: fragments[index].paragraphIndex,
+                      fontSize: fontSize,
+                      fontFamily: fontFamily,
+                      lineSpacing: lineSpacing,
+                      fontWeight: fontWeight,
+                      ink: ink,
+                      contextMenuBuilder: contextMenuBuilder(
+                        fragments[index].paragraphIndex,
                       ),
-                  ],
-                ),
-              ),
+                      highlights: [
+                        ...?highlights[fragments[index].paragraphIndex],
+                        if (spokenSentence.isNotEmpty) spokenSentence,
+                      ],
+                      searchHighlight: searchHighlight,
+                      isChapterHeading: tocParagraphs.contains(
+                        fragments[index].paragraphIndex,
+                      ),
+                      noteCount: noteCountFor(fragments[index].paragraphIndex),
+                      onOpenNotes: () =>
+                          onOpenNotes(fragments[index].paragraphIndex),
+                      showImage: fragments[index].showImage,
+                      showLinkAction: fragments[index].showLinkAction,
+                      indentFirstLine: fragments[index].indentFirstLine,
+                      selectable: selectable,
+                      onJumpToParagraph: onJumpToParagraph,
+                    ),
+                  ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

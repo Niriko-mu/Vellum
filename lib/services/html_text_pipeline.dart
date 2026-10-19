@@ -437,6 +437,14 @@ class HtmlTextPipeline {
     r'(章节|章|册|卷|部|回|节|回合|集|篇).*$',
   );
 
+  static final subsectionPattern = RegExp(
+    r'^\s*[一二三四五六七八九十百千万零〇两壹贰叁肆伍陆柒捌玖拾0-9]{1,8}'
+    r'[、.．]\s*.{1,36}$',
+  );
+  static final namedSectionPattern = RegExp(
+    r'^(序章|序言|前言|引子|楔子|尾声|后记|番外|附录|后序|跋|内容简介|作品简介)$',
+  );
+
   /// Max title length accepted when scanning TXT paragraphs for chapters
   /// (Fanqie uses 30; slightly relaxed for real-world titles like
   /// 「第xxx章 章节标题」).
@@ -519,7 +527,9 @@ class HtmlTextPipeline {
           value.contains('？')) {
         continue;
       }
-      if (chapterPattern.hasMatch(value)) {
+      if (chapterPattern.hasMatch(value) ||
+          subsectionPattern.hasMatch(value) ||
+          namedSectionPattern.hasMatch(value)) {
         entries.add(BookTocEntry(title: value, paragraphIndex: index));
       }
     }
@@ -548,11 +558,15 @@ class HtmlTextPipeline {
     return String.fromCharCodes(units);
   }
 
-  List<String> splitParagraphs(String text) {
-    return text
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n')
-        .split(_paragraphBreak)
+  List<String> splitParagraphs(
+    String text, {
+    bool preservePhysicalLines = false,
+  }) {
+    final normalized = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+    final chunks = preservePhysicalLines
+        ? normalized.split('\n')
+        : normalized.split(_paragraphBreak);
+    return chunks
         .map(
           (paragraph) => normalizeReaderMarkup(
             paragraph.replaceAll(_whitespaceRun, ' ').trim(),

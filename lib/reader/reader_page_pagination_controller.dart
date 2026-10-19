@@ -30,7 +30,7 @@ class ReaderPaginationController {
   static const _initialLayout = PageLayoutConfig(
     fontSize: 19,
     lineSpacing: ReaderLineSpacing.standard,
-    fontFamily: 'Georgia',
+    fontFamily: 'serif',
     fontWeight: ReaderFontWeight.regular,
     availableHeight: 600,
     contentWidth: 360,
