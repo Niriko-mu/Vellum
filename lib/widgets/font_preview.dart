@@ -20,6 +20,7 @@ class FontPreview extends StatefulWidget {
     this.compact = false,
     this.ink,
     this.defer = const Duration(milliseconds: 180),
+    this.loadOnMount = true,
     super.key,
   });
 
@@ -33,6 +34,9 @@ class FontPreview extends StatefulWidget {
   /// How long the row must stay on screen before it asks for its font.
   final Duration defer;
 
+  /// Render without registration when used in a catalog row.
+  final bool loadOnMount;
+
   @override
   State<FontPreview> createState() => _FontPreviewState();
 }
@@ -43,14 +47,15 @@ class _FontPreviewState extends State<FontPreview> {
   @override
   void initState() {
     super.initState();
-    _scheduleLoad();
+    if (widget.loadOnMount) _scheduleLoad();
   }
 
   @override
   void didUpdateWidget(covariant FontPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.font.name != widget.font.name ||
-        oldWidget.font.family != widget.font.family) {
+    if (widget.loadOnMount &&
+        (oldWidget.font.name != widget.font.name ||
+            oldWidget.font.family != widget.font.family)) {
       _scheduleLoad();
     }
   }

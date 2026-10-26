@@ -9,7 +9,10 @@ import 'ttf_name_reader.dart';
 
 /// Font file persistence, independent of book storage.
 class FontStorage {
-  const FontStorage();
+  const FontStorage({this.directory});
+
+  /// Explicit root for isolated storage tests and tools.
+  final Directory? directory;
 
   Future<Uint8List?> loadFont() async {
     final file = await _fontFile();
@@ -64,11 +67,7 @@ class FontStorage {
         final family = 'Font_${name.hashCode.abs()}';
         late final String displayName;
         try {
-          final bytes = Uint8List.fromList(await entity.readAsBytes());
-          displayName = resolveImportedFontDisplayName(
-            bytes: bytes,
-            filename: name,
-          );
+          displayName = await readFontDisplayNameFromFile(entity) ?? name;
         } catch (_) {
           displayName = name;
         }
@@ -87,6 +86,56 @@ class FontStorage {
     }
     final file = File('${dir.path}${Platform.pathSeparator}$name.ttf');
     await file.writeAsBytes(bytes, flush: true);
+  }
+
+  /// Copy one source with bounded buffers, validate, then replace the old file.
+  /// A failed replacement restores the previous font instead of truncating it.
+  Future<void> importFont(
+    String name, {
+    String? path,
+    Stream<List<int>>? stream,
+  }) async {
+    if (name.trim().isEmpty ||
+        name.contains(RegExp(r'[/\\\x00-\x1f]')) ||
+        name == '.' ||
+        name == '..') {
+      throw const FormatException('字体文件名无效');
+    }
+    final dir = await _fontsDir();
+    await dir.create(recursive: true);
+    final file = File('${dir.path}${Platform.pathSeparator}$name.ttf');
+    final temporary = await Directory(dir.path).createTemp('.font-import-');
+    final staged = File('${temporary.path}/font.ttf');
+    final previous = File('${temporary.path}/previous.ttf');
+    try {
+      if (path != null && path.isNotEmpty) {
+        await File(path).copy(staged.path);
+      } else if (stream != null) {
+        final sink = staged.openWrite();
+        try {
+          await sink.addStream(stream);
+          await sink.flush();
+        } finally {
+          await sink.close();
+        }
+      } else {
+        throw const FormatException('无法读取字体文件，请重新选择');
+      }
+      await validateFontFile(staged);
+      if (await file.exists()) await file.rename(previous.path);
+      try {
+        await staged.rename(file.path);
+      } catch (_) {
+        if (await previous.exists()) await previous.rename(file.path);
+        rethrow;
+      }
+    } finally {
+      // Keep the recoverable previous file if restoring it itself failed.
+      if (await previous.exists() && !await file.exists()) {
+        await previous.rename(file.path);
+      }
+      await temporary.delete(recursive: true);
+    }
   }
 
   Future<Uint8List?> loadFontByName(String name) async {
@@ -109,9 +158,11 @@ class FontStorage {
 
   Future<File> fontFile() => _fontFile();
 
-  Future<Directory> _fontsDir() async => Directory(
-    '${(await getApplicationDocumentsDirectory()).path}${Platform.pathSeparator}vellum_fonts',
-  );
+  Future<Directory> _fontsDir() async =>
+      directory ??
+      Directory(
+        '${(await getApplicationDocumentsDirectory()).path}${Platform.pathSeparator}vellum_fonts',
+      );
 
   Future<File> _fontFile() async => File(
     '${(await getApplicationDocumentsDirectory()).path}${Platform.pathSeparator}vellum_font.ttf',

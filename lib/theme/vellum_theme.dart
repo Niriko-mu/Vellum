@@ -6,7 +6,8 @@ import 'package:flutter/cupertino.dart';
 /// independent Fanqie-compatible surfaces so reading comfort is not coupled to
 /// the application's brand theme.
 abstract final class VellumTheme {
-  static String fontFamily = 'serif';
+  static const systemUiFontFamily = 'sans-serif';
+  static String fontFamily = systemUiFontFamily;
   static String contentFontFamily = 'serif';
 
   // Fanqie reference accent. It remains available for comparing the extracted
@@ -73,21 +74,21 @@ abstract final class VellumTheme {
       textStyle: TextStyle(
         inherit: false,
         color: shellInk,
-        fontFamily: 'Georgia',
+        fontFamily: systemUiFontFamily,
       ),
       navTitleTextStyle: TextStyle(
         inherit: false,
         color: shellInk,
         fontSize: 17,
         fontWeight: FontWeight.w600,
-        fontFamily: 'Georgia',
+        fontFamily: systemUiFontFamily,
       ),
       navLargeTitleTextStyle: TextStyle(
         inherit: false,
         color: shellInk,
         fontSize: 34,
         fontWeight: FontWeight.w700,
-        fontFamily: 'Georgia',
+        fontFamily: systemUiFontFamily,
       ),
     ),
   );
@@ -102,28 +103,28 @@ abstract final class VellumTheme {
       textStyle: TextStyle(
         inherit: false,
         color: shellDarkInk,
-        fontFamily: 'Georgia',
+        fontFamily: systemUiFontFamily,
       ),
       navTitleTextStyle: TextStyle(
         inherit: false,
         color: shellDarkInk,
         fontSize: 17,
         fontWeight: FontWeight.w600,
-        fontFamily: 'Georgia',
+        fontFamily: systemUiFontFamily,
       ),
       navLargeTitleTextStyle: TextStyle(
         inherit: false,
         color: shellDarkInk,
         fontSize: 34,
         fontWeight: FontWeight.w700,
-        fontFamily: 'Georgia',
+        fontFamily: systemUiFontFamily,
       ),
     ),
   );
 
   static CupertinoThemeData forBrightness(
     Brightness brightness, {
-    String fontFamily = 'Georgia',
+    String fontFamily = systemUiFontFamily,
   }) {
     final base = brightness == Brightness.dark ? dark : light;
     return base.copyWith(

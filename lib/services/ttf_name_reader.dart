@@ -1,5 +1,92 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+
+const _maxNameTableBytes = 1024 * 1024;
+
+bool _isFontSignature(ByteData data) => switch (data.getUint32(0)) {
+  0x00010000 || 0x74727565 || 0x4f54544f || 0x74797031 => true,
+  _ => false,
+};
+
+/// Reads only the SFNT directory (at most 64 KiB), never glyph outlines.
+Future<Uint8List> _fontDirectory(RandomAccessFile file) async {
+  final length = await file.length();
+  if (length < 12) throw const FormatException('字体文件不完整');
+  final header = await file.read(12);
+  final data = ByteData.sublistView(header);
+  final count = data.getUint16(4);
+  if (!_isFontSignature(data) ||
+      count == 0 ||
+      count > 4096 ||
+      12 + count * 16 > length) {
+    throw const FormatException('不是有效的 TTF 字体');
+  }
+  final directory = await file.read(count * 16);
+  if (directory.length != count * 16) {
+    throw const FormatException('字体目录不完整');
+  }
+  return directory;
+}
+
+Future<void> validateFontFile(File source) async {
+  final file = await source.open();
+  try {
+    final directory = await _fontDirectory(file);
+    final data = ByteData.sublistView(directory);
+    final length = await file.length();
+    var hasData = false;
+    for (var at = 0; at < directory.length; at += 16) {
+      final offset = data.getUint32(at + 8);
+      final size = data.getUint32(at + 12);
+      if (size > 0) hasData = true;
+      if (offset > length || size > length - offset) {
+        throw const FormatException('字体数据表损坏');
+      }
+    }
+    if (!hasData) throw const FormatException('字体数据为空');
+  } finally {
+    await file.close();
+  }
+}
+
+/// Build a tiny one-table SFNT for the existing byte parser. Keeping this
+/// bounded also makes listing hundreds of large CJK fonts inexpensive.
+Future<String?> readFontDisplayNameFromFile(File source) async {
+  final file = await source.open();
+  try {
+    final directory = await _fontDirectory(file);
+    final data = ByteData.sublistView(directory);
+    final length = await file.length();
+    for (var at = 0; at < directory.length; at += 16) {
+      if (data.getUint32(at) != 0x6e616d65) continue; // name
+      final offset = data.getUint32(at + 8);
+      final size = data.getUint32(at + 12);
+      if (size < 6 ||
+          size > _maxNameTableBytes ||
+          offset > length ||
+          size > length - offset)
+        return null;
+      await file.setPosition(offset);
+      final table = await file.read(size);
+      if (table.length != size) return null;
+      final bytes = Uint8List(28 + size);
+      final wrapper = ByteData.sublistView(bytes);
+      wrapper.setUint32(0, 0x00010000);
+      wrapper.setUint16(4, 1);
+      wrapper.setUint32(12, 0x6e616d65);
+      wrapper.setUint32(20, 28);
+      wrapper.setUint32(24, size);
+      bytes.setRange(28, bytes.length, table);
+      return readTtfDisplayName(bytes);
+    }
+    return null;
+  } on FormatException {
+    return null;
+  } finally {
+    await file.close();
+  }
+}
 
 /// Resolves the font label exposed to the user.
 ///

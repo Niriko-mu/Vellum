@@ -126,7 +126,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                     style: TextStyle(
                       color: ink,
                       fontFamily: activeFamily.isEmpty
-                          ? 'Georgia'
+                          ? VellumTheme.systemUiFontFamily
                           : activeFamily,
                       fontSize: 19,
                       height: 1.25,
@@ -175,15 +175,18 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                       selected:
                           activeFamily == option.family ||
                           (option.family == 'Default' &&
-                              (activeFamily.isEmpty ||
-                                  activeFamily == 'Georgia')),
+                                  activeFamily ==
+                                      VellumTheme.systemUiFontFamily ||
+                              activeFamily == 'Georgia'),
                       muted: muted,
                       accent: accent,
                       ink: ink,
                       selectedFill: selectedFill,
                       selectedBorder: selectedBorder,
                       onTap: () => onSelectSystemFont(
-                        option.family == 'Default' ? 'Georgia' : option.family,
+                        option.family == 'Default'
+                            ? VellumTheme.systemUiFontFamily
+                            : option.family,
                       ),
                     ),
                   _sectionTitle('我的导入', ink),
@@ -209,6 +212,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                         custom: FontPreview(
                           font: font,
                           compact: true,
+                          loadOnMount: activeFamily == font.family,
                           ink: activeFamily == font.family ? accent : muted,
                         ),
                         onTap: () => onSelectImportedFont(font),

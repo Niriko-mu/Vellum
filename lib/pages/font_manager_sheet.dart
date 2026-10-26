@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 
 import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
-import '../widgets/font_preview.dart';
 
 class FontManagerSheet extends StatelessWidget {
   final List<InstalledFont> installedFonts;
@@ -258,7 +257,16 @@ class _FontCard extends StatelessWidget {
               ),
             ),
 
-            child: FontPreview(font: font, ink: VellumTheme.inkOf(context)),
+            child: Text(
+              '永Aa · 阅读改变生活',
+              style: TextStyle(
+                color: VellumTheme.inkOf(context),
+                fontSize: 20,
+                fontFamily: isActive
+                    ? font.family
+                    : VellumTheme.systemUiFontFamily,
+              ),
+            ),
           ),
 
           // 操作区

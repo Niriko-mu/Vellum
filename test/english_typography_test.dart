@@ -22,10 +22,7 @@ void main() {
 
     test('mixed paragraphs follow the dominant script', () {
       expect(ReaderMarkup.isLatinBody('Hello world 你好'), isTrue);
-      expect(
-        ReaderMarkup.isLatinBody('你好世界，这是一段中文正文。hello'),
-        isFalse,
-      );
+      expect(ReaderMarkup.isLatinBody('你好世界，这是一段中文正文。hello'), isFalse);
     });
 
     test('indent prefix follows script', () {
@@ -81,36 +78,37 @@ void main() {
     expect(span.toPlainText().trim().startsWith('Call me Ishmael'), isTrue);
   });
 
-  testWidgets('Chinese body prose keeps start alignment and two-em indent', (
-    tester,
-  ) async {
-    final book = ImportedBook(
-      title: '夜雨',
-      format: BookFormat.txt,
-      paragraphs: ['他转身走进雨里，再也没有回头。'],
-    );
-    await tester.pumpWidget(
-      CupertinoApp(
-        home: CupertinoPageScaffold(
-          child: ReaderParagraph(
-            book: book,
-            paragraph: book.paragraphs[0],
-            paragraphIndex: 0,
-            fontSize: 24,
-            fontFamily: 'Roboto',
-            lineSpacing: ReaderLineSpacing.standard,
-            fontWeight: ReaderFontWeight.regular,
-            ink: const Color(0xff000000),
-            contextMenuBuilder: (context, state) => const SizedBox.shrink(),
-            selectable: false,
+  testWidgets(
+    'Chinese body prose uses full-width justification and two-em indent',
+    (tester) async {
+      final book = ImportedBook(
+        title: '夜雨',
+        format: BookFormat.txt,
+        paragraphs: ['他转身走进雨里，再也没有回头。'],
+      );
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: CupertinoPageScaffold(
+            child: ReaderParagraph(
+              book: book,
+              paragraph: book.paragraphs[0],
+              paragraphIndex: 0,
+              fontSize: 24,
+              fontFamily: 'Roboto',
+              lineSpacing: ReaderLineSpacing.standard,
+              fontWeight: ReaderFontWeight.regular,
+              ink: const Color(0xff000000),
+              contextMenuBuilder: (context, state) => const SizedBox.shrink(),
+              selectable: false,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    final text = tester.widget<Text>(find.byType(Text).first);
-    expect(text.textAlign, TextAlign.start);
-    final span = text.textSpan! as TextSpan;
-    expect((span.children!.first as TextSpan).text, '　　');
-  });
+      final text = tester.widget<Text>(find.byType(Text).first);
+      expect(text.textAlign, TextAlign.justify);
+      final span = text.textSpan! as TextSpan;
+      expect((span.children!.first as TextSpan).text, '　　');
+    },
+  );
 }

@@ -23,11 +23,14 @@ import 'services/book_importer.dart';
 
 import 'services/book_library.dart';
 import 'services/font_registry.dart';
+import 'services/font_import_service.dart';
 import 'services/notes_import.dart';
 import 'services/reading_stats.dart';
 import 'services/widget_shelf.dart';
 
 import 'theme/vellum_theme.dart';
+
+final appNavigatorKey = GlobalKey<NavigatorState>();
 
 class VellumApp extends StatefulWidget {
   const VellumApp({super.key});
@@ -45,6 +48,8 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
   final _library = const BookLibrary();
 
   List<InstalledFont> _installedFonts = [];
+  final _fontImporter = FontImportService();
+  bool _importingFonts = false;
 
   String _activeFontName = '';
 
@@ -102,7 +107,9 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
     setState(() {
       _activeFontName = name;
 
-      VellumTheme.fontFamily = _useFontForUi ? family : 'serif';
+      VellumTheme.fontFamily = _useFontForUi
+          ? family
+          : VellumTheme.systemUiFontFamily;
 
       VellumTheme.contentFontFamily = _useFontForContent ? family : 'serif';
     });
@@ -119,27 +126,80 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
   }
 
   Future<void> _importFonts() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-
-      allowedExtensions: ['ttf'],
-
-      withData: true,
-
-      allowMultiple: true,
-    );
-
-    if (result == null) return;
-
-    for (final file in result.files) {
-      if (file.bytes == null) continue;
-
-      final name = file.name.replaceAll('.ttf', '');
-
-      await _library.saveFontWithName(name, Uint8List.fromList(file.bytes!));
+    if (_importingFonts) return;
+    _importingFonts = true;
+    final navigator = appNavigatorKey.currentState;
+    final progress = ValueNotifier<String>('正在准备字体…');
+    CupertinoDialogRoute<void>? route;
+    String? summary;
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['ttf'],
+        withData: false,
+        withReadStream: true,
+        allowMultiple: true,
+      );
+      if (result == null || !mounted || navigator == null) return;
+      route = CupertinoDialogRoute<void>(
+        context: navigator.context,
+        barrierDismissible: false,
+        builder: (_) => PopScope(
+          canPop: false,
+          child: CupertinoAlertDialog(
+            title: const Text('正在导入字体'),
+            content: ValueListenableBuilder<String>(
+              valueListenable: progress,
+              builder: (_, value, _) => Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Column(
+                  children: [
+                    const CupertinoActivityIndicator(),
+                    const SizedBox(height: 12),
+                    Text(value),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      unawaited(navigator.push(route));
+      final outcomes = await _fontImporter.importFiles(
+        result.files,
+        onProgress: (done, total, name) =>
+            progress.value = '$done/$total  $name',
+      );
+      await _loadFonts();
+      final failed = outcomes.where((item) => item.error != null).toList();
+      summary = '成功 ${outcomes.length - failed.length} 个，失败 ${failed.length} 个';
+      if (failed.isNotEmpty) {
+        summary =
+            '$summary\n${failed.map((item) => '${item.filename}：${item.error}').join('\n')}';
+      }
+    } catch (error) {
+      summary = '字体导入失败：$error';
+    } finally {
+      if (route?.isActive ?? false) navigator?.removeRoute(route!);
+      // The route can still be animating out when removed.
+      WidgetsBinding.instance.addPostFrameCallback((_) => progress.dispose());
+      _importingFonts = false;
     }
-
-    await _loadFonts();
+    if (summary != null && mounted) {
+      await showCupertinoDialog<void>(
+        context: navigator!.context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('字体导入结果'),
+          content: SingleChildScrollView(child: Text(summary!)),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('完成'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _deleteFont(String name) async {
@@ -152,7 +212,7 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
     if (_activeFontName == name) {
       _activeFontName = '';
 
-      VellumTheme.fontFamily = 'serif';
+      VellumTheme.fontFamily = VellumTheme.systemUiFontFamily;
 
       VellumTheme.contentFontFamily = 'serif';
 
@@ -176,7 +236,9 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
 
       _useFontForContent = useForContent;
 
-      VellumTheme.fontFamily = useForUi ? family : 'serif';
+      VellumTheme.fontFamily = useForUi && _activeFontName.isNotEmpty
+          ? family
+          : VellumTheme.systemUiFontFamily;
 
       VellumTheme.contentFontFamily = useForContent ? family : 'serif';
     });
@@ -209,6 +271,7 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => CupertinoApp(
+    navigatorKey: appNavigatorKey,
     debugShowCheckedModeBanner: false,
 
     title: 'Vellum',
@@ -218,7 +281,7 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
 
       fontFamily: _useFontForUi && _activeFontName.isNotEmpty
           ? 'Font_${_activeFontName.hashCode.abs()}'
-          : 'serif',
+          : VellumTheme.systemUiFontFamily,
     ),
 
     home: LibraryShell(

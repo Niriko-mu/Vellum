@@ -179,10 +179,9 @@ class ReaderParagraph extends StatelessWidget {
         ? (plain.trim().length <= 28 ? TextAlign.center : TextAlign.start)
         : isCenter
         ? TextAlign.center
-        // Latin body: justified (market standard — flush both margins).
-        // CJK body: natural start — `TextAlign.justify` hangs the leading
-        // `　　` on wrapped lines and CJK already fills evenly.
-        : latinBody
+        // Body paragraphs use the full reader width. Flutter leaves the final
+        // line natural while distributing space across preceding lines.
+        : (latinBody || !isQuote && !isList)
         ? TextAlign.justify
         : TextAlign.start;
     final span = TextSpan(style: textStyle, children: spans);

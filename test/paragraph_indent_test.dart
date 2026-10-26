@@ -209,28 +209,30 @@ void main() {
     expect(children.first.toPlainText(), '　　');
   });
 
-  testWidgets('body paragraphs use natural alignment so the indent survives wrap', (
-    tester,
-  ) async {
-    // A wrapping paragraph is the failing case: `TextAlign.justify` hangs the
-    // leading `　　` of every non-last line, deleting the two-em first-line
-    // indent for any paragraph long enough to wrap.
-    final long = '他转身走进雨里，再也没有回头。' * 8;
-    final book = _bookWith([long]);
-    await tester.pumpWidget(_wrap(book, book.paragraphs[0], 0));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'body paragraphs use full-width justification while preserving indent',
+    (tester) async {
+      // A wrapping paragraph is the failing case: `TextAlign.justify` hangs the
+      // leading `　　` of every non-last line, deleting the two-em first-line
+      // indent for any paragraph long enough to wrap.
+      final long = '他转身走进雨里，再也没有回头。' * 8;
+      final book = _bookWith([long]);
+      await tester.pumpWidget(_wrap(book, book.paragraphs[0], 0));
+      await tester.pumpAndSettle();
 
-    final text = tester.widget<Text>(find.byType(Text).first);
-    expect(
-      text.textAlign,
-      TextAlign.start,
-      reason: 'TextAlign.justify hangs leading whitespace and removes the '
-          'two-em first-line indent on wrapped lines; body text must use '
-          'natural start alignment.',
-    );
-    final children = _childrenOfFirstText(tester);
-    expect(children.first.toPlainText(), '　　');
-  });
+      final text = tester.widget<Text>(find.byType(Text).first);
+      expect(
+        text.textAlign,
+        TextAlign.justify,
+        reason:
+            'TextAlign.justify hangs leading whitespace and removes the '
+            'two-em first-line indent on wrapped lines; body text must use '
+            'full-width justification.',
+      );
+      final children = _childrenOfFirstText(tester);
+      expect(children.first.toPlainText(), '　　');
+    },
+  );
 
   testWidgets('chapter title paragraphs stay flush without indent', (
     tester,

@@ -577,6 +577,8 @@ class ProgressiveBookPager {
       isList: isList,
       isCenter: isCenter,
     );
+    // Justification handles the first line's visual spacing. Keep the indent
+    // in the measured text so CJK line breaks remain identical to rendering.
     final displaySource = plainSource.isEmpty
         ? plainSource
         : (willIndent
