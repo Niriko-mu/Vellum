@@ -26,6 +26,8 @@ if not exist pubspec.yaml (
   goto finish
 )
 
+set "RAW_VERSION="
+set "VERSION="
 for /f "tokens=2 delims=:" %%V in ('findstr /r /c:"^version:" pubspec.yaml') do set "RAW_VERSION=%%V"
 for /f "tokens=1 delims=+ " %%V in ("!RAW_VERSION!") do set "VERSION=%%V"
 if "!VERSION!"=="" (
@@ -42,7 +44,7 @@ echo.
 echo [2/4] Resolving project dependencies...
 rem Skip the Flutter SDK update check: its git fetch can hang before any output.
 rem Keep real dependency resolution enabled, and retain the native exit code.
-"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& $env:ComSpec /d /c ('call '+[char]34+$env:VELLUM_FLUTTER+[char]34+' --no-version-check pub get 2>&1') | Tee-Object -FilePath $env:VELLUM_BUILD_LOG -Append; exit $LASTEXITCODE"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& $env:ComSpec /d /c ('call '+[char]34+$env:VELLUM_FLUTTER+[char]34+' --no-version-check pub get 2>&1') | ForEach-Object { $_; $_ | Out-File -LiteralPath $env:VELLUM_BUILD_LOG -Append -Encoding utf8 }; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo [ERROR] Dependency resolution failed. See !VELLUM_BUILD_LOG!
   goto finish
@@ -51,7 +53,7 @@ if errorlevel 1 (
 echo.
 echo [3/4] Building ABI-split Release APKs for Vellum V!VERSION!...
 echo Gradle compilation may take several minutes. Output is also saved to the log.
-"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& $env:ComSpec /d /c ('call '+[char]34+$env:VELLUM_FLUTTER+[char]34+' --no-version-check build apk --release --split-per-abi --no-pub 2>&1') | Tee-Object -FilePath $env:VELLUM_BUILD_LOG -Append; exit $LASTEXITCODE"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& $env:ComSpec /d /c ('call '+[char]34+$env:VELLUM_FLUTTER+[char]34+' --no-version-check build apk --release --split-per-abi --no-pub 2>&1') | ForEach-Object { $_; $_ | Out-File -LiteralPath $env:VELLUM_BUILD_LOG -Append -Encoding utf8 }; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo [ERROR] Release APK build failed. See !VELLUM_BUILD_LOG!
   goto finish
