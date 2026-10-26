@@ -20,6 +20,7 @@ class PageLayoutConfig {
     required this.contentWidth,
     required this.screenHeight,
     required this.title,
+    this.textScaler = TextScaler.noScaling,
   });
 
   final double fontSize;
@@ -30,6 +31,7 @@ class PageLayoutConfig {
   final double contentWidth;
   final double screenHeight;
   final String title;
+  final TextScaler textScaler;
 
   /// SelectableText/rasterized glyphs can extend beyond TextPainter's reported
   /// line box. Reserve half a rendered line (and never less than 12dp) so the
@@ -39,7 +41,7 @@ class PageLayoutConfig {
   double get usableHeight =>
       (availableHeight - measurementSlack).clamp(80.0, availableHeight);
 
-  double get lineHeight => fontSize * lineSpacing.height;
+  double get lineHeight => textScaler.scale(fontSize) * lineSpacing.height;
 
   TextStyle get measureStyle => TextStyle(
     fontFamily: fontFamily,
@@ -517,8 +519,13 @@ class ProgressiveBookPager {
 
   void _paginateParagraph(int index) {
     final availableHeight = _config.usableHeight;
-    final contentWidth = _config.contentWidth;
     final source = book.paragraphs[index];
+    // Quote decoration consumes width inside ReaderParagraph.
+    final isQuote = ReaderMarkup.quote.hasMatch(source);
+    final contentWidth = (_config.contentWidth - (isQuote ? 14 : 0)).clamp(
+      1.0,
+      double.infinity,
+    );
     final hasImage = book.imageBytes.containsKey(index);
     final hasBlockImage =
         hasImage && ReaderMarkup.isStandaloneImageParagraph(source);
@@ -565,18 +572,19 @@ class ProgressiveBookPager {
     final plainSource = ReaderMarkup.stripAllMarkers(source);
     // Same indent rule as ReaderParagraph — measure with the same prefix
     // the page will render, or page-mode layout drifts from scroll.
-    final isQuote = ReaderMarkup.quote.hasMatch(source);
     final isList = ReaderMarkup.list.hasMatch(source);
     final isCenter = ReaderMarkup.center.hasMatch(source);
     final isHeading = headingLevel != null;
-    final willIndent = ReaderMarkup.shouldIndentFirstLine(
-      paragraph: source,
-      fullParagraph: source,
-      headingLevel: headingLevel,
-      isQuote: isQuote,
-      isList: isList,
-      isCenter: isCenter,
-    );
+    final willIndent =
+        !ReaderMarkup.isLatinBody(plainSource) &&
+        ReaderMarkup.shouldIndentFirstLine(
+          paragraph: source,
+          fullParagraph: source,
+          headingLevel: headingLevel,
+          isQuote: isQuote,
+          isList: isList,
+          isCenter: isCenter,
+        );
     // Justification handles the first line's visual spacing. Keep the indent
     // in the measured text so CJK line breaks remain identical to rendering.
     final displaySource = plainSource.isEmpty
@@ -592,10 +600,13 @@ class ProgressiveBookPager {
             height: ReaderMarkup.headingLineHeight(headingLevel),
             fontWeight: FontWeight.w700,
           )
-        : _config.measureStyle;
+        : _config.measureStyle.copyWith(
+            fontStyle: isQuote ? FontStyle.italic : null,
+          );
     final painter = TextPainter(
       text: TextSpan(text: displaySource, style: measureStyle),
       textDirection: TextDirection.ltr,
+      textScaler: _config.textScaler,
     )..layout(maxWidth: contentWidth);
     final lines = painter.computeLineMetrics();
     var lineStart = 0;
@@ -605,7 +616,7 @@ class ProgressiveBookPager {
       final fragmentStart = lineStart;
       var fragmentHeight = 0.0;
       var fragmentEnd = lineStart;
-      final prefixHeight = firstFragment ? imageHeight + headingChrome : 0.0;
+      final prefixHeight = (firstFragment ? imageHeight : 0.0) + headingChrome;
       // Continuations of a split sentence: no leading gap, no indent.
       final leadGap = firstFragment ? gapBefore() : 0.0;
 
@@ -691,6 +702,7 @@ class ProgressiveBookPager {
       lineStart = fragmentEnd;
       firstFragment = false;
     }
+    painter.dispose();
   }
 }
 
@@ -706,8 +718,11 @@ double measureTitleHeight(PageLayoutConfig config) {
       ),
     ),
     textDirection: TextDirection.ltr,
+    textScaler: config.textScaler,
   )..layout(maxWidth: config.contentWidth);
-  return painter.height;
+  final height = painter.height;
+  painter.dispose();
+  return height;
 }
 
 /// `List<List<PageFragment>>` view over the pager's packed bounds.

@@ -553,8 +553,8 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
     coverToPage = to;
     // Measure the destination page before the animation starts so the
     // overlay never shows a half-paginated page that reflows mid-turn.
-    if (!pager.fullyPaginated && to >= pager.pageCount) {
-      pager.paginateUntilPages(to + 1);
+    if (!pager.fullyPaginated && to >= pager.pageCount - 1) {
+      pager.paginateUntilPages(to + 2);
     }
     // Keep PageView on [from] during the overlay so the underlying page does
     // not re-layout mid-animation (avoids visible “reflow” under the cover).
@@ -616,10 +616,9 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
             ReaderPageState.readerSideInset,
             ReaderPageState.readerBottomInset,
           ),
-          // The overlay is already wrapped in IgnorePointer, so selection
-          // semantics add cost without serving a purpose during the turn.
-          // Both overlay pages use the same non-selectable layout.
-          child: readerSurface(selectable: false).buildPage(context, page),
+          // Keep the same text renderer during the turn and after landing.
+          // IgnorePointer on the overlay already prevents selection gestures.
+          child: readerSurface().buildPage(context, page),
         ),
       ],
     );

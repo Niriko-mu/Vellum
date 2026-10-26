@@ -41,6 +41,7 @@ extension ReaderPagePagination on ReaderPageState {
       contentWidth: pageContentWidth(context),
       screenHeight: media.size.height,
       title: widget.book.title,
+      textScaler: media.textScaler,
     );
   }
 

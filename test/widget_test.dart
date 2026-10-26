@@ -644,13 +644,15 @@ void main() {
       ),
     );
 
-    final pageList = tester.widget<ListView>(
-      find.descendant(
-        of: find.byType(PageView),
-        matching: find.byType(ListView),
-      ),
-    );
-    expect(pageList.physics, isA<NeverScrollableScrollPhysics>());
+    await tester.pumpAndSettle();
+    final pageView = tester.widget<PageView>(find.byType(PageView));
+    final pageBefore = pageView.controller!.page;
+    final text = find.byType(SelectableText).first;
+    final positionBefore = tester.getTopLeft(text);
+    await tester.dragFrom(const Offset(300, 420), const Offset(0, -160));
+    await tester.pumpAndSettle();
+    expect(pageView.controller!.page, pageBefore);
+    expect(tester.getTopLeft(text), positionBefore);
   });
 
   testWidgets('downward pull adds a visible bookmark notice in page mode', (

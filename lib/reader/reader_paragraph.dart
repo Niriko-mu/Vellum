@@ -237,11 +237,11 @@ class ReaderParagraph extends StatelessWidget {
     ];
     final body = target == null
         ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: content,
           )
         : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ...content,
               CupertinoButton(

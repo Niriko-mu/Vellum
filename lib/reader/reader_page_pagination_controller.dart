@@ -64,7 +64,8 @@ class ReaderPaginationController {
         _lastConfig?.fontSize != config.fontSize ||
         _lastConfig?.lineSpacing != config.lineSpacing ||
         _lastConfig?.fontFamily != config.fontFamily ||
-        _lastConfig?.fontWeight != config.fontWeight;
+        _lastConfig?.fontWeight != config.fontWeight ||
+        _lastConfig?.textScaler != config.textScaler;
   }
 
   int reset({required PageLayoutConfig config, required int anchorParagraph}) {

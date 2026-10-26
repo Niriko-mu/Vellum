@@ -244,7 +244,7 @@ class ReaderPageSurface extends StatelessWidget {
             maxWidth: constraints.maxWidth,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (page == 0 && showBookTitle) _title(),
                 if (page == 0 && showBookTitle) const SizedBox(height: 30),

@@ -131,8 +131,8 @@ extension ReaderPageGestures on ReaderPageState {
         to = from - 1;
       }
       if (to < 0 || to >= totalPages) return;
-      if (!pager.fullyPaginated && to >= pager.pageCount) {
-        pager.paginateUntilPages(to + 1);
+      if (!pager.fullyPaginated && to >= pager.pageCount - 1) {
+        pager.paginateUntilPages(to + 2);
       }
       coverAnim.stop();
       dragTurn = true;
