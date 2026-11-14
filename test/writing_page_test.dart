@@ -215,11 +215,18 @@ void main() {
     );
     expect(segmented.groupValue, 3);
 
-    // Novel switch: flips in the panel without waiting on disk.
-    await tester.tap(find.byType(AppSwitch));
+    // Novel switch: flips in the panel without waiting on disk. The sheet now
+    // holds two switches (novel mode and save status), so target the label.
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) => w is AppSwitch && w.semanticLabel == '小说排版',
+      ),
+    );
     await tester.pump();
-    final sw = tester.widget<AppSwitch>(find.byType(AppSwitch));
-    expect(sw.value, isTrue);
+    final novelSwitch = tester
+        .widgetList<AppSwitch>(find.byType(AppSwitch))
+        .firstWhere((s) => s.semanticLabel == '小说排版');
+    expect(novelSwitch.value, isTrue);
 
     // Navbar also has 完成; close the sheet via its own button.
     await tester.tap(find.text('完成').last);
@@ -251,9 +258,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Markdown 模式下不启用，切换到纯文本即可使用'), findsOneWidget);
 
-    final sw = tester.widget<AppSwitch>(find.byType(AppSwitch));
-    expect(sw.value, isFalse);
+    // Two switches now live in this sheet (novel mode and save-status); the
+    // novel one is the one that can be inert.
+    final novelSwitch = tester
+        .widgetList<AppSwitch>(find.byType(AppSwitch))
+        .firstWhere((s) => s.semanticLabel == '小说排版');
+    expect(novelSwitch.value, isFalse);
     // A disabled switch keeps its callback but reports itself as not tappable.
-    expect(sw.enabled, isFalse);
+    expect(novelSwitch.enabled, isFalse);
   });
 }

@@ -14,6 +14,8 @@ import '../services/writing_library.dart';
 import '../theme/app_colors.dart';
 import '../widgets/markdown_preview.dart';
 import 'writing_typography_sheet.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_type.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingEditorPage extends StatefulWidget {
@@ -34,7 +36,8 @@ class WritingEditorPage extends StatefulWidget {
   State<WritingEditorPage> createState() => _WritingEditorPageState();
 }
 
-class _WritingEditorPageState extends State<WritingEditorPage> {
+class _WritingEditorPageState extends State<WritingEditorPage>
+    with SingleTickerProviderStateMixin {
   late final WritingLibrary _library = widget.library ?? const WritingLibrary();
   late final TextEditingController _titleController;
   late final TextEditingController _bodyController;
@@ -45,7 +48,7 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
 
   /// Typing pauses briefly before the disk write, so a burst of keystrokes is
   /// one save rather than one per character.
-  static const Duration _autoSaveDelay = Duration(milliseconds: 600);
+  static const Duration _autoSaveDelay = AppMotion.autosaveDelay;
   Timer? _autoSaveTimer;
   Timer? _novelFormatTimer;
   final _typoStore = const WritingTypographyStore();
@@ -64,6 +67,28 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
     return '已自动保存';
   }
 
+  /// Fades the save label out when its text changes, then back in.
+  ///
+  /// A cross-fade would need the old and new label laid out side by side, which
+  /// widened the row mid-swap; this keeps one line that briefly dips, which is
+  /// calmer in peripheral vision — exactly where this text lives.
+  ///
+  /// Driven by a controller rather than a delayed future so it is disposed with
+  /// the page and honours the reduced-motion setting.
+  late final AnimationController _saveStatusFade;
+
+  String _shownSaveStatus = '';
+
+  void _syncSaveStatus() {
+    final next = _saveStatusText;
+    if (next == _shownSaveStatus) return;
+    _shownSaveStatus = next;
+    _saveStatusFade
+      ..duration = motionDuration(context, AppMotion.fast)
+      ..value = 0
+      ..forward();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -72,6 +97,12 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
     _titleController = TextEditingController(text: _document.title);
     _bodyController = TextEditingController(text: _document.body);
     _lastBodyText = _document.body;
+    _shownSaveStatus = _saveStatusText;
+    _saveStatusFade = AnimationController(
+      vsync: this,
+      duration: AppMotion.fast,
+      value: 1,
+    );
     _titleController.addListener(_markDirty);
     _bodyController.addListener(_onBodyChanged);
     _loadTypo();
@@ -218,14 +249,21 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
       );
       unawaited(_library.upsert(snapshot));
     }
+    _saveStatusFade.dispose();
     _titleController.dispose();
     _bodyController.dispose();
     super.dispose();
   }
 
   void _markDirty() {
-    // Rebuild every keystroke so the footer 字/词 count stays live.
-    setState(() => _dirty = true);
+    // Only rebuild when the flag actually flips. It used to call setState on
+    // every keystroke purely so the character count stayed live, which rebuilt
+    // this whole page — including the text field being typed into — once per
+    // character. The count now listens to the controller directly.
+    if (!_dirty) {
+      setState(() => _dirty = true);
+    }
+    _syncSaveStatus();
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(_autoSaveDelay, () {
       if (mounted) unawaited(_persist());
@@ -249,6 +287,7 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
       format: _format,
     );
     setState(() => _saving = true);
+    _syncSaveStatus();
     try {
       final saved = await _library.upsert(next);
       if (!mounted) return;
@@ -257,6 +296,7 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
         _dirty = false;
         _saving = false;
       });
+      _syncSaveStatus();
       widget.onChanged?.call();
     } catch (_) {
       // Keep the text dirty so the next pause (or export/leave) retries.
@@ -411,11 +451,6 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
     final ink = context.c.foreground;
     final accent = context.c.primary;
     final paper = context.c.backgroundSubtle;
-    final previewDoc = _document.copyWith(
-      title: _titleController.text,
-      body: _bodyController.text,
-      format: _format,
-    );
     final updated = _document.updatedAt.toLocal();
     final date =
         '${updated.month}月${updated.day}日 '
@@ -492,46 +527,86 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      '$date · $_saveStatusText',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: muted, fontSize: 13),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            date,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.caption(muted),
+                          ),
+                        ),
+                        if (_typo.showSaveStatus) ...[
+                          Text(' · ', style: AppText.caption(muted)),
+                          Flexible(
+                            // AnimatedSwitcher measures each child in a loose,
+                            // overlay-sized box, which pushed this label out of
+                            // the row entirely. A plain fade over the *new* text
+                            // needs no measurement of the old one, so the line
+                            // never changes width mid-swap.
+                            child: FadeTransition(
+                              opacity: _saveStatusFade,
+                              child: Text(
+                                _saveStatusText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.caption(muted),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    '${previewDoc.characterCount} 字',
-                    style: TextStyle(color: muted, fontSize: 13),
+                  // Scoped rebuild: one line follows the text, not the page.
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _bodyController,
+                    builder: (context, value, _) => Text(
+                      '${value.text.characters.length} 字',
+                      style: AppText.caption(muted),
+                    ),
                   ),
                 ],
               ),
             ),
             Expanded(
-              child: _previewing
-                  ? MarkdownPreview(source: _bodyController.text)
-                  : CupertinoTextField(
-                      controller: _bodyController,
-                      placeholder: '写下你的想法…',
-                      placeholderStyle: TextStyle(
-                        color: muted.withValues(alpha: .6),
-                        fontSize: _typo.fontSize,
-                        height: 1.85,
+              // Cross-fade only: scaling body text would blur it, and any
+              // height animation would fight the keyboard.
+              child: AnimatedSwitcher(
+                duration: motionDuration(context, AppMotion.fast),
+                switchInCurve: AppMotion.settle,
+                switchOutCurve: AppMotion.dismissCurve,
+                child: _previewing
+                    ? MarkdownPreview(
+                        key: const ValueKey('preview'),
+                        source: _bodyController.text,
+                      )
+                    : CupertinoTextField(
+                        key: const ValueKey('edit'),
+                        controller: _bodyController,
+                        placeholder: '写下你的想法…',
+                        placeholderStyle: TextStyle(
+                          color: muted.withValues(alpha: .6),
+                          fontSize: _typo.fontSize,
+                          height: 1.85,
+                        ),
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        keyboardType: TextInputType.multiline,
+                        style: TextStyle(
+                          color: ink,
+                          fontSize: _typo.fontSize,
+                          fontFamily: _typo.fontFamily,
+                          fontWeight: _typo.fontWeight,
+                          height: 1.85,
+                        ),
+                        decoration: const BoxDecoration(),
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                       ),
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      keyboardType: TextInputType.multiline,
-                      style: TextStyle(
-                        color: ink,
-                        fontSize: _typo.fontSize,
-                        fontFamily: _typo.fontFamily,
-                        fontWeight: _typo.fontWeight,
-                        height: 1.85,
-                      ),
-                      decoration: const BoxDecoration(),
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-                    ),
+              ),
             ),
             Container(
               decoration: BoxDecoration(

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 import '../theme/vellum_theme.dart';
-import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
 
 /// Compact reading-time indicator shown while reader chrome is hidden.
@@ -133,9 +132,11 @@ class ReaderCoverTurnOverlay extends StatelessWidget {
                     ),
                   ),
                   builder: (context, child) {
-                    final progress = (dragTurn || dragCommitted)
-                        ? animation.value
-                        : AppMotion.settle.transform(animation.value);
+                    // Raw controller value: the curve is applied once, by the
+                    // animateTo that drives this controller. Transforming here
+                    // as well double-eased the tap path and forced the drag
+                    // path to bypass the curve entirely.
+                    final progress = animation.value;
                     final dx = isNext ? -progress : -1 + progress;
                     return FractionalTranslation(
                       translation: Offset(dx, 0),

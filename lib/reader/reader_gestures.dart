@@ -1,6 +1,7 @@
 import 'dart:ui' show Offset;
 
 import 'reader_models.dart';
+import '../theme/app_motion.dart';
 
 enum ReaderTapAction {
   none,
@@ -39,11 +40,11 @@ abstract final class ReaderGestures {
 
   /// Long-press to select text then drag down must not arm bookmark.
   /// Bookmark requires a quick, mostly vertical downward flick at the top.
-  static const Duration bookmarkMaxHold = Duration(milliseconds: 400);
+  static const Duration bookmarkMaxHold = AppMotion.bookmarkPullHold;
 
   /// Fanqie throttles volume-key paging to 300 ms so a held key does not
   /// flip dozens of pages.
-  static const Duration volumeKeyThrottle = Duration(milliseconds: 300);
+  static const Duration volumeKeyThrottle = AppMotion.actionThrottle;
 
   static ReaderTapAction resolvePointerUp({
     required DateTime? downAt,

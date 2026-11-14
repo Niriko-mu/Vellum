@@ -8,6 +8,7 @@ import 'reader_control_panels.dart';
 import 'reader_models.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Reader chrome overlay.
 ///
@@ -153,10 +154,10 @@ class ReaderMenu extends StatefulWidget {
   State<ReaderMenu> createState() => _ReaderMenuState();
 }
 
-const Duration kReaderMenuAnimDuration = Duration(milliseconds: 300);
+const Duration kReaderMenuAnimDuration = AppMotion.base;
 
 /// Short debounce so double-taps do not queue, but buttons still feel live.
-const Duration kReaderActionThrottle = Duration(milliseconds: 200);
+const Duration kReaderActionThrottle = AppMotion.actionThrottle;
 
 enum _AbovePanel { none, catalog, settings }
 
@@ -173,6 +174,9 @@ class _ReaderMenuState extends State<ReaderMenu>
   late final AnimationController _chromeAnim = AnimationController(
     vsync: this,
     duration: kReaderMenuAnimDuration,
+    // Closing is a dismissal, not a performance: it takes less time than
+    // opening even before the curve makes it leave earlier.
+    reverseDuration: AppMotion.dismiss,
   );
 
   @override
@@ -266,14 +270,18 @@ class _ReaderMenuState extends State<ReaderMenu>
     final media = MediaQuery.of(context);
     final topSafe = media.padding.top;
     final bottomSafe = media.padding.bottom;
+    // One curve pair for both directions: opening settles, closing leaves
+    // immediately. Reusing the decelerating curve on the way out made every
+    // dismissal feel like waiting for the bars to finish leaving.
+    final chromeCurve = motionPair(_chromeAnim);
     final topSlide = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _chromeAnim, curve: AppMotion.settle));
+    ).animate(chromeCurve);
     final bottomSlide = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _chromeAnim, curve: AppMotion.settle));
+    ).animate(chromeCurve);
     final chromeVisible = widget.visible || _chromeAnim.isAnimating;
 
     // Bottom chrome always shows progress + actions so seek stays usable
@@ -353,13 +361,42 @@ class _ReaderMenuState extends State<ReaderMenu>
                   ),
 
                 // Taller sheet above the action bar (seek row stays under it).
-                if (_panel != _AbovePanel.none)
-                  Positioned(
+                //
+                // The panel is the largest surface in the reader, and it used to
+                // appear and vanish between two frames. It slides up into place
+                // instead — position and opacity only. Animating its height (a
+                // SizeTransition, or an AnimatedSize driven by this value) would
+                // re-lay-out the whole band every frame, which is the same cost
+                // the top bar just lost.
+                // Mounted even when the panel is closed: the switcher needs to
+                // stay in the tree to animate the outgoing surface. An empty
+                // child paints nothing and takes no taps.
+                Positioned(
                     left: 0,
                     right: 0,
                     top: panelTop,
                     bottom: chrome,
-                    child: DecoratedBox(
+                    child: AnimatedSwitcher(
+                      duration: AppMotion.base,
+                      reverseDuration: AppMotion.dismiss,
+                      switchInCurve: AppMotion.settle,
+                      switchOutCurve: AppMotion.dismissCurve,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, .06),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: _panel == _AbovePanel.none
+                          ? const SizedBox.expand(
+                              key: ValueKey('reader-panel-none'),
+                            )
+                          : DecoratedBox(
+                              key: ValueKey(_panel),
                       decoration: BoxDecoration(
                         color: themeBg,
                         border: Border(
@@ -409,6 +446,7 @@ class _ReaderMenuState extends State<ReaderMenu>
                           ),
                         ],
                       ),
+                            ),
                     ),
                   ),
 
@@ -417,22 +455,20 @@ class _ReaderMenuState extends State<ReaderMenu>
                     top: 0,
                     left: 0,
                     right: 0,
-                    child: ClipRect(
-                      child: SizeTransition(
-                        sizeFactor: _chromeAnim,
-                        alignment: Alignment.topCenter,
-                        child: SlideTransition(
-                          position: topSlide,
-                          child: ReaderTopBar(
-                            bookmarked: widget.bookmarked,
-                            title: widget.chapterTitle.isNotEmpty
-                                ? widget.chapterTitle
-                                : widget.bookTitle,
-                            surface: themeBg,
-                            onBack: _handleTopBarBack,
-                            onToggleBookmark: widget.onToggleBookmark,
-                          ),
-                        ),
+                    // Slides only. The old ClipRect + SizeTransition animated
+                    // the bar's *height*, so every frame re-laid-out the whole
+                    // top of the page; the bottom bar was already using a pure
+                    // slide, and the two bars did not move alike.
+                    child: SlideTransition(
+                      position: topSlide,
+                      child: ReaderTopBar(
+                        bookmarked: widget.bookmarked,
+                        title: widget.chapterTitle.isNotEmpty
+                            ? widget.chapterTitle
+                            : widget.bookTitle,
+                        surface: themeBg,
+                        onBack: _handleTopBarBack,
+                        onToggleBookmark: widget.onToggleBookmark,
                       ),
                     ),
                   ),
@@ -663,10 +699,14 @@ class _ReaderMenuState extends State<ReaderMenu>
   }) {
     final accent = VellumTheme.readerAccentOf(context);
     final ink = VellumTheme.readerChromeInk(themeBg);
+    // Same press feedback as every other tap target in the app: the cell fills,
+    // the icon and label do not fade. These four are the most-tapped controls in
+    // the reader and were the only place still using an opacity dip.
     return Expanded(
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        onPressed: onTap,
+      child: AppPressable(
+        onTap: onTap,
+        pressedColor: ink.withValues(alpha: .06),
+        semanticLabel: label,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

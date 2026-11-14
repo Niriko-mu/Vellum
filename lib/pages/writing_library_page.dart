@@ -81,7 +81,7 @@ class _WritingPageState extends State<WritingPage> {
   Future<void> _createDocument() async {
     final doc = await _library.create();
     if (!mounted) return;
-    await Navigator.of(context).push<void>(
+    await Navigator.of(context, rootNavigator: true).push<void>(
       CupertinoPageRoute(
         builder: (_) => WritingEditorPage(document: doc, onChanged: _reload),
       ),
@@ -90,7 +90,7 @@ class _WritingPageState extends State<WritingPage> {
   }
 
   Future<void> _openDocument(WritingDocument doc) async {
-    await Navigator.of(context).push<void>(
+    await Navigator.of(context, rootNavigator: true).push<void>(
       CupertinoPageRoute(
         builder: (_) => WritingEditorPage(document: doc, onChanged: _reload),
       ),
@@ -432,4 +432,3 @@ class _EmptyWritingState extends StatelessWidget {
     );
   }
 }
-

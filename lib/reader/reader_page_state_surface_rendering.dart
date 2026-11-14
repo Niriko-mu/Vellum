@@ -145,7 +145,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                       // often armed selection first; hold longer before the
                       // gesture is treated as a select.
                       selectionHoldTimer = Timer(
-                        const Duration(milliseconds: 750),
+                        AppMotion.selectionHold,
                         () {
                           pointerLooksLikeSelection = true;
                         },
@@ -530,9 +530,9 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
     pageController
         .animateToPage(
           target,
-          // 180ms easeOutCubic: snappy tap-to-turn. Fanqie's slide mode uses a
-          // short custom-Scroller fling; long durations feel laggy on tap.
-          duration: const Duration(milliseconds: 180),
+          // Short and decelerating: a tap-turn must feel immediate. Longer
+          // durations here read as lag, not smoothness.
+          duration: motionDuration(context, AppMotion.fast),
           curve: AppMotion.settle,
         )
         .whenComplete(() {
@@ -564,6 +564,12 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
     refresh(() {
       requestedPage = to;
     });
+    // Reduced motion: the page still turns, it just arrives without the slide.
+    // "Complete and operable without movement" — never "the turn does nothing".
+    if (MediaQuery.disableAnimationsOf(context)) {
+      finishCoverTurn(to);
+      return;
+    }
     coverAnim
       ..reset()
       ..forward().whenComplete(() {

@@ -28,6 +28,7 @@ import '../services/reader_background.dart';
 import 'reader_page_state_pagination.dart';
 import 'reader_page_state_gestures.dart';
 import 'reader_page_state_surface_rendering.dart';
+import '../theme/app_motion.dart';
 
 class ReaderPage extends StatefulWidget {
   final ImportedBook book;
@@ -756,7 +757,7 @@ class ReaderPageState extends State<ReaderPage>
 
   void scheduleSave() {
     saveTimer?.cancel();
-    saveTimer = Timer(const Duration(milliseconds: 350), saveState);
+    saveTimer = Timer(AppMotion.saveDebounce, saveState);
   }
 
   /// Scroll notifications arrive every frame. Rebuilding the entire reader

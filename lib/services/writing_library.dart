@@ -175,6 +175,7 @@ class WritingTypography {
     this.fontSize = 16,
     this.weightIndex = 1,
     this.novelMode = false,
+    this.showSaveStatus = true,
   });
 
   /// null = system default; otherwise a font-family alias (built-in or
@@ -187,6 +188,11 @@ class WritingTypography {
 
   /// 小说排版开关：开启后输入时自动「段首两格 + 段间空行」，无需每次点按钮。
   final bool novelMode;
+
+  /// 是否在标题下方显示自动保存状态（「即将自动保存 / 保存中… / 已自动保存」）。
+  ///
+  /// 关掉后只保留日期，写作时视野里不再有每句话都在变的文字。
+  final bool showSaveStatus;
 
   static const weightLabels = ['细', '常规', '中粗', '粗'];
   static const weightValues = [
@@ -208,11 +214,13 @@ class WritingTypography {
     double? fontSize,
     int? weightIndex,
     bool? novelMode,
+    bool? showSaveStatus,
   }) => WritingTypography(
     fontFamily: clearFont ? null : (fontFamily ?? this.fontFamily),
     fontSize: fontSize ?? this.fontSize,
     weightIndex: weightIndex ?? this.weightIndex,
     novelMode: novelMode ?? this.novelMode,
+    showSaveStatus: showSaveStatus ?? this.showSaveStatus,
   );
 
   Map<String, dynamic> toJson() => {
@@ -220,6 +228,7 @@ class WritingTypography {
     'fontSize': fontSize,
     'weightIndex': weightIndex,
     'novelMode': novelMode,
+    'showSaveStatus': showSaveStatus,
   };
 
   factory WritingTypography.fromJson(Map<String, dynamic> json) {
@@ -229,6 +238,9 @@ class WritingTypography {
       fontSize: size.clamp(minSize, maxSize),
       weightIndex: ((json['weightIndex'] as num?)?.toInt() ?? 1).clamp(0, 3),
       novelMode: json['novelMode'] as bool? ?? false,
+      // Absent in files written before the switch existed: default to showing,
+      // which is what those readers were already seeing.
+      showSaveStatus: json['showSaveStatus'] as bool? ?? true,
     );
   }
 }

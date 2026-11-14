@@ -8,6 +8,7 @@ import '../services/writing_library.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../theme/app_type.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingTypographySheet extends StatefulWidget {
@@ -256,10 +257,8 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                     children: [
                       Text(
                         '小说模式',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: widget.novelAvailable ? ink : muted,
+                        style: AppText.stateTitle(
+                          widget.novelAvailable ? ink : muted,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -267,7 +266,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                         widget.novelAvailable
                             ? '开启后自动排版：段首两格缩进 · 段间空行'
                             : 'Markdown 模式下不启用，切换到纯文本即可使用',
-                        style: TextStyle(fontSize: 13, color: muted),
+                        style: AppText.caption(muted),
                       ),
                     ],
                   ),
@@ -277,6 +276,32 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                   enabled: widget.novelAvailable,
                   semanticLabel: '小说排版',
                   onChanged: (v) => _update(_typo.copyWith(novelMode: v)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '显示保存状态',
+                        style: AppText.stateTitle(ink),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '关闭后标题下方只保留日期，写作时不再出现变化的文字',
+                        style: AppText.caption(muted),
+                      ),
+                    ],
+                  ),
+                ),
+                AppSwitch(
+                  value: _typo.showSaveStatus,
+                  semanticLabel: '显示保存状态',
+                  onChanged: (v) => _update(_typo.copyWith(showSaveStatus: v)),
                 ),
               ],
             ),

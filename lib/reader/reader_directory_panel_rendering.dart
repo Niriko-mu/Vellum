@@ -5,6 +5,7 @@ import 'reader_directory_panel.dart';
 import 'reader_directory_panel_state.dart';
 import 'reader_directory_panel_search_view.dart';
 import '../theme/app_shape.dart';
+import '../widgets/ui/app_pressable.dart';
 
   /// Fanqie caloglayout structure: book name → tabs → divider → list.
   /// Parent supplies full band height; panel fills it.
@@ -448,8 +449,10 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
         return Semantics(
           button: true,
           label: isCurrent ? '${entry.value}，当前章节' : entry.value,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          // Press fill over the whole row, like every other list in the app.
+          // The catalogue used a bare GestureDetector, so a tap gave no feedback
+          // until the page jumped.
+          child: AppPressable(
             onTap: () {
               final callback = widget.onJumpToChapter;
               if (tab == 0 && callback != null) {
@@ -458,6 +461,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                 widget.onJumpToParagraph(entry.key);
               }
             },
+            pressedColor: ink.withValues(alpha: .06),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(

@@ -21,7 +21,7 @@ $rules = @(
       'widgets\ui\app_pressable.dart',
       'app.dart'
     ) }
-  @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 165 }
+  @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 161 }
   @{ Name = '圆角字面量'; Pattern = 'BorderRadius\.circular\(\s*[0-9]'; Baseline = 0 }
   @{ Name = '过重字重'; Pattern = 'FontWeight\.(w700|w800|w900|bold)'; Baseline = 5 }
   @{ Name = '阴影（token 之外）'; Pattern = 'BoxShadow\('; Baseline = 6; Files = @(

@@ -12,6 +12,7 @@ import '../services/tts_text.dart' show sentenceAt;
 import 'reader_page_state.dart';
 import 'reader_page_state_pagination.dart';
 import 'reader_page_state_surface_rendering.dart';
+import '../theme/app_motion.dart';
 
 extension ReaderPageGestures on ReaderPageState {
   Widget bookmarkPullIndicator(BuildContext context) {
@@ -238,6 +239,24 @@ extension ReaderPageGestures on ReaderPageState {
       return;
     }
 
+    // Reduced motion: a released drag must not keep sliding after the finger
+    // is gone. Commit or cancel instantly, which is the same outcome the settle
+    // animates towards.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      coverFromPage = from;
+      coverToPage = to;
+      if (commit) {
+        finishCoverTurn(to);
+      } else {
+        cancelDragTurn();
+        refresh(() {
+          currentPage = from;
+          requestedPage = from;
+        });
+      }
+      return;
+    }
+
     // Keep dragCommitted on for the whole settle so the overlay reads
     // raw controller value (no curve jump at release).
     coverFromPage = from;
@@ -263,12 +282,19 @@ extension ReaderPageGestures on ReaderPageState {
       return;
     }
 
+    // The curve belongs here, not in the overlay. `animateTo` defaults to
+    // linear, so omitting it made a released drag glide at constant speed while
+    // the tap path eased out — the same page turn with two different motions.
+    // The overlay now reads the raw controller value (see ReaderCoverTurnOverlay)
+    // so the curve is applied exactly once.
     coverAnim
         .animateTo(
           end,
-          duration: commit
-              ? const Duration(milliseconds: 160)
-              : const Duration(milliseconds: 160),
+          duration: motionDuration(
+            context,
+            commit ? AppMotion.base : AppMotion.fast,
+          ),
+          curve: AppMotion.settle,
         )
         .whenCompleteOrCancel(() {
           if (!mounted) return;
@@ -349,7 +375,7 @@ extension ReaderPageGestures on ReaderPageState {
     tapTimer?.cancel();
     pendingTapPos = upPosition;
     pendingTapAction = action;
-    tapTimer = Timer(const Duration(milliseconds: 200), () {
+    tapTimer = Timer(AppMotion.doubleTapWindow, () {
       tapTimer = null;
       final deferred = pendingTapAction;
       pendingTapAction = null;

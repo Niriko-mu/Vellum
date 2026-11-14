@@ -108,8 +108,10 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
 
   @override
   Widget build(BuildContext context) {
+    // Sub-page switches (main → 更多设置 → 背景) resize the content; the panel
+    // appearing/disappearing is owned by the transition outside this widget.
     return AnimatedSize(
-      duration: const Duration(milliseconds: 160),
+      duration: AppMotion.fast,
       curve: AppMotion.settle,
       alignment: Alignment.topCenter,
       child: SingleChildScrollView(
