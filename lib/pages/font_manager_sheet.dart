@@ -1,8 +1,13 @@
 import 'package:flutter/cupertino.dart';
 
 import '../services/book_library.dart';
-import '../theme/vellum_theme.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_type.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
+import '../widgets/ui/app_section.dart' show appHairline;
+import '../widgets/ui/app_sheet.dart';
 
 class FontManagerSheet extends StatelessWidget {
   final List<InstalledFont> installedFonts;
@@ -19,181 +24,74 @@ class FontManagerSheet extends StatelessWidget {
 
   const FontManagerSheet({
     super.key,
-
     required this.installedFonts,
-
     required this.activeFontName,
-
     required this.onActivateFont,
-
     required this.onDeleteFont,
-
     required this.onImportFonts,
   });
 
   @override
   Widget build(BuildContext context) {
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
-    final surface = VellumTheme.shellOf(context);
-    final card = VellumTheme.cardOf(context);
-    final line = VellumTheme.lineOf(context);
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+    final colors = context.c;
+
+    return AppSheet(
+      title: '字体管理',
+      maxHeightFactor: 0.7,
+      padding: EdgeInsets.zero,
+      trailing: AppPressable(
+        onTap: onImportFonts,
+        semanticLabel: '导入字体',
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.x2),
+          child: Icon(CupertinoIcons.plus_circle, color: colors.primary),
+        ),
       ),
-
-      decoration: BoxDecoration(
-        color: surface,
-
-        borderRadius: AppRadius.sheetTop,
+      footer: AppButton(
+        label: '关闭',
+        variant: AppButtonVariant.tonal,
+        expand: true,
+        onPressed: () => Navigator.pop(context),
       ),
-
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-
-            child: Row(
+      child: installedFonts.isEmpty
+          ? const AppContentState(
+              kind: AppContentStateKind.empty,
+              icon: CupertinoIcons.textformat,
+              title: '暂无字体',
+              description: '点击右上角 + 导入字体',
+            )
+          : Column(
               children: [
-                Text(
-                  '字体管理',
-
-                  style: TextStyle(
-                    color: ink,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                for (final font in installedFonts)
+                  _FontCard(
+                    font: font,
+                    isActive: font.name == activeFontName,
+                    onActivate: () {
+                      Navigator.pop(context);
+                      onActivateFont(font.name);
+                    },
+                    onDelete: () => _confirmDelete(context, font.name),
                   ),
-                ),
-
-                const Spacer(),
-
-                CupertinoButton(
-                  minimumSize: const Size(44, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-
-                  onPressed: () {
-                    Navigator.pop(context);
-
-                    onImportFonts();
-                  },
-
-                  child: Icon(CupertinoIcons.plus_circle, color: accent),
-                ),
               ],
             ),
-          ),
-
-          Container(height: 1, color: line),
-
-          Flexible(
-            child: installedFonts.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.all(32),
-
-                    child: Column(
-                      children: [
-                        Icon(CupertinoIcons.textformat, size: 48, color: muted),
-
-                        const SizedBox(height: 16),
-
-                        Text(
-                          '暂无字体',
-
-                          style: TextStyle(fontSize: 16, color: muted),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          '点击右上角 + 导入字体',
-
-                          style: TextStyle(fontSize: 14, color: muted),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-
-                    itemCount: installedFonts.length,
-
-                    itemBuilder: (context, index) {
-                      final font = installedFonts[index];
-
-                      final isActive = font.name == activeFontName;
-
-                      return _FontCard(
-                        font: font,
-
-                        isActive: isActive,
-
-                        onActivate: () {
-                          Navigator.pop(context);
-
-                          onActivateFont(font.name);
-                        },
-
-                        onDelete: () => _confirmDelete(context, font.name),
-                      );
-                    },
-                  ),
-          ),
-
-          SafeArea(
-            top: false,
-
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-
-              child: CupertinoButton(
-                minimumSize: const Size(44, 44),
-                color: card,
-
-                onPressed: () => Navigator.pop(context),
-
-                child: Text('关闭', style: TextStyle(color: ink)),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Future<void> _confirmDelete(BuildContext context, String fontName) async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
-
       builder: (ctx) => CupertinoAlertDialog(
-        title: Text(
-          '删除字体',
-          style: TextStyle(color: VellumTheme.inkOf(context)),
-        ),
-
-        content: Text(
-          '确定要删除 "$fontName" 吗？',
-          style: TextStyle(color: VellumTheme.mutedOf(context)),
-        ),
-
+        title: const Text('删除字体'),
+        content: Text('确定要删除 "\$fontName" 吗？'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(ctx, false),
-
-            child: Text(
-              '取消',
-              style: TextStyle(color: VellumTheme.accentOf(context)),
-            ),
+            child: const Text('取消'),
           ),
-
           CupertinoDialogAction(
             isDestructiveAction: true,
-
             onPressed: () => Navigator.pop(ctx, true),
-
             child: const Text('删除'),
           ),
         ],
@@ -202,7 +100,6 @@ class FontManagerSheet extends StatelessWidget {
 
     if (confirmed == true) {
       await onDeleteFont(fontName);
-
       if (context.mounted) Navigator.pop(context);
     }
   }
@@ -219,123 +116,106 @@ class _FontCard extends StatelessWidget {
 
   const _FontCard({
     required this.font,
-
     required this.isActive,
-
     required this.onActivate,
-
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    final colors = context.c;
 
-      decoration: BoxDecoration(
-        color: VellumTheme.cardOf(context),
-
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-
-        border: isActive
-            ? Border.all(color: VellumTheme.accentOf(context), width: 1.5)
-            : Border.all(color: VellumTheme.lineOf(context)),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.x4,
+        0,
+        AppSpace.x4,
+        AppSpace.x3,
       ),
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          // 字体预览区
-          Container(
-            padding: const EdgeInsets.all(20),
-
-            decoration: BoxDecoration(
-              color: VellumTheme.cardOf(context).withValues(alpha: .72),
-
-              borderRadius: AppRadius.sheetTop,
-            ),
-
-            child: Text(
-              '永Aa · 阅读改变生活',
-              style: TextStyle(
-                color: VellumTheme.inkOf(context),
-                fontSize: 20,
-                fontFamily: isActive
-                    ? font.family
-                    : VellumTheme.systemUiFontFamily,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: AppRadius.groupedAll,
+          // Selection is a fill plus an outline in the selected tier; it is not
+          // a thicker version of the default hairline.
+          border: isActive
+              ? Border.all(color: colors.primary, width: 1)
+              : Border.all(color: colors.border),
+        ),
+        child: ClipRRect(
+          borderRadius: AppRadius.groupedAll,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Glyph sample, inside the card: one surface, no nested panel.
+              Padding(
+                padding: const EdgeInsets.all(AppSpace.x5),
+                child: Text(
+                  '永Aa · 阅读改变生活',
+                  style: AppText.stateTitle(colors.foreground).copyWith(
+                    fontSize: 24,
+                    fontFamily: isActive
+                        ? font.family
+                        : VellumThemeFamilies.system,
+                  ),
+                ),
               ),
-            ),
-          ),
-
-          // 操作区
-          Padding(
-            padding: const EdgeInsets.all(12),
-
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-
-                    children: [
-                      Text(
-                        font.label,
-
-                        style: TextStyle(
-                          color: VellumTheme.inkOf(context),
-                          fontSize: 16,
-
-                          fontWeight: FontWeight.w600,
+              SizedBox(height: appHairline(context), child: ColoredBox(color: colors.border)),
+              Padding(
+                padding: const EdgeInsets.all(AppSpace.x3),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            font.label,
+                            style: AppText.rowTitle(colors.foreground),
+                          ),
+                          if (isActive) ...[
+                            const SizedBox(height: AppSpace.x1),
+                            Text(
+                              '当前使用中',
+                              style: AppText.caption(colors.primary),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (!isActive)
+                      AppButton(
+                        label: '启用',
+                        size: AppButtonSize.small,
+                        variant: AppButtonVariant.tonal,
+                        onPressed: onActivate,
+                      ),
+                    const SizedBox(width: AppSpace.x2),
+                    AppPressable(
+                      onTap: onDelete,
+                      semanticLabel: '删除字体',
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpace.x3),
+                        child: Icon(
+                          CupertinoIcons.trash,
+                          color: colors.destructive,
+                          size: 20,
                         ),
                       ),
-
-                      if (isActive)
-                        Text(
-                          '当前使用中',
-
-                          style: TextStyle(
-                            fontSize: 13,
-
-                            color: VellumTheme.accentOf(context),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-
-                if (!isActive)
-                  CupertinoButton(
-                    minimumSize: const Size(44, 44),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-
-                    onPressed: onActivate,
-
-                    child: Text(
-                      '启用',
-                      style: TextStyle(color: VellumTheme.accentOf(context)),
                     ),
-                  ),
-
-                CupertinoButton(
-                  minimumSize: const Size(44, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-
-                  onPressed: onDelete,
-
-                  child: Icon(
-                    CupertinoIcons.trash,
-
-                    color: CupertinoColors.systemRed.resolveFrom(context),
-
-                    size: 20,
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+/// The interface font family, resolved outside a widget tree.
+abstract final class VellumThemeFamilies {
+  static const system = 'sans-serif';
 }

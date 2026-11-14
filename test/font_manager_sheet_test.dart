@@ -32,9 +32,11 @@ void main() {
 
     expect(find.text('字体管理'), findsOneWidget);
     expect(find.text('暂无字体'), findsOneWidget);
+    // The empty state is the shared AppContentState: its description carries the
+    // muted role, its title the foreground role.
     expect(
       tester.widget<Text>(find.text('暂无字体')).style!.color,
-      AppColors.light.mutedForeground,
+      AppColors.light.foreground,
     );
   });
 
