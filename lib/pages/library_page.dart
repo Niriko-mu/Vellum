@@ -2,7 +2,13 @@ import 'package:flutter/cupertino.dart';
 
 import '../services/book_importer.dart';
 import '../services/library_models.dart';
-import '../theme/vellum_theme.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_shape.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_field.dart';
+import '../widgets/ui/app_pressable.dart';
+import '../widgets/ui/app_section.dart';
+import '../widgets/ui/app_sheet.dart';
 import 'book_widgets.dart';
 
 class LibraryPage extends StatefulWidget {
@@ -40,8 +46,15 @@ class LibraryPage extends StatefulWidget {
 }
 
 class _LibraryPageState extends State<LibraryPage> {
+  final _searchController = TextEditingController();
   String _query = '';
   String? _folderFilter; // null = all
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<ImportedBook> get _filtered {
     final q = _query.trim().toLowerCase();
@@ -228,10 +241,11 @@ class _LibraryPageState extends State<LibraryPage> {
     final showEmptyLibrary = widget.books.isEmpty;
     final showEmptySearch = !showEmptyLibrary && filtered.isEmpty;
 
+    final colors = context.c;
     return CupertinoPageScaffold(
-      backgroundColor: VellumTheme.shellOf(context),
+      backgroundColor: colors.background,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: VellumTheme.shellOf(context),
+        backgroundColor: colors.background,
         border: null,
         middle: const Text('书库'),
         trailing: Row(
@@ -256,17 +270,42 @@ class _LibraryPageState extends State<LibraryPage> {
           children: [
             if (!showEmptyLibrary) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 12, 18, 4),
-                child: CupertinoSearchTextField(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.pageGutter,
+                  AppSpace.x3,
+                  AppSpace.pageGutter,
+                  AppSpace.x2,
+                ),
+                child: AppTextField(
+                  controller: _searchController,
+                  search: true,
                   placeholder: '搜索书名',
                   onChanged: (value) => setState(() => _query = value),
+                  trailing: _query.isEmpty
+                      ? null
+                      : AppPressable(
+                          onTap: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                          semanticLabel: '清除搜索',
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              CupertinoIcons.xmark_circle_fill,
+                              size: 16,
+                            ),
+                          ),
+                        ),
                 ),
               ),
               SizedBox(
                 height: 40,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.pageGutter,
+                  ),
                   children: [
                     _folderChip(id: null, label: '全部'),
                     for (final folder in widget.folders)
@@ -280,15 +319,27 @@ class _LibraryPageState extends State<LibraryPage> {
                   ? EmptyLibrary(onImport: widget.onImport)
                   : showEmptySearch
                   ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          _query.trim().isEmpty
-                              ? '这个文件夹里还没有书。'
-                              : '没有找到与「${_query.trim()}」相关的书',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: VellumTheme.mutedOf(context)),
-                        ),
+                      child: AppContentState(
+                        kind: AppContentStateKind.empty,
+                        icon: CupertinoIcons.search,
+                        title: _query.trim().isEmpty
+                            ? '这个文件夹里还没有书'
+                            : '没有找到与「${_query.trim()}」相关的书',
+                        description: _query.trim().isEmpty
+                            ? '在书库里长按一本书可以把它移到这里。'
+                            : '换个关键词，或者清除搜索条件。',
+                        actions: [
+                          if (_query.trim().isNotEmpty)
+                            AppButton(
+                              label: '清除搜索',
+                              variant: AppButtonVariant.tonal,
+                              pill: true,
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _query = '');
+                              },
+                            ),
+                        ],
                       ),
                     )
                   : LayoutBuilder(
@@ -306,7 +357,12 @@ class _LibraryPageState extends State<LibraryPage> {
                             ? 5
                             : 6;
                         return GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(14, 8, 14, 28),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpace.pageGutter,
+                            AppSpace.x2,
+                            AppSpace.pageGutter,
+                            AppSpace.x6,
+                          ),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: columns,
@@ -340,26 +396,12 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 
   Widget _folderChip({required String? id, required String label}) {
-    final selected = _folderFilter == id;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        minimumSize: const Size(0, 32),
-        borderRadius: BorderRadius.circular(16),
-        color: selected
-            ? VellumTheme.accentOf(context)
-            : VellumTheme.cardOf(context),
-        onPressed: () => setState(() => _folderFilter = id),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected
-                ? CupertinoColors.white
-                : VellumTheme.inkOf(context),
-            fontSize: 13,
-          ),
-        ),
+      padding: const EdgeInsets.only(right: AppSpace.x2),
+      child: AppChip(
+        label: label,
+        selected: _folderFilter == id,
+        onTap: () => setState(() => _folderFilter = id),
       ),
     );
   }
@@ -387,57 +429,35 @@ class _FolderPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxH = MediaQuery.sizeOf(context).height * .56;
-    return Container(
-      constraints: BoxConstraints(maxHeight: maxH),
-      decoration: BoxDecoration(
-        color: VellumTheme.cardOf(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    final colors = context.c;
+    return AppSheet(
+      title: title,
+      maxHeightFactor: 0.56,
+      footer: AppButton(
+        label: '取消',
+        variant: AppButtonVariant.tonal,
+        expand: true,
+        onPressed: () => Navigator.pop(context),
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: VellumTheme.inkOf(context),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+      child: ClipRRect(
+        borderRadius: AppRadius.groupedAll,
+        child: ColoredBox(
+          color: colors.backgroundSubtle,
+          child: Column(
+            children: [
+              if (onSelectAll != null)
+                AppRow(
+                  label: trailingAllLabel ?? '全部',
+                  onTap: onSelectAll!,
                 ),
-              ),
-            ),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                children: [
-                  if (onSelectAll != null)
-                    _tile(context, trailingAllLabel ?? '全部', onSelectAll!),
-                  if (extraActionLabel != null && onExtraAction != null)
-                    _tile(context, extraActionLabel!, onExtraAction!),
-                  for (final folder in folders)
-                    _tile(context, folder.name, () => onSelect(folder)),
-                ],
-              ),
-            ),
-            Container(height: 1, color: VellumTheme.lineOf(context)),
-            CupertinoButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-          ],
+              if (extraActionLabel != null && onExtraAction != null)
+                AppRow(label: extraActionLabel!, onTap: onExtraAction!),
+              for (final folder in folders)
+                AppRow(label: folder.name, onTap: () => onSelect(folder)),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _tile(BuildContext context, String label, VoidCallback onTap) =>
-      CupertinoListTile(
-        title: Text(label, style: TextStyle(color: VellumTheme.inkOf(context))),
-        onTap: onTap,
-      );
 }
