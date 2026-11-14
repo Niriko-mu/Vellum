@@ -18,6 +18,7 @@ class AppPressable extends StatefulWidget {
     this.pressedColor,
     this.semanticLabel,
     this.semanticHint,
+    this.onPressChanged,
     this.isButton = true,
     this.enabled = true,
     this.behaviour = HitTestBehavior.opaque,
@@ -36,6 +37,11 @@ class AppPressable extends StatefulWidget {
 
   final String? semanticLabel;
   final String? semanticHint;
+
+  /// Reports press state. Grouped sections use it to hide the hairline above
+  /// and below the pressed row: a pressed row with a line running through it
+  /// looks like two rows, not one surface being touched.
+  final ValueChanged<bool>? onPressChanged;
   final bool isButton;
   final bool enabled;
   final HitTestBehavior behaviour;
@@ -53,6 +59,7 @@ class _AppPressableState extends State<AppPressable> {
   void _setPressed(bool value) {
     if (!_interactive || _pressed == value) return;
     setState(() => _pressed = value);
+    widget.onPressChanged?.call(value);
   }
 
   @override

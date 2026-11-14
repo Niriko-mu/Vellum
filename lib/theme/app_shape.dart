@@ -80,14 +80,20 @@ abstract final class AppSpace {
   /// Gap between two grouped sections.
   static const double sectionGap = x6;
 
-  /// Row height without a leading icon.
-  static const double rowMinHeight = x11;
-
-  /// Row height with a leading icon.
-  static const double rowMinHeightLeading = x14;
+  /// Row height floor. Not a ceiling: a single-line row is 16/24 text plus 12
+  /// top and bottom padding = 48 naturally, and a two-line row grows to 72.
+  /// A fixed height would clip at large text sizes.
+  static const double rowMinHeight = x10;
 
   /// Grouped section header height.
   static const double sectionHeaderMinHeight = x10;
+
+  /// Separator inset when rows carry a leading glyph: 16 padding + 16 glyph +
+  /// 12 gap, so the hairline starts where the label does.
+  static const double separatorInsetAfterLeading = x4 + x4 + x3;
+
+  /// Separator inset when rows have no leading glyph.
+  static const double separatorInset = x3;
 
   /// Reading measure cap on tablets and desktop windows.
   static const double contentMaxWidth = 720;
