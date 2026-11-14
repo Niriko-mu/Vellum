@@ -128,7 +128,7 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
                       ),
                       subtitle: Text(
                         '保留在「未关联笔记」，之后可再关联',
-                        style: TextStyle(color: muted, fontSize: 12),
+                        style: TextStyle(color: muted, fontSize: 13),
                       ),
                       trailing: widget.unassociated
                           ? Icon(CupertinoIcons.checkmark_alt, color: accent)

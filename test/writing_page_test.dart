@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/vellum.dart';
+import 'package:vellum/widgets/ui/app_controls.dart';
 
 /// In-memory library so the editor can auto-save without path_provider.
 class _MemoryWritingLibrary extends WritingLibrary {
@@ -215,9 +216,9 @@ void main() {
     expect(segmented.groupValue, 3);
 
     // Novel switch: flips in the panel without waiting on disk.
-    await tester.tap(find.byType(CupertinoSwitch));
+    await tester.tap(find.byType(AppSwitch));
     await tester.pump();
-    final sw = tester.widget<CupertinoSwitch>(find.byType(CupertinoSwitch));
+    final sw = tester.widget<AppSwitch>(find.byType(AppSwitch));
     expect(sw.value, isTrue);
 
     // Navbar also has 完成; close the sheet via its own button.
@@ -250,8 +251,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Markdown 模式下不启用，切换到纯文本即可使用'), findsOneWidget);
 
-    final sw = tester.widget<CupertinoSwitch>(find.byType(CupertinoSwitch));
+    final sw = tester.widget<AppSwitch>(find.byType(AppSwitch));
     expect(sw.value, isFalse);
-    expect(sw.onChanged, isNull);
+    // A disabled switch keeps its callback but reports itself as not tappable.
+    expect(sw.enabled, isFalse);
   });
 }

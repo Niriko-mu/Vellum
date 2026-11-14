@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../services/library_models.dart';
 import '../theme/vellum_theme.dart';
+import '../widgets/ui/app_controls.dart';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import '../services/reader_background.dart';
@@ -741,7 +742,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
         Expanded(
           child: Text(detail, style: TextStyle(fontSize: 13, color: _muted)),
         ),
-        CupertinoSwitch(value: value, onChanged: onChanged),
+        AppSwitch(value: value, semanticLabel: label, onChanged: onChanged),
       ],
     ),
   );

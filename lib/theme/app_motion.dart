@@ -3,8 +3,8 @@ import 'package:flutter/widgets.dart';
 /// Motion vocabulary: three curves, three durations, one spring.
 ///
 /// Components name the pairing after the gesture; nothing invents its own
-/// curve. `Curves.easeInOut` is absent on purpose — ease-in reads as "the
-/// interface hesitated".
+/// curve. Ease-in-out is absent on purpose — ease-in reads as "the interface
+/// hesitated".
 abstract final class AppMotion {
   /// Pure deceleration. The default, for anything that changes an existing
   /// thing's size or place.

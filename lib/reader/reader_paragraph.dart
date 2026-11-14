@@ -167,6 +167,8 @@ class ReaderParagraph extends StatelessWidget {
         plain,
         image: image,
         highlights: highlights,
+        // Mark passages with the brand role itself rather than a frozen copy
+        // of it: the highlight must follow whatever the accent step becomes.
         highlightColor:
             highlightColor ??
             VellumTheme.readerAccentOf(context).withValues(alpha: .22),
@@ -277,9 +279,9 @@ class ReaderParagraph extends StatelessWidget {
     String source, {
     Uint8List? image,
     List<String> highlights = const [],
-    Color highlightColor = const Color(0x33a33d2e),
+    Color highlightColor = const Color(0x33A33D2E),
     String searchHighlight = '',
-    Color searchHighlightColor = const Color(0x55a33d2e),
+    Color searchHighlightColor = const Color(0x55A33D2E),
   }) {
     final spans = <InlineSpan>[];
     final buffer = StringBuffer();
@@ -512,7 +514,7 @@ class _NoteMarker extends StatelessWidget {
                   '$count',
                   style: const TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: CupertinoColors.white,
                   ),
                 ),

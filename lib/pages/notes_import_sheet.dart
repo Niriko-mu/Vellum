@@ -91,7 +91,7 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
                 '读到 ${notes.length} 条笔记'
                 '${widget.fileName.isEmpty ? '' : ' · ${widget.fileName}'}'
                 '${widget.import.format == 'json' ? '（JSON 备份）' : '（文本）'}',
-                style: TextStyle(color: muted, fontSize: 12),
+                style: TextStyle(color: muted, fontSize: 13),
               ),
             ),
 
@@ -99,7 +99,7 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
             // change where the notes will land.
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Text('关联书籍', style: TextStyle(color: muted, fontSize: 12)),
+              child: Text('关联书籍', style: TextStyle(color: muted, fontSize: 13)),
             ),
             CupertinoListTile(
               backgroundColor: bg,
@@ -118,7 +118,7 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
               ),
               subtitle: Text(
                 _unassociated ? '先存下来，之后可以再关联到某本书' : widget.match.reason,
-                style: TextStyle(color: muted, fontSize: 12),
+                style: TextStyle(color: muted, fontSize: 13),
               ),
               trailing: const Icon(CupertinoIcons.chevron_down, size: 16),
               onTap: _pickBook,
@@ -128,14 +128,14 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
                 child: Text(
                   widget.import.warning,
-                  style: TextStyle(color: muted, fontSize: 12),
+                  style: TextStyle(color: muted, fontSize: 13),
                 ),
               ),
 
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text('预览', style: TextStyle(color: muted, fontSize: 12)),
+              child: Text('预览', style: TextStyle(color: muted, fontSize: 13)),
             ),
             Flexible(
               child: Container(
@@ -176,7 +176,7 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
                                   comment,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: muted, fontSize: 12),
+                                  style: TextStyle(color: muted, fontSize: 13),
                                 ),
                               ),
                           ],

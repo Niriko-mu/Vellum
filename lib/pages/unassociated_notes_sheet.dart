@@ -122,7 +122,7 @@ class _UnassociatedNotesSheetState extends State<UnassociatedNotesSheet> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
               child: Text(
                 '这些笔记还没有所属的书。选择一本即可关联。',
-                style: TextStyle(color: muted, fontSize: 12),
+                style: TextStyle(color: muted, fontSize: 13),
               ),
             ),
             Flexible(
@@ -162,7 +162,7 @@ class _UnassociatedNotesSheetState extends State<UnassociatedNotesSheet> {
                                 : note.note,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: muted, fontSize: 12),
+                            style: TextStyle(color: muted, fontSize: 13),
                           ),
                           trailing: CupertinoButton(
                             padding: EdgeInsets.zero,

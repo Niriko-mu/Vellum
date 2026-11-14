@@ -6,6 +6,8 @@ import 'package:flutter/cupertino.dart';
 import '../services/vellum_backup_service.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_type.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -360,8 +362,9 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                 CupertinoListTile(
                   title: const Text('备份加密'),
                   additionalInfo: Text(_encrypt ? '开启' : '关闭'),
-                  trailing: CupertinoSwitch(
+                  trailing: AppSwitch(
                     value: _encrypt,
+                    semanticLabel: '备份加密',
                     onChanged: (value) => setState(() => _encrypt = value),
                   ),
                 ),
@@ -384,8 +387,9 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                             bucketUrl: _bucket.text,
                           ).vendorLabel,
                   ),
-                  trailing: CupertinoSwitch(
+                  trailing: AppSwitch(
                     value: _showCloud,
+                    semanticLabel: '对象存储',
                     onChanged: (value) => setState(() => _showCloud = value),
                   ),
                   onTap: () => setState(() => _showCloud = !_showCloud),
@@ -498,11 +502,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                 children: [
                   Text(
                     '数据由你掌握',
-                    style: TextStyle(
-                      color: ink,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppText.sectionHeader(ink),
                   ),
                   const SizedBox(height: 4),
                   Text(

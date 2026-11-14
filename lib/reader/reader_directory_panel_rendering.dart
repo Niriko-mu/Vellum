@@ -501,13 +501,17 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                                 : FontWeight.w400,
                           ),
                         ),
-                        if (secondary.isNotEmpty) ...[
+                        // The catalogue item is a fixed 54dp Fanqie row. At a
+                        // large text scale the title alone fills it, so the
+                        // secondary line steps aside rather than being clipped.
+                        if (secondary.isNotEmpty &&
+                            MediaQuery.textScalerOf(context).scale(1) <= 1.4) ...[
                           const SizedBox(height: 4),
                           Text(
                             secondary,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: metaColor, fontSize: 12),
+                            style: TextStyle(color: metaColor, fontSize: 13),
                           ),
                         ],
                       ],
@@ -634,7 +638,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                         '${summary.currentPageLabel.isEmpty ? '' : ' · ${summary.currentPageLabel}'}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: muted, fontSize: 11),
+                        style: TextStyle(color: muted, fontSize: 13),
                       ),
                     ],
                   ),

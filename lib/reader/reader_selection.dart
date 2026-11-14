@@ -353,9 +353,8 @@ Future<void> showParagraphNotesSheet(
   await showCupertinoModalPopup<void>(
     context: context,
     builder: (ctx) {
-      final isDark = CupertinoTheme.of(ctx).brightness == Brightness.dark;
-    final colors = context.c;
-      final bg = isDark ? const Color(0xff2c2c2e) : const Color(0xfff7f7f7);
+      final colors = context.c;
+      final bg = colors.card;
       final ink = colors.foreground;
       final muted = colors.mutedForeground;
       final tileBg = colors.card;

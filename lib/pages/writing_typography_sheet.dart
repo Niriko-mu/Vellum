@@ -7,6 +7,7 @@ import '../services/library_models.dart';
 import '../services/writing_library.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingTypographySheet extends StatefulWidget {
@@ -271,12 +272,11 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                     ],
                   ),
                 ),
-                CupertinoSwitch(
+                AppSwitch(
                   value: widget.novelAvailable && _typo.novelMode,
-                  activeTrackColor: accent,
-                  onChanged: widget.novelAvailable
-                      ? (v) => _update(_typo.copyWith(novelMode: v))
-                      : null,
+                  enabled: widget.novelAvailable,
+                  semanticLabel: '小说排版',
+                  onChanged: (v) => _update(_typo.copyWith(novelMode: v)),
                 ),
               ],
             ),
