@@ -6,7 +6,7 @@
 # 每一行是「规则 / 当前基线」。改完一批 UI 后重跑，把下降后的数字写回基线。
 $root = Join-Path $PSScriptRoot '..\lib'
 $rules = @(
-  @{ Name = 'widget 内颜色字面量'; Pattern = 'Color\(0x[0-9a-fA-F]{8}\)'; Baseline = 16; Files = @(
+  @{ Name = 'widget 内颜色字面量'; Pattern = 'Color\(0x[0-9a-fA-F]{8}\)'; Baseline = 14; Files = @(
       'reader\reader_color_picker.dart',
       'reader\reader_controls.dart',
       'reader\reader_directory_panel_rendering.dart',

@@ -18,13 +18,18 @@ class ReaderReadingTimePill extends StatelessWidget {
   final ValueListenable<int> todaySeconds;
   final Color surface;
 
+  /// Reading time is ambient information, so it is rendered in minutes.
+  ///
+  /// A seconds-precision label changes every single second for the first
+  /// minute, which makes the reader repaint once a second forever — measured
+  /// at 6 needless frames per 5 idle seconds. Minutes are what a reader
+  /// actually reads.
   static String compactDuration(int seconds) {
     final value = seconds < 0 ? 0 : seconds;
     final hours = value ~/ 3600;
     final minutes = (value % 3600) ~/ 60;
     if (hours > 0) return '${hours}h${minutes.toString().padLeft(2, '0')}';
-    if (minutes > 0) return '${minutes}m';
-    return '${value}s';
+    return '${minutes}m';
   }
 
   @override

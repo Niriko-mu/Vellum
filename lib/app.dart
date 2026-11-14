@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart'
-    show SystemUiOverlayStyle, SystemChrome, Uint8List;
+    show SystemUiOverlayStyle, Uint8List;
 
 import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show MaterialApp, Theme, ThemeMode;
+import 'package:flutter/material.dart'
+    show Colors, MaterialApp, Theme, ThemeMode;
 
 import 'pages/cover_editor_sheet.dart';
 import 'pages/library_pages.dart';
@@ -296,35 +297,35 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
           ? ThemeMode.dark
           : ThemeMode.light,
       builder: (context, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        // Edge-to-edge: the status and navigation bars are transparent and the
-        // page paints behind them. Their icons follow the resolved brightness.
-        SystemChrome.setSystemUIOverlayStyle(
-          SystemUiOverlayStyle(
-            statusBarColor: const Color(0x00000000),
-            statusBarIconBrightness: isDark
-                ? Brightness.light
-                : Brightness.dark,
-            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-            systemNavigationBarColor: const Color(0x00000000),
-            systemNavigationBarIconBrightness: isDark
-                ? Brightness.light
-                : Brightness.dark,
-          ),
-        );
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
         final family =
-            Theme.of(context).textTheme.bodyMedium?.fontFamily ??
+            theme.textTheme.bodyMedium?.fontFamily ??
             VellumTheme.systemUiFontFamily;
-        return DefaultTextStyle(
-          // MaterialApp ships WidgetsApp with a deliberately loud red-on-yellow
-          // error text style as its default. Everything we have not styled
-          // explicitly must fall back to the row title instead.
-          style: AppText.rowTitle(
-            Theme.of(context).extension<AppColors>()!.foreground,
-          ).copyWith(fontFamily: family, decoration: TextDecoration.none),
-          child: CupertinoTheme(
-            data: VellumTheme.cupertinoOf(context),
-            child: child ?? const SizedBox.shrink(),
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          // Edge-to-edge: the bars are transparent and the page paints behind
+          // them; the icons follow the resolved brightness. This is read from
+          // the layer tree, so it costs nothing per rebuild — a
+          // `SystemChrome.setSystemUIOverlayStyle` call here would cross the
+          // platform channel on every tab tap and every theme frame.
+          value: (isDark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark)
+              .copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: Colors.transparent,
+              ),
+          child: DefaultTextStyle(
+            // MaterialApp ships WidgetsApp with a deliberately loud red-on-yellow
+            // error text style as its default. Everything we have not styled
+            // explicitly must fall back to the row title instead.
+            style: AppText.rowTitle(
+              theme.extension<AppColors>()!.foreground,
+            ).copyWith(fontFamily: family, decoration: TextDecoration.none),
+            child: CupertinoTheme(
+              data: VellumTheme.cupertinoOf(context),
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },
@@ -437,7 +438,9 @@ class _LibraryShellState extends State<LibraryShell>
   Timer? _widgetSyncTimer;
   String? _widgetCurrentBookId;
 
-  int _tab = 0;
+  /// Tab index as a listenable: tapping a tab changes one int, it does not
+  /// rebuild the shell and therefore does not re-run every tab's build.
+  final _tab = ValueNotifier<int>(0);
 
   bool _importing = false;
 
@@ -458,6 +461,7 @@ class _LibraryShellState extends State<LibraryShell>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _widgetSyncTimer?.cancel();
+    _tab.dispose();
     super.dispose();
   }
 
@@ -830,9 +834,9 @@ class _LibraryShellState extends State<LibraryShell>
       children: [
         CupertinoTabScaffold(
           tabBar: CupertinoTabBar(
-            currentIndex: _tab,
+            currentIndex: _tab.value,
 
-            onTap: (value) => setState(() => _tab = value),
+            onTap: (value) => _tab.value = value,
 
             activeColor: context.c.primary,
 
