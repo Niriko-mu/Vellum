@@ -83,14 +83,14 @@ void main() {
     await tester.pumpWidget(
       CupertinoApp(home: WritingPage(initialDocuments: documents)),
     );
-    await tester.enterText(find.byType(CupertinoSearchTextField), '灯塔');
+    await tester.enterText(find.byType(CupertinoTextField), '灯塔');
     await tester.pumpAndSettle();
     expect(find.text('第一篇'), findsOneWidget);
     expect(find.text('第二篇'), findsNothing);
-    await tester.enterText(find.byType(CupertinoSearchTextField), '无匹配的文字');
+    await tester.enterText(find.byType(CupertinoTextField), '无匹配的文字');
     await tester.pumpAndSettle();
     expect(find.text('未找到相关文稿'), findsOneWidget);
-    await tester.enterText(find.byType(CupertinoSearchTextField), '');
+    await tester.enterText(find.byType(CupertinoTextField), '');
     await tester.pumpAndSettle();
     expect(find.text('第一篇'), findsOneWidget);
     expect(find.text('第二篇'), findsOneWidget);
