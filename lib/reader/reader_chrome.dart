@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../theme/app_motion.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
 
 /// Fanqie top bar (alg.xml): **44dp**, back @16dp. Chapter/book label sits
@@ -37,11 +38,14 @@ class ReaderTopBar extends StatelessWidget {
           height: height,
           child: Row(
             children: [
-              CupertinoButton(
-                padding: const EdgeInsets.only(left: 16, right: 4),
-                minimumSize: const Size(48, 44),
-                onPressed: onBack,
-                child: Icon(CupertinoIcons.chevron_back, size: 26, color: ink),
+              AppPressable(
+                onTap: onBack,
+                semanticLabel: '返回',
+                child: SizedBox(
+                  width: 48,
+                  height: 44,
+                  child: Icon(CupertinoIcons.chevron_back, size: 26, color: ink),
+                ),
               ),
               Expanded(
                 child: Padding(
@@ -60,18 +64,21 @@ class ReaderTopBar extends StatelessWidget {
                   ),
                 ),
               ),
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                minimumSize: const Size(48, 44),
-                onPressed: onToggleBookmark,
-                child: Icon(
-                  bookmarked
-                      ? CupertinoIcons.bookmark_fill
-                      : CupertinoIcons.bookmark,
-                  size: 22,
-                  color: bookmarked
-                      ? context.c.primary
-                      : ink.withValues(alpha: .85),
+              AppPressable(
+                onTap: onToggleBookmark,
+                semanticLabel: bookmarked ? '取消书签' : '添加书签',
+                child: SizedBox(
+                  width: 48,
+                  height: 44,
+                  child: Icon(
+                    bookmarked
+                        ? CupertinoIcons.bookmark_fill
+                        : CupertinoIcons.bookmark,
+                    size: 22,
+                    color: bookmarked
+                        ? context.c.primary
+                        : ink.withValues(alpha: .85),
+                  ),
                 ),
               ),
             ],

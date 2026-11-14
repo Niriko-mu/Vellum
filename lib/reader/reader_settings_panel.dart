@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/library_models.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import '../services/reader_background.dart';
@@ -11,6 +12,7 @@ import 'reader_panel_common.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_type.dart';
 class ReaderSettingsPanel extends StatefulWidget {
   const ReaderSettingsPanel({
     required this.fontSize,
@@ -174,31 +176,25 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            minimumSize: const Size(0, 34),
+          child: AppTextButton(
+            label: '导入图片',
+            icon: CupertinoIcons.photo_on_rectangle,
+            color: _ink,
+            pressedColor: _ink.withValues(alpha: .06),
             onPressed: _pickBackgroundImage,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(CupertinoIcons.photo_on_rectangle, size: 16, color: _ink),
-                const SizedBox(width: 4),
-                Text('导入图片', style: TextStyle(fontSize: 13, color: _ink)),
-              ],
-            ),
           ),
         ),
         if (widget.background.usesImage)
-          CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            minimumSize: const Size(0, 34),
+          AppTextButton(
+            label: '移除',
+            color: _muted,
+            pressedColor: _ink.withValues(alpha: .06),
             onPressed: () => widget.onBackground(
               widget.background.copyWith(
                 clearImage: true,
                 kind: BackgroundKind.solid,
               ),
             ),
-            child: Text('移除', style: TextStyle(fontSize: 13, color: _muted)),
           ),
       ],
     ),
@@ -220,28 +216,22 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             ),
           ),
           const SizedBox(width: 10),
-          CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            minimumSize: const Size(0, 34),
+          AppTextButton(
+            label: _showUnderlayPicker ? '收起取色' : '取色',
+            color: _ink,
+            pressedColor: _ink.withValues(alpha: .06),
             onPressed: () => _setSubpage(() {
               _showInkPicker = false;
               _showUnderlayPicker = !_showUnderlayPicker;
             }),
-            child: Text(
-              _showUnderlayPicker ? '收起取色' : '取色',
-              style: TextStyle(fontSize: 13, color: _ink),
-            ),
           ),
           if (widget.background.colorValue != null)
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(0, 34),
+            AppTextButton(
+              label: '恢复默认',
+              color: _muted,
+              pressedColor: _ink.withValues(alpha: .06),
               onPressed: () => widget.onBackground(
                 widget.background.copyWith(clearColor: true),
-              ),
-              child: Text(
-                '恢复默认',
-                style: TextStyle(fontSize: 13, color: _muted),
               ),
             ),
         ],
@@ -297,25 +287,22 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           ),
         ),
         const SizedBox(width: 10),
-        CupertinoButton(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          minimumSize: const Size(0, 34),
+        AppTextButton(
+          label: _showInkPicker ? '收起取色' : '取色',
+          color: _ink,
+          pressedColor: _ink.withValues(alpha: .06),
           onPressed: () => _setSubpage(() {
             _showUnderlayPicker = false;
             _showInkPicker = !_showInkPicker;
           }),
-          child: Text(
-            _showInkPicker ? '收起取色' : '取色',
-            style: TextStyle(fontSize: 13, color: _ink),
-          ),
         ),
         if (widget.background.inkColorValue != null)
-          CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            minimumSize: const Size(0, 34),
+          AppTextButton(
+            label: '恢复默认',
+            color: _muted,
+            pressedColor: _ink.withValues(alpha: .06),
             onPressed: () =>
                 widget.onBackground(widget.background.copyWith(clearInk: true)),
-            child: Text('恢复默认', style: TextStyle(fontSize: 13, color: _muted)),
           ),
       ],
     ),
@@ -341,23 +328,33 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             0xffb7b7b7: '浅灰',
             0xfff7e4cf: '米黄',
           }.entries)
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              minimumSize: const Size(0, 30),
-              color: Color(entry.key),
-              borderRadius: BorderRadius.circular(AppRadius.grouped),
-              onPressed: () => widget.onBackground(
+            // A colour swatch, not a button: the fill *is* the information,
+            // so the label sits on constant ink rather than a theme role.
+            AppPressable(
+              onTap: () => widget.onBackground(
                 widget.background.copyWith(inkColorValue: entry.key),
               ),
-              child: Text(
-                entry.value,
-                style: TextStyle(
-                  fontSize: 13,
-                  color:
+              borderRadius: AppRadius.groupedAll,
+              semanticLabel: entry.value,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color(entry.key),
+                  borderRadius: AppRadius.groupedAll,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    entry.value,
+                    style: AppText.caption(
                       ReaderBackground.suggestTone(entry.key) ==
-                          BackgroundTone.dark
-                      ? CupertinoColors.white
-                      : CupertinoColors.black,
+                              BackgroundTone.dark
+                          ? context.c.constantWhite
+                          : context.c.constantBlack,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -557,22 +554,16 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               ],
             ),
           ),
-          CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            minimumSize: const Size(0, 36),
+          AppTextButton(
+            label: '自定义',
+            color: _ink,
+            pressedColor: _ink.withValues(alpha: .06),
             onPressed: () => _setSubpage(() {
               _showMore = false;
               _showInkPicker = false;
               _showUnderlayPicker = false;
               _showBackground = true;
             }),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('自定义', style: TextStyle(fontSize: 13, color: _ink)),
-                Icon(CupertinoIcons.chevron_forward, size: 14, color: _muted),
-              ],
-            ),
           ),
         ],
       ),
@@ -667,13 +658,14 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     surface: _surface,
     child: Row(
       children: [
-        CupertinoButton(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          minimumSize: const Size(44, 44),
+        AppTextButton(
+          label: 'A−',
+          size: AppButtonSize.regular,
+          color: _ink,
+          pressedColor: _ink.withValues(alpha: .06),
           onPressed: () => widget.onFontSize(
             (widget.fontSize - 1).clamp(kReaderFontMin, kReaderFontMax),
           ),
-          child: Text('A−', style: TextStyle(fontSize: 14, color: _ink)),
         ),
         Expanded(
           child: CupertinoSlider(
@@ -683,13 +675,14 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             onChanged: widget.onFontSize,
           ),
         ),
-        CupertinoButton(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          minimumSize: const Size(44, 44),
+        AppTextButton(
+          label: 'A+',
+          size: AppButtonSize.regular,
+          color: _ink,
+          pressedColor: _ink.withValues(alpha: .06),
           onPressed: () => widget.onFontSize(
             (widget.fontSize + 1).clamp(kReaderFontMin, kReaderFontMax),
           ),
-          child: Text('A+', style: TextStyle(fontSize: 14, color: _ink)),
         ),
         SizedBox(
           width: 28,
@@ -714,19 +707,11 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           onChanged: widget.onBrightness,
         ),
       ),
-      CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        minimumSize: const Size(44, 44),
+      AppTextButton(
+        label: _followsSystem ? '跟随系统' : '恢复跟随',
+        color: _followsSystem ? _muted : context.c.primary,
+        pressedColor: _ink.withValues(alpha: .06),
         onPressed: () => widget.onBrightness(_followSystemBrightness),
-        child: Text(
-          _followsSystem ? '跟随系统' : '恢复跟随',
-          style: TextStyle(
-            fontSize: 13,
-            color: _followsSystem
-                ? _muted
-                : context.c.primary,
-          ),
-        ),
       ),
     ],
   );

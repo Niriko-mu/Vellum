@@ -10,6 +10,7 @@ import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Reader chrome overlay.
 ///
@@ -532,11 +533,11 @@ class _ReaderMenuState extends State<ReaderMenu>
       VoidCallback? onTap,
     }) {
       final color = ink.withValues(alpha: enabled ? .9 : .32);
-      return CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        minimumSize: const Size(52, 44),
+      return AppTextButton(
+        label: text,
+        color: color,
+        pressedColor: ink.withValues(alpha: .06),
         onPressed: enabled ? onTap : null,
-        child: Text(text, style: TextStyle(color: color, fontSize: 14)),
       );
     }
 

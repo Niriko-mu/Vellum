@@ -55,11 +55,14 @@ class HomePage extends StatelessWidget {
         backgroundColor: colors.background,
         border: null,
         middle: const _Wordmark(),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(44, 44),
-          onPressed: onImport,
-          child: Icon(CupertinoIcons.add, color: colors.primary),
+        trailing: AppPressable(
+          onTap: onImport,
+          semanticLabel: '导入电子书',
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(CupertinoIcons.add, color: colors.primary),
+          ),
         ),
       ),
       child: books.isEmpty

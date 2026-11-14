@@ -8,6 +8,7 @@ import '../services/book_search.dart';
 import 'epub_original_reader_page.dart';
 import '../services/epub_original_state.dart';
 import 'reader_page.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Routes EPUB to its retained original while keeping the existing reader.
 class BookReadingHost extends StatefulWidget {
@@ -112,11 +113,11 @@ class _BookReadingHostState extends State<BookReadingHost> {
         Positioned(
           top: MediaQuery.paddingOf(context).top + 4,
           right: 12,
-          child: CupertinoButton(
-            color: CupertinoColors.systemGrey5.resolveFrom(context),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: AppButton(
+            label: '原书样式',
+            variant: AppButtonVariant.tonal,
+            size: AppButtonSize.small,
             onPressed: () => _switchMode(true),
-            child: const Text('原书样式', style: TextStyle(fontSize: 13)),
           ),
         ),
       ],

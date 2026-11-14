@@ -93,11 +93,9 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
                     ),
                   ),
                   const Spacer(),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(44, 32),
+                  AppTextButton(
+                    label: '完成',
                     onPressed: () => Navigator.pop(context),
-                    child: Text('完成', style: TextStyle(color: accent)),
                   ),
                 ],
               ),

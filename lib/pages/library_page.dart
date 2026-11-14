@@ -252,15 +252,23 @@ class _LibraryPageState extends State<LibraryPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (widget.onCreateFolder != null)
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: _promptManageFolders,
-                child: const Icon(CupertinoIcons.folder),
+              AppPressable(
+                onTap: _promptManageFolders,
+                semanticLabel: '管理文件夹',
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(CupertinoIcons.folder),
+                ),
               ),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: widget.onImport,
-              child: const Icon(CupertinoIcons.add),
+            AppPressable(
+              onTap: widget.onImport,
+              semanticLabel: '导入电子书',
+              child: const SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(CupertinoIcons.add),
+              ),
             ),
           ],
         ),

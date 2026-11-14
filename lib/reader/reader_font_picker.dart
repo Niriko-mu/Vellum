@@ -5,6 +5,7 @@ import '../theme/vellum_theme.dart';
 import '../widgets/font_preview.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Fanqie-style font picker data: only the built-in system font is listed by
 /// default. User-imported fonts are appended from the real installed list;
@@ -105,11 +106,10 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                   ),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: CupertinoButton(
-                      minimumSize: const Size(44, 44),
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: AppTextButton(
+                      label: '完成',
+                      color: accent,
                       onPressed: () => Navigator.pop(context),
-                      child: Text('完成', style: TextStyle(color: accent)),
                     ),
                   ),
                 ],

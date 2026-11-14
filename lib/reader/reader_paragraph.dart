@@ -9,6 +9,8 @@ import 'reader_markup.dart';
 import 'reader_models.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Renders one reader paragraph (body, heading, quote, list, image, link).
 class ReaderParagraph extends StatelessWidget {
@@ -170,12 +172,10 @@ class ReaderParagraph extends StatelessWidget {
         // Mark passages with the brand role itself rather than a frozen copy
         // of it: the highlight must follow whatever the accent step becomes.
         highlightColor:
-            highlightColor ??
-            context.c.primary.withValues(alpha: .22),
+            highlightColor ?? context.c.primary.withValues(alpha: .22),
         searchHighlight: searchHighlight,
         searchHighlightColor:
-            searchHighlightColor ??
-            context.c.primary.withValues(alpha: .34),
+            searchHighlightColor ?? context.c.primary.withValues(alpha: .34),
       ),
     ];
     final alignment = effectiveHeading != null
@@ -245,11 +245,9 @@ class ReaderParagraph extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ...content,
-              CupertinoButton(
-                padding: const EdgeInsets.only(top: 2),
-                minimumSize: const Size(0, 28),
+              AppTextButton(
+                label: '跳转至书内链接',
                 onPressed: () => onJumpToParagraph?.call(target),
-                child: const Text('跳转至书内链接'),
               ),
             ],
           );
@@ -481,43 +479,45 @@ class _NoteMarker extends StatelessWidget {
       label: count == 1
           ? '打开第 $paragraphIndex 段笔记'
           : '打开第 $paragraphIndex 段的 $count 条笔记',
-      child: CupertinoButton(
-        padding: const EdgeInsets.all(4),
-        minimumSize: const Size(44, 44),
-        onPressed: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            boxShadow: [
-              BoxShadow(
-                color: CupertinoColors.black.withValues(alpha: .18),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                CupertinoIcons.chat_bubble_text,
-                size: 11,
-                color: CupertinoColors.white,
-              ),
-              if (count > 1) ...[
-                const SizedBox(width: 3),
-                Text(
-                  '$count',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: CupertinoColors.white,
-                  ),
+      child: AppPressable(
+        onTap: onTap,
+        semanticLabel: '打开笔记',
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.black.withValues(alpha: .18),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  CupertinoIcons.chat_bubble_text,
+                  size: 11,
+                  color: CupertinoColors.white,
+                ),
+                if (count > 1) ...[
+                  const SizedBox(width: 3),
+                  Text(
+                    '$count',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: CupertinoColors.white,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),

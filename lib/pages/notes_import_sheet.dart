@@ -7,6 +7,7 @@ import '../widgets/book_picker_sheet.dart';
 import '../widgets/ui/app_section.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Where the imported notes should land, as chosen in [NotesImportSheet].
 class NotesImportOutcome {
@@ -192,15 +193,20 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
               child: Row(
                 children: [
                   Expanded(
-                    child: CupertinoButton(
-                      color: ink.withValues(alpha: .06),
+                    child: AppButton(
+                      label: '取消',
+                      variant: AppButtonVariant.tonal,
+                      expand: true,
                       onPressed: () => Navigator.pop(context),
-                      child: Text('取消', style: TextStyle(color: ink)),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: CupertinoButton.filled(
+                    child: AppButton(
+                      label: _unassociated
+                          ? '仍然导入'
+                          : '导入到《${_selected!.title}》',
+                      expand: true,
                       onPressed: notes.isEmpty
                           ? null
                           : () => Navigator.pop(
@@ -209,11 +215,6 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
                                   ? const NotesImportOutcome.unassociated()
                                   : NotesImportOutcome.book(_selected!),
                             ),
-                      child: Text(
-                        _unassociated ? '仍然导入' : '导入到《${_selected!.title}》',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
                   ),
                 ],

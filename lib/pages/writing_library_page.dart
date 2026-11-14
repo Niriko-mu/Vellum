@@ -223,13 +223,16 @@ class _WritingPageState extends State<WritingPage> {
                         Semantics(
                           label: '导入文稿',
                           button: true,
-                          child: CupertinoButton(
-                            onPressed: _importDocument,
-                            padding: const EdgeInsets.all(12),
-                            child: Icon(
-                              CupertinoIcons.square_arrow_down,
-                              size: 23,
-                              color: ink,
+                          child: AppPressable(
+                            onTap: _importDocument,
+                            semanticLabel: '导入文稿',
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Icon(
+                                CupertinoIcons.square_arrow_down,
+                                size: 23,
+                                color: ink,
+                              ),
                             ),
                           ),
                         ),

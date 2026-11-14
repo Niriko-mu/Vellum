@@ -108,14 +108,10 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
         backgroundColor: colors.background,
         border: null,
         middle: const Text('阅读统计'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(44, 44),
+        trailing: AppTextButton(
+          label: '重置',
+          color: colors.destructive,
           onPressed: _confirmReset,
-          child: Text(
-            '重置',
-            style: AppText.rowTitle(colors.destructive),
-          ),
         ),
       ),
       child: _loading

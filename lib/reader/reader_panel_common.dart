@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_pressable.dart';
 class ReaderPanelTitle extends StatelessWidget {
   const ReaderPanelTitle({
     required this.icon,
@@ -27,12 +28,14 @@ class ReaderPanelTitle extends StatelessWidget {
       child: Row(
         children: [
           if (onBack != null)
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(44, 44),
-              pressedOpacity: .65,
-              onPressed: onBack,
-              child: Icon(CupertinoIcons.chevron_back, size: 20, color: muted),
+            AppPressable(
+              onTap: onBack,
+              semanticLabel: '返回',
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(CupertinoIcons.chevron_back, size: 20, color: muted),
+              ),
             )
           else
             Icon(icon, size: 18, color: context.c.primary),
@@ -47,12 +50,14 @@ class ReaderPanelTitle extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(44, 44),
-            pressedOpacity: .65,
-            onPressed: onClose,
-            child: Icon(CupertinoIcons.chevron_down, size: 20, color: muted),
+          AppPressable(
+            onTap: onClose,
+            semanticLabel: '收起',
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(CupertinoIcons.chevron_down, size: 20, color: muted),
+            ),
           ),
         ],
       ),

@@ -283,6 +283,92 @@ class AppButtonGeometry {
   }
 }
 
+/// A small text action: an icon and a word, no chrome.
+///
+/// Used where a filled or tonal button would be too heavy — the reader's
+/// settings panel, sheet headers, inline "全选/清空". It keeps the product's
+/// one press feedback (a whole-surface fill) instead of the stock Cupertino
+/// button's opacity dip, which is why it exists rather than being a styled
+/// version of one.
+class AppTextButton extends StatelessWidget {
+  const AppTextButton({
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.size = AppButtonSize.small,
+    this.color,
+    this.pressedColor,
+    this.semanticLabel,
+    super.key,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final AppButtonSize size;
+
+  /// Overrides the label colour. Reader panels sit on a paper surface whose ink
+  /// is not the theme foreground, so they pass their own.
+  final Color? color;
+
+  final Color? pressedColor;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.c;
+    final enabled = onPressed != null;
+    final labelColor = color ?? colors.primary;
+    final geometry = _sizeOf(size);
+
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: AppPressable(
+        onTap: onPressed,
+        enabled: enabled,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        semanticLabel: semanticLabel ?? label,
+        pressedColor: pressedColor,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: geometry.horizontal,
+            vertical: geometry.vertical,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: geometry.iconSize, color: labelColor),
+                SizedBox(width: geometry.gap),
+              ],
+              Text(label, style: geometry.labelStyle(labelColor)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static AppButtonGeometry _sizeOf(AppButtonSize size) => switch (size) {
+    AppButtonSize.small => const AppButtonGeometry(
+      horizontal: AppSpace.x2,
+      vertical: AppSpace.x1 + 2,
+      gap: 6,
+      iconSize: 16,
+      typeIndex: AppTypeStep.sm,
+      weight: FontWeight.w500,
+    ),
+    _ => const AppButtonGeometry(
+      horizontal: AppSpace.x3,
+      vertical: AppSpace.x2,
+      gap: AppSpace.x2,
+      iconSize: 20,
+      typeIndex: AppTypeStep.base,
+      weight: FontWeight.w500,
+    ),
+  };
+}
+
 /// A filter or tag. Chips are selections, not actions — "保存" is a button.
 class AppChip extends StatelessWidget {
   const AppChip({

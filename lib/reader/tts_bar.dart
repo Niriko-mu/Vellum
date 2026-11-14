@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Floating control bar while the listen (听书) feature is active.
 ///
@@ -105,18 +107,10 @@ class TtsBar extends StatelessWidget {
                         style: TextStyle(fontSize: 13, color: muted),
                       ),
                     ),
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      minimumSize: const Size(44, 36),
+                    AppTextButton(
+                      label: '×${speed.toStringAsFixed(2)}',
+                      color: accent,
                       onPressed: onCycleSpeed,
-                      child: Text(
-                        '×${speed.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: accent,
-                        ),
-                      ),
                     ),
                     _icon(
                       context,
@@ -141,10 +135,12 @@ class TtsBar extends StatelessWidget {
     VoidCallback onTap, {
     required Color color,
     double size = 24,
-  }) => CupertinoButton(
-    padding: EdgeInsets.zero,
-    minimumSize: const Size(44, 36),
-    onPressed: onTap,
-    child: Icon(icon, size: size, color: color),
+  }) => AppPressable(
+    onTap: onTap,
+    child: SizedBox(
+      width: 44,
+      height: 36,
+      child: Icon(icon, size: size, color: color),
+    ),
   );
 }
