@@ -8,6 +8,7 @@ import '../theme/vellum_theme.dart';
 import '../util/text_slices.dart';
 import 'reader_markup.dart';
 import 'reader_models.dart';
+import '../theme/app_shape.dart';
 
 /// Renders one reader paragraph (body, heading, quote, list, image, link).
 class ReaderParagraph extends StatelessWidget {
@@ -488,7 +489,7 @@ class _NoteMarker extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
             boxShadow: [
               BoxShadow(
                 color: CupertinoColors.black.withValues(alpha: .18),
@@ -510,7 +511,7 @@ class _NoteMarker extends StatelessWidget {
                 Text(
                   '$count',
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: CupertinoColors.white,
                   ),

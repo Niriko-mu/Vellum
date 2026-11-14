@@ -8,6 +8,7 @@ import 'reader_page_pagination_controller.dart';
 
 import 'reader_page_state.dart';
 import 'reader_page_state_surface_rendering.dart';
+import '../theme/app_motion.dart';
 
 extension ReaderPagePagination on ReaderPageState {
   double pageAvailableHeight(BuildContext context) {
@@ -467,7 +468,7 @@ extension ReaderPagePagination on ReaderPageState {
           ctx,
           alignment: 0.08,
           duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.settle,
         );
       }
       if (!mounted) return;
@@ -478,7 +479,7 @@ extension ReaderPagePagination on ReaderPageState {
           exact,
           alignment: 0.08,
           duration: const Duration(milliseconds: 100),
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.settle,
         );
       }
       if (mounted) {

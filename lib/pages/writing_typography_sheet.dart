@@ -6,6 +6,7 @@ import '../reader/reader_font_picker.dart';
 import '../services/library_models.dart';
 import '../services/writing_library.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingTypographySheet extends StatefulWidget {
@@ -108,7 +109,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
         decoration: BoxDecoration(
           color: card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.grouped),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -127,11 +128,11 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
             Text(
               '对所有文稿全局生效',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: muted),
+              style: TextStyle(fontSize: 13, color: muted),
             ),
             const SizedBox(height: 12),
             // Font row — same picker as the reading page (system + imported).
-            Text('字体', style: TextStyle(fontSize: 12, color: muted)),
+            Text('字体', style: TextStyle(fontSize: 13, color: muted)),
             const SizedBox(height: 8),
             CupertinoButton(
               padding: EdgeInsets.zero,
@@ -143,7 +144,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                 ),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: .08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                   border: Border.all(color: line),
                 ),
                 child: Row(
@@ -178,7 +179,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('字号', style: TextStyle(fontSize: 12, color: muted)),
+            Text('字号', style: TextStyle(fontSize: 13, color: muted)),
             Row(
               children: [
                 CupertinoButton(
@@ -223,13 +224,13 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                   child: Text(
                     '${_typo.fontSize.round()}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: muted),
+                    style: TextStyle(fontSize: 13, color: muted),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text('字重', style: TextStyle(fontSize: 12, color: muted)),
+            Text('字重', style: TextStyle(fontSize: 13, color: muted)),
             const SizedBox(height: 8),
             CupertinoSlidingSegmentedControl<int>(
               groupValue: _typo.weightIndex,
@@ -265,7 +266,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                         widget.novelAvailable
                             ? '开启后自动排版：段首两格缩进 · 段间空行'
                             : 'Markdown 模式下不启用，切换到纯文本即可使用',
-                        style: TextStyle(fontSize: 12, color: muted),
+                        style: TextStyle(fontSize: 13, color: muted),
                       ),
                     ],
                   ),
@@ -284,7 +285,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: .08),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: Text(
                 (widget.novelAvailable && _typo.novelMode)

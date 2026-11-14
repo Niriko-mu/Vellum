@@ -159,7 +159,7 @@ class BookGridCard extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(2),
+                                        borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
                                         child: LinearProgressIndicator(
                                           value: progress.clamp(0.0, 1.0),
                                           minHeight: 3,

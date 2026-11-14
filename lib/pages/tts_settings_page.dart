@@ -132,7 +132,7 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
               child: Text(
                 '配置后即可在阅读页点「听书」，从当前页开始朗读；'
                 '语音会缓存在本机以省流量。Key 只保存在这台设备上。',
-                style: TextStyle(fontSize: 12, color: muted, height: 1.5),
+                style: TextStyle(fontSize: 13, color: muted, height: 1.5),
               ),
             ),
             CupertinoListSection.insetGrouped(
@@ -211,7 +211,7 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
               child: Text(
                 'OpenAI 兼容接口按合成音频计费、Azure 按朗读字符数计费，'
                 '请在服务商侧留意用量；同一本书的语音会缓存，重复听不重复计费。',
-                style: TextStyle(fontSize: 11, color: muted, height: 1.5),
+                style: TextStyle(fontSize: 13, color: muted, height: 1.5),
               ),
             ),
           ],

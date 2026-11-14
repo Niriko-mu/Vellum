@@ -4,6 +4,7 @@ import '../services/book_search.dart';
 import '../services/notes_library.dart';
 import '../theme/vellum_theme.dart';
 import 'reader_directory_panel_state.dart';
+import '../theme/app_shape.dart';
 
 const double readerDirectorySearchListRoom = 96;
 
@@ -101,12 +102,12 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
             child: Text(
               '${results.paragraphCount} 段 · ${results.totalOccurrences} 处'
               '${results.truncated ? '（仅显示前面这些）' : ''}',
-              style: TextStyle(color: muted, fontSize: 12),
+              style: TextStyle(color: muted, fontSize: 13),
             ),
           ),
           Text(
             '$position/${hits.length}',
-            style: TextStyle(color: muted, fontSize: 12),
+            style: TextStyle(color: muted, fontSize: 13),
           ),
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -180,14 +181,14 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: accent,
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           Text(
             '${group.occurrences} 处',
-            style: TextStyle(color: muted, fontSize: 11),
+            style: TextStyle(color: muted, fontSize: 13),
           ),
         ],
       ),
@@ -233,7 +234,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: ink.withValues(alpha: .35),
-                  fontSize: 12,
+                  fontSize: 13,
                 ),
               ),
             const SizedBox(height: 2),
@@ -246,7 +247,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: ink.withValues(alpha: .35),
-                  fontSize: 12,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -256,12 +257,12 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                 Text(
                   '第 ${hit.paragraphIndex + 1} 段'
                   '${hit.first.lineNumber > 1 ? ' · 第 ${hit.first.lineNumber} 行' : ''}',
-                  style: TextStyle(color: muted, fontSize: 11),
+                  style: TextStyle(color: muted, fontSize: 13),
                 ),
                 if (page.isNotEmpty) ...[
                   Text(
                     ' · $page',
-                    style: TextStyle(color: muted, fontSize: 11),
+                    style: TextStyle(color: muted, fontSize: 13),
                   ),
                 ],
                 const Spacer(),
@@ -270,7 +271,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                     '本段 ${hit.matchCount} 处',
                     style: TextStyle(
                       color: accent.withValues(alpha: .8),
-                      fontSize: 11,
+                      fontSize: 13,
                     ),
                   ),
               ],
@@ -359,7 +360,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: ink.withValues(alpha: .035),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.grouped),
                 border: Border.all(color: ink.withValues(alpha: .08)),
               ),
               child: GestureDetector(
@@ -379,13 +380,13 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                             ),
                             decoration: BoxDecoration(
                               color: accent.withValues(alpha: .12),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
                             ),
                             child: Text(
                               note.kind.label,
                               style: TextStyle(
                                 color: accent,
-                                fontSize: 11,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -399,7 +400,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                               ].join(' · '),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: muted, fontSize: 12),
+                              style: TextStyle(color: muted, fontSize: 13),
                             ),
                           ),
                           Semantics(
@@ -427,7 +428,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                           padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                           decoration: BoxDecoration(
                             color: accent.withValues(alpha: .08),
-                            borderRadius: BorderRadius.circular(9),
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
                           ),
                           child: Text(
                             quote,

@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/notes_library.dart';
 import '../util/text_slices.dart' show safeSubstring, buildBingSearchUri;
+import '../theme/app_shape.dart';
 
 export '../util/text_slices.dart' show buildBingSearchUri;
 
@@ -255,7 +256,7 @@ class NoteSheetBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.grouped),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -275,7 +276,7 @@ class NoteSheetBody extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: quoteBg,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             child: Text(
               selectedText,
@@ -295,7 +296,7 @@ class NoteSheetBody extends StatelessWidget {
             style: TextStyle(color: fieldInk, fontSize: 15, height: 1.35),
             decoration: BoxDecoration(
               color: fieldBg,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
             textInputAction: TextInputAction.newline,
           ),
@@ -304,7 +305,7 @@ class NoteSheetBody extends StatelessWidget {
             Text(
               error!,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: CupertinoColors.systemRed,
               ),
             ),
@@ -368,7 +369,7 @@ Future<void> showParagraphNotesSheet(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               decoration: BoxDecoration(
                 color: bg,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.grouped),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -395,7 +396,7 @@ Future<void> showParagraphNotesSheet(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: tileBg,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -403,7 +404,7 @@ Future<void> showParagraphNotesSheet(
                               Text(
                                 note.kind.label,
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 13,
                                   color: muted,
                                   fontWeight: FontWeight.w600,
                                 ),

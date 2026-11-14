@@ -6,6 +6,7 @@ import '../services/book_search.dart';
 import 'reader_models.dart';
 import 'reader_directory_panel.dart';
 import 'reader_directory_panel_rendering.dart';
+import '../theme/app_motion.dart';
 
 class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
   var tab = 0;
@@ -249,7 +250,7 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
           searchScrollController.animateTo(
             (row * _searchRowHeight).clamp(0.0, max),
             duration: const Duration(milliseconds: 160),
-            curve: Curves.easeOutCubic,
+            curve: AppMotion.settle,
           );
           return;
         }
@@ -372,7 +373,7 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
       scrollController.animateTo(
         offset,
         duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.settle,
       );
     }
     if (currentOffscreen) setState(() => currentOffscreen = false);

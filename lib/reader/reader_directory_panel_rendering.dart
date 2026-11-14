@@ -4,6 +4,7 @@ import '../theme/vellum_theme.dart';
 import 'reader_directory_panel.dart';
 import 'reader_directory_panel_state.dart';
 import 'reader_directory_panel_search_view.dart';
+import '../theme/app_shape.dart';
 
   /// Fanqie caloglayout structure: book name → tabs → divider → list.
   /// Parent supplies full band height; panel fills it.
@@ -320,7 +321,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: ink.withValues(alpha: .06),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Row(
         children: [
@@ -554,7 +555,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
             child: CupertinoButton(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               minimumSize: const Size(44, 44),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(AppRadius.xl3),
               color: accent,
               onPressed: () {
                 didAutoScroll = false;
@@ -593,7 +594,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: accent.withValues(alpha: .08),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.grouped),
             border: Border.all(color: accent.withValues(alpha: .22)),
           ),
           child: Padding(
@@ -662,7 +663,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
     required Color color,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(3),
+      borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
       child: SizedBox(
         height: 4,
         child: LinearProgressIndicator(

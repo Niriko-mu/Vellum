@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../services/vellum_backup_service.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -414,7 +415,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                       '支持 https://bucket.cos.region.myqcloud.com 与 https://bucket.oss-cn-region.aliyuncs.com。密钥只保存在本机安全存储。',
                       style: TextStyle(
                         color: muted,
-                        fontSize: 12,
+                        fontSize: 13,
                         height: 1.35,
                       ),
                     ),
@@ -480,7 +481,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
         decoration: BoxDecoration(
           color: card,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(AppRadius.xl3),
           border: Border.all(color: VellumTheme.lineOf(context)),
         ),
         child: Row(
@@ -522,7 +523,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
   ) => Container(
     decoration: BoxDecoration(
       color: card,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadius.xl2),
     ),
     child: Column(
       children: [
@@ -533,7 +534,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
               Expanded(
                 child: Text(
                   '${_selectedSections.length}/${BackupSection.values.length} 类内容已选择',
-                  style: TextStyle(color: muted, fontSize: 12),
+                  style: TextStyle(color: muted, fontSize: 13),
                 ),
               ),
               CupertinoButton(
@@ -573,7 +574,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
   }) => Container(
     decoration: BoxDecoration(
       color: card,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadius.xl2),
       border: Border.all(color: VellumTheme.lineOf(context)),
     ),
     child: Column(children: children),
@@ -609,7 +610,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
       decoration: BoxDecoration(
         color: CupertinoColors.systemFill.resolveFrom(context),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
     ),
   );

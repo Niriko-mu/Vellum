@@ -6,6 +6,8 @@ import 'reader_chrome.dart';
 import '../services/reader_background.dart';
 import 'reader_control_panels.dart';
 import 'reader_models.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_shape.dart';
 
 /// Reader chrome overlay.
 ///
@@ -267,11 +269,11 @@ class _ReaderMenuState extends State<ReaderMenu>
     final topSlide = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _chromeAnim, curve: Curves.easeOutCubic));
+    ).animate(CurvedAnimation(parent: _chromeAnim, curve: AppMotion.settle));
     final bottomSlide = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _chromeAnim, curve: Curves.easeOutCubic));
+    ).animate(CurvedAnimation(parent: _chromeAnim, curve: AppMotion.settle));
     final chromeVisible = widget.visible || _chromeAnim.isAnimating;
 
     // Bottom chrome always shows progress + actions so seek stays usable
@@ -394,7 +396,7 @@ class _ReaderMenuState extends State<ReaderMenu>
                                   height: 4,
                                   decoration: BoxDecoration(
                                     color: chromeInk.withValues(alpha: .22),
-                                    borderRadius: BorderRadius.circular(2),
+                                    borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
                                   ),
                                 ),
                               ),
@@ -526,7 +528,7 @@ class _ReaderMenuState extends State<ReaderMenu>
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: ink.withValues(alpha: .86),
-                      fontSize: 12,
+                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -534,7 +536,7 @@ class _ReaderMenuState extends State<ReaderMenu>
                   '本章 $chapterPercent% · 全书 $bookPercent%',
                   style: TextStyle(
                     color: ink.withValues(alpha: .55),
-                    fontSize: 11,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -678,7 +680,7 @@ class _ReaderMenuState extends State<ReaderMenu>
               label,
               style: TextStyle(
                 color: selected ? accent : ink.withValues(alpha: .92),
-                fontSize: 11,
+                fontSize: 13,
               ),
             ),
           ],

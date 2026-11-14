@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../theme/app_motion.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Fanqie top bar (alg.xml): **44dp**, back @16dp. Chapter/book label sits
 /// **left-aligned** next to the back chevron (not centred).
@@ -236,7 +237,7 @@ class BookmarkRibbon extends StatelessWidget {
     final ink = VellumTheme.readerChromeInk(bg);
     final accent = VellumTheme.readerAccentOf(context);
     final normalizedProgress = progress.clamp(0.0, 1.2);
-    final easedProgress = Curves.easeOutCubic.transform(
+    final easedProgress = AppMotion.settle.transform(
       (normalizedProgress / 1.2).clamp(0.0, 1.0),
     );
     final ribbonLength = pinned ? 72.0 : 22 + easedProgress * 68;
@@ -312,7 +313,7 @@ class BookmarkRibbon extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: bg.withValues(alpha: .94),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(AppRadius.grouped),
                           border: Border.all(
                             color: armed
                                 ? accent.withValues(alpha: .55)

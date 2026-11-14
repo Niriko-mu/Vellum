@@ -5,6 +5,7 @@ import '../services/notes_import.dart';
 import '../services/notes_library.dart' show unmatchedBookTitle;
 import '../theme/vellum_theme.dart';
 import '../widgets/book_picker_sheet.dart';
+import '../theme/app_shape.dart';
 
 /// Where the imported notes should land, as chosen in [NotesImportSheet].
 class NotesImportOutcome {
@@ -65,7 +66,7 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: AppRadius.sheetTop,
       ),
       child: SafeArea(
         top: false,
@@ -141,7 +142,7 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
                 margin: const EdgeInsets.fromLTRB(20, 6, 20, 12),
                 decoration: BoxDecoration(
                   color: ink.withValues(alpha: .04),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Scrollbar(
                   thumbVisibility: true,

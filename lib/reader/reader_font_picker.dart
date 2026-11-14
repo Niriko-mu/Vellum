@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/font_preview.dart';
+import '../theme/app_shape.dart';
 
 /// Fanqie-style font picker data: only the built-in system font is listed by
 /// default. User-imported fonts are appended from the real installed list;
@@ -82,7 +83,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: AppRadius.sheetTop,
       ),
       child: SafeArea(
         top: false,
@@ -155,7 +156,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                       placeholderStyle: TextStyle(color: muted),
                       decoration: BoxDecoration(
                         color: ink.withValues(alpha: .06),
-                        borderRadius: BorderRadius.circular(9),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                     ),
                   ],
@@ -259,7 +260,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
       decoration: BoxDecoration(
         color: selected ? selectedFill : null,
         border: selected ? Border.all(color: selectedBorder, width: 1) : null,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Row(
         children: [

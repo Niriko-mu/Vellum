@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import '../theme/app_shape.dart';
 
 /// Compact HSV picker: saturation/value pad + hue bar + hex field.
 /// Calls [onChanged] on every gesture tick so the caller can live-preview
@@ -78,7 +79,7 @@ class _ReaderColorPickerState extends State<ReaderColorPicker> {
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: current.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(color: current.withValues(alpha: .35)),
             ),
             child: Text(
@@ -97,7 +98,7 @@ class _ReaderColorPickerState extends State<ReaderColorPicker> {
             return Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                   child: SizedBox(
                     width: w,
                     height: h,
@@ -136,7 +137,7 @@ class _ReaderColorPickerState extends State<ReaderColorPicker> {
             alignment: Alignment.center,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
                 child: const SizedBox(
                   height: 12,
                   width: double.infinity,
@@ -200,7 +201,7 @@ class _ReaderColorPickerState extends State<ReaderColorPicker> {
                 ),
                 decoration: BoxDecoration(
                   color: CupertinoColors.secondarySystemFill.resolveFrom(context),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 onChanged: (v) {
                   _editingHex = true;

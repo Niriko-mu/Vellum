@@ -4,6 +4,7 @@ import '../services/notes_import.dart';
 import '../services/notes_library.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/book_picker_sheet.dart';
+import '../theme/app_shape.dart';
 
 /// Lists imported notes that never found their book, and links them on request.
 ///
@@ -98,7 +99,7 @@ class _UnassociatedNotesSheetState extends State<UnassociatedNotesSheet> {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: AppRadius.sheetTop,
       ),
       child: SafeArea(
         top: false,

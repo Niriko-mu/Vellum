@@ -15,6 +15,8 @@ import 'tts_bar.dart';
 import 'reader_page_state.dart';
 import 'reader_page_state_pagination.dart';
 import 'reader_page_state_gestures.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_shape.dart';
 
 Widget renderReaderPage(ReaderPageState state, BuildContext context) =>
     state.renderReaderPage(context);
@@ -253,7 +255,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                       scale: Tween<double>(begin: .92, end: 1).animate(
                         CurvedAnimation(
                           parent: animation,
-                          curve: Curves.easeOutCubic,
+                          curve: AppMotion.settle,
                         ),
                       ),
                       child: child,
@@ -268,7 +270,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             color: VellumTheme.cardOf(context),
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(AppRadius.xl2),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x33000000),
@@ -531,7 +533,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
           // 180ms easeOutCubic: snappy tap-to-turn. Fanqie's slide mode uses a
           // short custom-Scroller fling; long durations feel laggy on tap.
           duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.settle,
         )
         .whenComplete(() {
           if (!mounted) return;

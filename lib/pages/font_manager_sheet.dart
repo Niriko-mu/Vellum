@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 class FontManagerSheet extends StatelessWidget {
   final List<InstalledFont> installedFonts;
@@ -46,7 +47,7 @@ class FontManagerSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: surface,
 
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: AppRadius.sheetTop,
       ),
 
       child: Column(
@@ -234,7 +235,7 @@ class _FontCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: VellumTheme.cardOf(context),
 
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
 
         border: isActive
             ? Border.all(color: VellumTheme.accentOf(context), width: 1.5)
@@ -252,9 +253,7 @@ class _FontCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: VellumTheme.cardOf(context).withValues(alpha: .72),
 
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
+              borderRadius: AppRadius.sheetTop,
             ),
 
             child: Text(
@@ -296,7 +295,7 @@ class _FontCard extends StatelessWidget {
                           '当前使用中',
 
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
 
                             color: VellumTheme.accentOf(context),
                           ),

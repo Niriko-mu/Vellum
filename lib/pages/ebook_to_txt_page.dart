@@ -12,6 +12,7 @@ import '../services/book_importer.dart';
 import '../services/book_import_service.dart';
 import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 enum _ConvertPhase { idle, pickingSource, parsing, pickingPath, done, failed }
 
@@ -232,7 +233,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                     DecoratedBox(
                       decoration: BoxDecoration(
                         color: VellumTheme.cardOf(context),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.grouped),
                         border: Border.all(color: VellumTheme.lineOf(context)),
                       ),
                       child: Padding(
@@ -244,7 +245,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                     SizedBox(
                       width: double.infinity,
                       child: CupertinoButton.filled(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.grouped),
                         onPressed: _busy ? null : _startConvert,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
@@ -265,7 +266,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                     Text(
                       '转换在本机完成，不会上传文件。',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: muted, fontSize: 12),
+                      style: TextStyle(color: muted, fontSize: 13),
                     ),
                   ],
                 ),
@@ -352,7 +353,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: CupertinoColors.systemRed,
-              fontSize: 12,
+              fontSize: 13,
               height: 1.4,
             ),
           ),
@@ -378,7 +379,7 @@ class _InfoRow extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: VellumTheme.mutedOf(context), fontSize: 12),
+          style: TextStyle(color: VellumTheme.mutedOf(context), fontSize: 13),
         ),
       ),
       const SizedBox(width: 8),
@@ -389,7 +390,7 @@ class _InfoRow extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: VellumTheme.inkOf(context),
-            fontSize: 12,
+            fontSize: 13,
             height: 1.35,
           ),
         ),

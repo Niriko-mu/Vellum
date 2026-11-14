@@ -7,6 +7,8 @@ import '../services/reader_background.dart';
 import 'reader_color_picker.dart';
 import 'reader_models.dart';
 import 'reader_panel_common.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_shape.dart';
 class ReaderSettingsPanel extends StatefulWidget {
   const ReaderSettingsPanel({
     required this.fontSize,
@@ -107,7 +109,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
   Widget build(BuildContext context) {
     return AnimatedSize(
       duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.settle,
       alignment: Alignment.topCenter,
       child: SingleChildScrollView(
         controller: _scrollController,
@@ -158,7 +160,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                     widget.background.colorValue ?? 0xfff6f6f6,
                   ).withValues(alpha: widget.background.clampedImageOpacity)
                 : Color(widget.background.colorValue ?? 0xfff6f6f6),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(color: _ink.withValues(alpha: .2)),
           ),
           clipBehavior: Clip.antiAlias,
@@ -235,7 +237,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               ),
               child: Text(
                 '恢复默认',
-                style: TextStyle(fontSize: 12, color: _muted),
+                style: TextStyle(fontSize: 13, color: _muted),
               ),
             ),
         ],
@@ -271,7 +273,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             child: Text(
               '${(widget.background.clampedImageOpacity * 100).round()}%',
               textAlign: TextAlign.right,
-              style: TextStyle(fontSize: 12, color: _muted),
+              style: TextStyle(fontSize: 13, color: _muted),
             ),
           ),
         ],
@@ -309,7 +311,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             minimumSize: const Size(0, 34),
             onPressed: () =>
                 widget.onBackground(widget.background.copyWith(clearInk: true)),
-            child: Text('恢复默认', style: TextStyle(fontSize: 12, color: _muted)),
+            child: Text('恢复默认', style: TextStyle(fontSize: 13, color: _muted)),
           ),
       ],
     ),
@@ -339,14 +341,14 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               minimumSize: const Size(0, 30),
               color: Color(entry.key),
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(AppRadius.grouped),
               onPressed: () => widget.onBackground(
                 widget.background.copyWith(inkColorValue: entry.key),
               ),
               child: Text(
                 entry.value,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   color:
                       ReaderBackground.suggestTone(entry.key) ==
                           BackgroundTone.dark
@@ -376,7 +378,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     const SizedBox(height: 12),
     Text(
       '图片与自定义色只保存在本机 backgrounds/ 目录；护眼为 0.15 覆盖层，亮度走窗口属性，三者互相独立。',
-      style: TextStyle(fontSize: 11, color: _muted, height: 1.5),
+      style: TextStyle(fontSize: 13, color: _muted, height: 1.5),
     ),
     const SizedBox(height: 8),
   ];
@@ -385,7 +387,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(
       text,
-      style: TextStyle(fontSize: 12, color: _muted, letterSpacing: .4),
+      style: TextStyle(fontSize: 13, color: _muted, letterSpacing: .4),
     ),
   );
 
@@ -443,7 +445,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: ink.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         children: [
@@ -458,7 +460,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                     color: groupValue == entry.key
                         ? surface.withValues(alpha: .95)
                         : const Color(0x00000000),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Text(
                     entry.value,
@@ -522,7 +524,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
         children: [
           SizedBox(
             width: 56,
-            child: Text('背景', style: TextStyle(color: _muted, fontSize: 12)),
+            child: Text('背景', style: TextStyle(color: _muted, fontSize: 13)),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -690,7 +692,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           child: Text(
             '${widget.fontSize.round()}',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: _muted),
+            style: TextStyle(fontSize: 13, color: _muted),
           ),
         ),
       ],
@@ -715,7 +717,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
         child: Text(
           _followsSystem ? '跟随系统' : '恢复跟随',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: _followsSystem
                 ? _muted
                 : VellumTheme.readerAccentOf(context),
@@ -737,7 +739,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     child: Row(
       children: [
         Expanded(
-          child: Text(detail, style: TextStyle(fontSize: 12, color: _muted)),
+          child: Text(detail, style: TextStyle(fontSize: 13, color: _muted)),
         ),
         CupertinoSwitch(value: value, onChanged: onChanged),
       ],

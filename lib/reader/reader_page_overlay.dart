@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 import '../theme/vellum_theme.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_shape.dart';
 
 /// Compact reading-time indicator shown while reader chrome is hidden.
 class ReaderReadingTimePill extends StatelessWidget {
@@ -42,7 +44,7 @@ class ReaderReadingTimePill extends StatelessWidget {
               builder: (context, today, _) => DecoratedBox(
                 decoration: BoxDecoration(
                   color: surface.withValues(alpha: .72),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                   border: Border.all(color: ink.withValues(alpha: .12)),
                 ),
                 child: Padding(
@@ -59,7 +61,7 @@ class ReaderReadingTimePill extends StatelessWidget {
                         '本次 ${compactDuration(session)} · 今日 ${compactDuration(today)}',
                         style: TextStyle(
                           color: ink.withValues(alpha: .62),
-                          fontSize: 10,
+                          fontSize: 13,
                           height: 1.1,
                         ),
                       ),
@@ -128,7 +130,7 @@ class ReaderCoverTurnOverlay extends StatelessWidget {
                   builder: (context, child) {
                     final progress = (dragTurn || dragCommitted)
                         ? animation.value
-                        : Curves.easeOutCubic.transform(animation.value);
+                        : AppMotion.settle.transform(animation.value);
                     final dx = isNext ? -progress : -1 + progress;
                     return FractionalTranslation(
                       translation: Offset(dx, 0),

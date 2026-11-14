@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show Scrollbar;
 import '../services/notes_import.dart';
 import '../services/notes_library.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Picks a book from the shelf, with "keep unassociated" always available.
 ///
@@ -71,7 +72,7 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: AppRadius.sheetTop,
       ),
       child: SafeArea(
         top: false,

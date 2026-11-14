@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/vellum_update_installer.dart';
 import '../services/vellum_update_service.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Checks the release feed and, when a newer build exists, walks the user
 /// through picking an ABI variant and installing it.
@@ -251,7 +252,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
     return Container(
       decoration: BoxDecoration(
         color: VellumTheme.cardOf(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: AppRadius.sheetTop,
         border: Border.all(color: VellumTheme.lineOf(context)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
@@ -267,7 +268,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: VellumTheme.lineOf(context),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
                 ),
               ),
             ),
@@ -284,7 +285,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
             const SizedBox(height: 4),
             Text(
               '当前版本 V${widget.release.currentVersion}',
-              style: TextStyle(fontSize: 12, color: muted),
+              style: TextStyle(fontSize: 13, color: muted),
             ),
             const SizedBox(height: 14),
             Flexible(child: _buildBody(ink, muted)),
@@ -315,7 +316,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
           ],
           if (_phase == _UpdatePhase.downloading) ...[
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
               child: LinearProgressIndicator(
                 value: _total == null || _total == 0
                     ? null
@@ -332,7 +333,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
               _total == null
                   ? '已下载 ${_formatBytes(_received)}'
                   : '${_formatBytes(_received)} / ${_formatBytes(_total!)}',
-              style: TextStyle(fontSize: 12, color: muted),
+              style: TextStyle(fontSize: 13, color: muted),
             ),
           ] else if (_assets.isEmpty) ...[
             Text(
@@ -343,7 +344,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
             Text(
               _installer.canInstallInApp ? '选择适合本机的安装包' : '选择要下载的安装包',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: muted,
                 fontWeight: FontWeight.w600,
                 letterSpacing: .4,
@@ -363,7 +364,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
               const SizedBox(height: 6),
               Text(
                 '未能识别本机架构，默认推荐 arm64-v8a；装错版本会提示「应用未安装」。',
-                style: TextStyle(fontSize: 11, color: muted, height: 1.4),
+                style: TextStyle(fontSize: 13, color: muted, height: 1.4),
               ),
             ],
           ],
@@ -385,7 +386,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
             Text(
               _error,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 color: CupertinoColors.systemRed,
                 height: 1.4,
               ),
@@ -502,7 +503,7 @@ class _AssetRow extends StatelessWidget {
                   Text(
                     abiDescription(asset.abi),
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       color: VellumTheme.mutedOf(context),
                     ),
                   ),
@@ -514,12 +515,12 @@ class _AssetRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: VellumTheme.softAccentOf(context),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
                   '推荐',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: accent,
                     fontWeight: FontWeight.w600,
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Stage + optional determinate progress for import / format conversion.
 class ConversionProgress extends StatelessWidget {
@@ -42,12 +43,12 @@ class ConversionProgress extends StatelessWidget {
               ),
             ),
             if (percent != null)
-              Text('$percent%', style: TextStyle(color: muted, fontSize: 12)),
+              Text('$percent%', style: TextStyle(color: muted, fontSize: 13)),
           ],
         ),
         const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           child: SizedBox(
             height: 6,
             child: Stack(
@@ -74,7 +75,7 @@ class ConversionProgress extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             caption!,
-            style: TextStyle(color: muted, fontSize: 12, height: 1.35),
+            style: TextStyle(color: muted, fontSize: 13, height: 1.35),
           ),
         ],
       ],

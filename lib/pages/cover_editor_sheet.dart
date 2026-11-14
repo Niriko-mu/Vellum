@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../services/book_importer.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Long-press sheet: edit shelf cover with an image or custom text.
 class CoverEditorSheet extends StatefulWidget {
@@ -85,7 +86,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
         ),
         decoration: BoxDecoration(
           color: VellumTheme.cardOf(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: AppRadius.sheetTop,
         ),
         child: SafeArea(
           top: false,
@@ -119,11 +120,11 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                     height: 156,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
                         border: Border.all(color: VellumTheme.lineOf(context)),
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(9),
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
                         child: preview != null
                             ? Image.memory(preview, fit: BoxFit.cover)
                             : _TextCoverPreview(
@@ -137,7 +138,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                 ),
                 const SizedBox(height: 14),
                 CupertinoButton.filled(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                   onPressed: _pickImage,
                   child: Text(preview == null ? '上传封面图片' : '更换封面图片'),
                 ),
@@ -167,7 +168,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                             ? .08
                             : .5,
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                       border: Border.all(color: VellumTheme.lineOf(context)),
                     ),
                   ),
@@ -176,7 +177,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                     '保存后书架将使用这段文字作为封面。',
                     style: TextStyle(
                       color: VellumTheme.mutedOf(context),
-                      fontSize: 12,
+                      fontSize: 13,
                     ),
                   ),
                 ],

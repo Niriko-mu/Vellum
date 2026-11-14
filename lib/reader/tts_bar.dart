@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../theme/vellum_theme.dart';
+import '../theme/app_shape.dart';
 
 /// Floating control bar while the listen (听书) feature is active.
 ///
@@ -49,7 +50,7 @@ class TtsBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
               color: VellumTheme.readerChromeOf(context).withValues(alpha: .97),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppRadius.xl2),
               border: Border.all(color: VellumTheme.lineOf(context)),
               boxShadow: const [
                 BoxShadow(
@@ -100,7 +101,7 @@ class TtsBar extends StatelessWidget {
                         positionLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: muted),
+                        style: TextStyle(fontSize: 13, color: muted),
                       ),
                     ),
                     CupertinoButton(
