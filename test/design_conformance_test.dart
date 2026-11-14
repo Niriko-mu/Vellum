@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/theme/app_colors.dart';
@@ -9,6 +8,7 @@ import 'package:vellum/theme/vellum_theme.dart';
 import 'package:vellum/widgets/ui/app_controls.dart';
 import 'package:vellum/widgets/ui/app_section.dart';
 import 'package:vellum/theme/app_icons.dart';
+import 'package:vellum/widgets/ui/app_dialog.dart';
 
 /// The conformance contract, ported from the reference implementation's
 /// \`spec_test.dart\`.
@@ -274,6 +274,131 @@ void main() {
       expect(decoration.color, isNot(AppColors.light.foreground));
     });
   });
+
+  group('primitives', () {
+    test('every icon token points at the vendored Lucide family', () {
+      // Override #8: the glyphs come from a font we ship, not a pub package.
+      // If a token ever points elsewhere the app renders tofu on device, and no
+      // other test notices.
+      final icons = <String, IconData>{
+        'search': AppIcons.search,
+        'book': AppIcons.book,
+        'docText': AppIcons.docText,
+        'add': AppIcons.add,
+        'chevronRight': AppIcons.chevronRight,
+        'chevronBack': AppIcons.chevronBack,
+        'gear': AppIcons.gear,
+        'trash': AppIcons.trash,
+        'checkmarkAlt': AppIcons.checkmarkAlt,
+        'bookmark': AppIcons.bookmark,
+      };
+      for (final entry in icons.entries) {
+        expect(
+          entry.value.fontFamily,
+          'Lucide',
+          reason: 'AppIcons.${entry.key} must come from the Lucide font',
+        );
+        expect(entry.value.fontPackage, isNull);
+        expect(entry.value.codePoint, greaterThan(0));
+      }
+    });
+
+    testWidgets('a dialog shows its message and pops the tapped value', (
+      tester,
+    ) async {
+      String? chosen;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: VellumTheme.forBrightness(Brightness.light),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: AppTextButton(
+                  label: 'open',
+                  onPressed: () async {
+                    chosen = await showAppDialog<String>(
+                      context: context,
+                      title: 'Pick',
+                      message: 'Body copy',
+                      actions: const [
+                        AppDialogAction<String>(label: 'Two', value: 'two'),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pick'), findsOneWidget);
+      expect(find.text('Body copy'), findsOneWidget);
+      await tester.tap(find.text('Two'));
+      await tester.pumpAndSettle();
+      expect(chosen, 'two');
+    });
+
+    testWidgets('a confirm dialog answers false when cancelled', (
+      tester,
+    ) async {
+      bool? answer;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: VellumTheme.forBrightness(Brightness.light),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: AppTextButton(
+                  label: 'ask',
+                  onPressed: () async {
+                    answer = await showAppConfirm(
+                      context: context,
+                      title: 'Delete?',
+                      message: 'Cannot be undone.',
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ask'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(answer, isFalse);
+    });
+
+    testWidgets('a switch row toggles from anywhere on the row', (tester) async {
+      var value = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: VellumTheme.forBrightness(Brightness.light),
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => AppSection(
+                children: [
+                  AppSwitchRow(
+                    label: 'Auto save',
+                    value: value,
+                    onChanged: (next) => setState(() => value = next),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      // Tapping the label, not the switch: the whole row is the target.
+      await tester.tap(find.text('Auto save'));
+      await tester.pumpAndSettle();
+      expect(value, isTrue);
+    });
+  });
+
 }
 
 void _noop() {}
