@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/reader/reader_page.dart';
-import 'package:vellum/reader/reader_page_state_surface_rendering.dart';
 import 'package:vellum/services/book_importer.dart';
 import 'package:vellum/services/library_models.dart';
 
