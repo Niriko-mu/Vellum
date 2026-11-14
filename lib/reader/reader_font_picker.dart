@@ -4,7 +4,6 @@ import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/font_preview.dart';
 import '../theme/app_shape.dart';
-import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
@@ -68,7 +67,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
     final bg = widget.surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(bg);
     final muted = ink.withValues(alpha: .55);
-    final accent = context.c.primary;
+    final accent = VellumTheme.readerAccentFor(bg);
     final isDarkPaper = bg.computeLuminance() < .24;
     final selectedFill = accent.withValues(alpha: isDarkPaper ? .28 : .13);
     final selectedBorder = accent.withValues(alpha: isDarkPaper ? .92 : .78);

@@ -110,6 +110,11 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
   Color get _ink => VellumTheme.readerChromeInk(_surface);
   Color get _muted => _ink.withValues(alpha: .55);
 
+  /// The accent on this paper. Not the app's primary: the paper does not
+  /// follow the app theme, so a dark-themed app on a light paper would pick
+  /// the light peach and lose the contrast (see readerAccentFor).
+  Color get _accent => VellumTheme.readerAccentFor(_surface);
+
   @override
   Widget build(BuildContext context) {
     // Sub-page switches (main → 更多设置 → 背景) resize the content; the panel
@@ -258,6 +263,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
               value: widget.background.clampedImageOpacity,
               min: 0,
               max: 1,
+              activeColor: _accent,
               onChanged: (v) => widget.onBackground(
                 widget.background.copyWith(imageOpacity: v),
               ),
@@ -440,7 +446,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     required ValueChanged<T> onChanged,
   }) {
     final ink = _ink;
-    final accent = context.c.primary;
+    final accent = _accent;
     final surface = _surface;
     return Container(
       height: 44,
@@ -545,7 +551,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _isSelectedColor(color.toARGB32())
-                              ? context.c.primary
+                              ? _accent
                               : _ink.withValues(alpha: .2),
                           width: _isSelectedColor(color.toARGB32()) ? 2 : 1,
                         ),
@@ -673,6 +679,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             value: widget.fontSize.clamp(kReaderFontMin, kReaderFontMax),
             min: kReaderFontMin,
             max: kReaderFontMax,
+            activeColor: _accent,
             onChanged: widget.onFontSize,
           ),
         ),
@@ -705,12 +712,13 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           value: (_followsSystem ? 0.6 : widget.brightness).clamp(0.05, 1.0),
           min: 0.05,
           max: 1,
+          activeColor: _accent,
           onChanged: widget.onBrightness,
         ),
       ),
       AppTextButton(
         label: _followsSystem ? '跟随系统' : '恢复跟随',
-        color: _followsSystem ? _muted : context.c.primary,
+        color: _followsSystem ? _muted : _accent,
         pressedColor: _ink.withValues(alpha: .06),
         onPressed: () => widget.onBrightness(_followSystemBrightness),
       ),

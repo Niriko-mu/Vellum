@@ -513,7 +513,7 @@ class _ReaderMenuState extends State<ReaderMenu>
   /// Progress row: labels are tappable chapter steps + seek bar.
   Widget _progressRow(BuildContext context, Color themeBg) {
     final ink = VellumTheme.readerChromeInk(themeBg);
-    final accent = context.c.primary;
+    final accent = VellumTheme.readerAccentFor(themeBg);
     final hasChapters = widget.chapterCount > 1;
     final chapterMax = (widget.chapterCount - 1).clamp(0, 1 << 30);
     final chapterValue = widget.currentChapterIndex.clamp(0, chapterMax);
@@ -700,7 +700,7 @@ class _ReaderMenuState extends State<ReaderMenu>
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final accent = context.c.primary;
+    final accent = VellumTheme.readerAccentFor(themeBg);
     final ink = VellumTheme.readerChromeInk(themeBg);
     // Same press feedback as every other tap target in the app: the cell fills,
     // the icon and label do not fade. These four are the most-tapped controls in

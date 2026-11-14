@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import '../theme/vellum_theme.dart';
-import '../theme/app_colors.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
 class ReaderPanelTitle extends StatelessWidget {
@@ -39,7 +38,7 @@ class ReaderPanelTitle extends StatelessWidget {
               ),
             )
           else
-            Icon(icon, size: 18, color: context.c.primary),
+            Icon(icon, size: 18, color: VellumTheme.readerAccentFor(bg)),
           const SizedBox(width: 8),
           Text(
             title,

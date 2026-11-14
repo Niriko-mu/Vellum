@@ -24,7 +24,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
     final surface = widget.surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(surface);
     final muted = ink.withValues(alpha: .55);
-    final accent = context.c.primary;
+    final accent = VellumTheme.readerAccentFor(surface);
     final chapterEntries = entries;
     final emptyMessage = switch (tab) {
       0 => '这本书暂未识别出章节标题。',

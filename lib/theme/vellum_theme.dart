@@ -124,6 +124,18 @@ abstract final class VellumTheme {
     return ink.withValues(alpha: _isNightPaper(surface) ? .62 : .58);
   }
 
+  /// The accent used **on a reader paper**.
+  ///
+  /// Not the running theme's primary: the paper is chosen by the reader and
+  /// does not follow the app theme, so pairing them produces a light peach on a
+  /// light paper the moment the system goes dark — technically the brand colour,
+  /// unreadable in practice. The paper decides.
+  static Color readerAccentFor(Color surface) =>
+      // The brand accent that matches the paper's tone, not the app's. Light
+      // terracotta on a light paper, the light tint on a night paper — the
+      // latter is exactly what AppColors.dark already declares.
+      _isNightPaper(surface) ? AppColors.dark.primary : AppColors.light.primary;
+
   /// Reader chrome surface. Prefers the active reading paper (the Fanqie menu
   /// sits on the theme bg). Defaults to the white paper.
   static Color readerChromeOf(BuildContext context, {Color? paper}) {
@@ -300,6 +312,13 @@ abstract final class VellumTheme {
           colors.foreground,
         ).copyWith(fontFamily: family, inherit: false),
         actionTextStyle: AppText.rowTitle(
+          colors.primary,
+        ).copyWith(fontFamily: family, inherit: false),
+        // The navigation bar's own action colour, and the colour its back
+        // chevron inherits. Without this it defaults to Cupertino's
+        // activeBlue, which is how a terracotta app ended up with a blue
+        // back arrow.
+        navActionTextStyle: AppText.rowTitle(
           colors.primary,
         ).copyWith(fontFamily: family, inherit: false),
         tabLabelTextStyle: AppText.tabLabel(

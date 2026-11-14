@@ -374,13 +374,17 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
               ),
               children: [
                 AppRow(
-                  label: '${_selectedSections.length}/{total} 类内容已选择',
+                  label: '${_selectedSections.length}/'
+                      '${BackupSection.values.length} 类内容已选择',
                   value: _encrypt ? '加密' : '未加密',
                 ),
                 for (final section in BackupSection.values)
                   AppRow(
                     label: section.label,
                     description: section.description,
+                    // A checkbox row toggles in place; a chevron would promise
+                    // a page that never opens.
+                    showChevron: false,
                     leading: CupertinoCheckbox(
                       value: _selectedSections.contains(section),
                       activeColor: colors.primary,
