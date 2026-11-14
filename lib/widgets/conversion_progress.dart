@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
-import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Stage + optional determinate progress for import / format conversion.
 class ConversionProgress extends StatelessWidget {
@@ -20,8 +20,8 @@ class ConversionProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
     final clamped = value?.clamp(0.0, 1.0);
     final percent = clamped == null ? null : (clamped * 100).round();
     return Column(
@@ -36,7 +36,7 @@ class ConversionProgress extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: VellumTheme.inkOf(context),
+                  color: context.c.foreground,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -54,7 +54,7 @@ class ConversionProgress extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                ColoredBox(color: VellumTheme.softAccentOf(context)),
+                ColoredBox(color: context.c.secondary),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: AnimatedFractionallySizedBox(

@@ -5,7 +5,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../services/tts_client.dart';
 import '../services/tts_preferences.dart';
-import '../theme/vellum_theme.dart';
+import '../theme/app_colors.dart';
 
 /// Configuration page for the listen (听书) service.
 ///
@@ -116,8 +116,8 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final pageBackground = CupertinoTheme.of(context).scaffoldBackgroundColor;
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
     final isAzure = _prefs.provider == TtsProvider.azure;
 
     return CupertinoPageScaffold(

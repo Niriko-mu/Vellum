@@ -13,6 +13,7 @@ import '../services/book_import_service.dart';
 import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 enum _ConvertPhase { idle, pickingSource, parsing, pickingPath, done, failed }
 
@@ -171,13 +172,13 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
 
   @override
   Widget build(BuildContext context) {
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: VellumTheme.shellOf(context),
+        backgroundColor: context.c.background,
         border: null,
         middle: const Text('转为 TXT'),
       ),
@@ -200,7 +201,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                       height: 72,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: VellumTheme.softAccentOf(context),
+                        color: context.c.secondary,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -232,9 +233,9 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                     const SizedBox(height: 18),
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: VellumTheme.cardOf(context),
+                        color: context.c.card,
                         borderRadius: BorderRadius.circular(AppRadius.grouped),
-                        border: Border.all(color: VellumTheme.lineOf(context)),
+                        border: Border.all(color: context.c.border),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -379,7 +380,7 @@ class _InfoRow extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: VellumTheme.mutedOf(context), fontSize: 13),
+          style: TextStyle(color: context.c.mutedForeground, fontSize: 13),
         ),
       ),
       const SizedBox(width: 8),
@@ -389,7 +390,7 @@ class _InfoRow extends StatelessWidget {
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: VellumTheme.inkOf(context),
+            color: context.c.foreground,
             fontSize: 13,
             height: 1.35,
           ),

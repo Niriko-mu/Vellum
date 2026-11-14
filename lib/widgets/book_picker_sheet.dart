@@ -3,8 +3,8 @@ import 'package:flutter/material.dart' show Scrollbar;
 
 import '../services/notes_import.dart';
 import '../services/notes_library.dart';
-import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Picks a book from the shelf, with "keep unassociated" always available.
 ///
@@ -56,10 +56,10 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = VellumTheme.cardOf(context);
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final bg = context.c.card;
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
     final needle = _query.trim().toLowerCase();
     final books = [
       for (final book in widget.books)

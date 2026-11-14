@@ -3,9 +3,9 @@ import 'package:flutter/material.dart' show Scrollbar;
 
 import '../services/notes_import.dart';
 import '../services/notes_library.dart' show unmatchedBookTitle;
-import '../theme/vellum_theme.dart';
 import '../widgets/book_picker_sheet.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Where the imported notes should land, as chosen in [NotesImportSheet].
 class NotesImportOutcome {
@@ -54,10 +54,10 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = VellumTheme.cardOf(context);
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final bg = context.c.card;
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
     final notes = widget.import.notes;
 
     return Container(

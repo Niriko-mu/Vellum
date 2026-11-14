@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/book_importer.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Long-press sheet: edit shelf cover with an image or custom text.
 class CoverEditorSheet extends StatefulWidget {
@@ -85,7 +86,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
           maxHeight: MediaQuery.sizeOf(context).height * .78,
         ),
         decoration: BoxDecoration(
-          color: VellumTheme.cardOf(context),
+          color: context.c.card,
           borderRadius: AppRadius.sheetTop,
         ),
         child: SafeArea(
@@ -100,7 +101,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                     Text(
                       '编辑封面',
                       style: TextStyle(
-                        color: VellumTheme.inkOf(context),
+                        color: context.c.foreground,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -121,7 +122,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(AppRadius.xl),
-                        border: Border.all(color: VellumTheme.lineOf(context)),
+                        border: Border.all(color: context.c.border),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -169,14 +170,14 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                             : .5,
                       ),
                       borderRadius: BorderRadius.circular(AppRadius.xl),
-                      border: Border.all(color: VellumTheme.lineOf(context)),
+                      border: Border.all(color: context.c.border),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '保存后书架将使用这段文字作为封面。',
                     style: TextStyle(
-                      color: VellumTheme.mutedOf(context),
+                      color: context.c.mutedForeground,
                       fontSize: 13,
                     ),
                   ),
@@ -207,8 +208,8 @@ class _TextCoverPreview extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          VellumTheme.accentOf(context).withValues(alpha: .9),
-          VellumTheme.accentOf(context).withValues(alpha: .55),
+          context.c.primary.withValues(alpha: .9),
+          context.c.primary.withValues(alpha: .55),
         ],
       ),
     ),

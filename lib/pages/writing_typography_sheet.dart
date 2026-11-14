@@ -5,8 +5,8 @@ import 'package:flutter/cupertino.dart';
 import '../reader/reader_font_picker.dart';
 import '../services/library_models.dart';
 import '../services/writing_library.dart';
-import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingTypographySheet extends StatefulWidget {
@@ -97,11 +97,11 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
-    final card = VellumTheme.cardOf(context);
-    final line = VellumTheme.lineOf(context);
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
+    final card = context.c.card;
+    final line = context.c.border;
     return SafeArea(
       top: false,
       child: Container(

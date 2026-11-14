@@ -6,6 +6,7 @@ import '../reader/reader_paragraph.dart';
 import '../services/book_importer.dart';
 import '../services/html_text_pipeline.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_colors.dart';
 
 /// Renders a Markdown draft through the reader's own text pipeline:
 /// `markdown` → HTML → reader markup → paragraphs. Everything happens on
@@ -48,7 +49,7 @@ class _MarkdownPreviewState extends State<MarkdownPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final muted = VellumTheme.mutedOf(context);
+    final muted = context.c.mutedForeground;
     if (_paragraphs.isEmpty) {
       return Center(
         child: Padding(
@@ -81,7 +82,7 @@ class _MarkdownPreviewState extends State<MarkdownPreview> {
           fontFamily: VellumTheme.contentFontFamily,
           lineSpacing: ReaderLineSpacing.standard,
           fontWeight: ReaderFontWeight.regular,
-          ink: VellumTheme.inkOf(context),
+          ink: context.c.foreground,
           showImage: false,
           showLinkAction: false,
           indentFirstLine: false,

@@ -4,8 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../services/vellum_backup_service.dart';
-import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -311,14 +311,14 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final bg = CupertinoTheme.of(context).scaffoldBackgroundColor;
-    final card = VellumTheme.cardOf(context);
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
+    final card = context.c.card;
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
     return CupertinoPageScaffold(
       backgroundColor: bg,
       navigationBar: CupertinoNavigationBar(
         middle: const Text('数据备份'),
-        backgroundColor: VellumTheme.shellOf(context),
+        backgroundColor: context.c.background,
         border: null,
       ),
       child: SafeArea(
@@ -482,14 +482,14 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
         decoration: BoxDecoration(
           color: card,
           borderRadius: BorderRadius.circular(AppRadius.xl3),
-          border: Border.all(color: VellumTheme.lineOf(context)),
+          border: Border.all(color: context.c.border),
         ),
         child: Row(
           children: [
             Icon(
               CupertinoIcons.lock_shield,
               size: 30,
-              color: VellumTheme.accentOf(context),
+              color: context.c.primary,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -556,7 +556,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
           CupertinoListTile(
             leading: CupertinoCheckbox(
               value: _selectedSections.contains(section),
-              activeColor: VellumTheme.accentOf(context),
+              activeColor: context.c.primary,
               onChanged: (_) => _toggleSection(section),
             ),
             title: Text(section.label),
@@ -575,7 +575,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
     decoration: BoxDecoration(
       color: card,
       borderRadius: BorderRadius.circular(AppRadius.xl2),
-      border: Border.all(color: VellumTheme.lineOf(context)),
+      border: Border.all(color: context.c.border),
     ),
     child: Column(children: children),
   );

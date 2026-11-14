@@ -8,6 +8,7 @@ import '../services/vellum_update_installer.dart';
 import '../services/vellum_update_service.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Checks the release feed and, when a newer build exists, walks the user
 /// through picking an ABI variant and installing it.
@@ -246,14 +247,14 @@ class _UpdateSheetState extends State<UpdateSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
 
     return Container(
       decoration: BoxDecoration(
-        color: VellumTheme.cardOf(context),
+        color: context.c.card,
         borderRadius: AppRadius.sheetTop,
-        border: Border.all(color: VellumTheme.lineOf(context)),
+        border: Border.all(color: context.c.border),
       ),
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
       child: SafeArea(
@@ -267,7 +268,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
                 width: 38,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: VellumTheme.lineOf(context),
+                  color: context.c.border,
                   borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
                 ),
               ),
@@ -322,9 +323,9 @@ class _UpdateSheetState extends State<UpdateSheet> {
                     ? null
                     : (_received / _total!).clamp(0.0, 1.0),
                 minHeight: 6,
-                backgroundColor: VellumTheme.softAccentOf(context),
+                backgroundColor: context.c.secondary,
                 valueColor: AlwaysStoppedAnimation(
-                  VellumTheme.accentOf(context),
+                  context.c.primary,
                 ),
               ),
             ),
@@ -471,7 +472,7 @@ class _AssetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = VellumTheme.accentOf(context);
+    final accent = context.c.primary;
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: onTap,
@@ -484,7 +485,7 @@ class _AssetRow extends StatelessWidget {
                   ? CupertinoIcons.checkmark_circle_fill
                   : CupertinoIcons.circle,
               size: 20,
-              color: selected ? accent : VellumTheme.mutedOf(context),
+              color: selected ? accent : context.c.mutedForeground,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -495,7 +496,7 @@ class _AssetRow extends StatelessWidget {
                     asset.label,
                     style: TextStyle(
                       fontSize: 15,
-                      color: VellumTheme.inkOf(context),
+                      color: context.c.foreground,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),
@@ -504,7 +505,7 @@ class _AssetRow extends StatelessWidget {
                     abiDescription(asset.abi),
                     style: TextStyle(
                       fontSize: 13,
-                      color: VellumTheme.mutedOf(context),
+                      color: context.c.mutedForeground,
                     ),
                   ),
                 ],
@@ -514,7 +515,7 @@ class _AssetRow extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: VellumTheme.softAccentOf(context),
+                  color: context.c.secondary,
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(

@@ -12,7 +12,6 @@ import '../services/font_storage.dart';
 import '../services/library_models.dart';
 import '../services/writing_library.dart';
 import '../theme/app_colors.dart';
-import '../theme/vellum_theme.dart';
 import '../widgets/markdown_preview.dart';
 import 'writing_typography_sheet.dart';
 
@@ -408,9 +407,9 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final muted = VellumTheme.mutedOf(context);
-    final ink = VellumTheme.inkOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final muted = context.c.mutedForeground;
+    final ink = context.c.foreground;
+    final accent = context.c.primary;
     final paper = context.c.backgroundSubtle;
     final previewDoc = _document.copyWith(
       title: _titleController.text,
