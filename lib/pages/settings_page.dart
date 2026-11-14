@@ -410,6 +410,7 @@ class _SettingsPageState extends State<SettingsPage> {
       // No text-scale clamp: the grouped rows grow with the reader's system
       // font size instead of pinning the page at 1.2.
       child: AppPage(
+        reserveDock: true,
         sections: <Widget>[
           const SizedBox(height: AppSpace.x4),
           AppSection(

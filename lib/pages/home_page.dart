@@ -67,6 +67,7 @@ class HomePage extends StatelessWidget {
               child: EmptyLibrary(onImport: onImport),
             )
           : AppPage(
+              reserveDock: true,
               sections: [
                 const SizedBox(height: AppSpace.x4),
                 Text(

@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/writing_library.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_shadow.dart';
 import '../theme/app_type.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/ui/app_controls.dart';
@@ -279,11 +280,15 @@ class _WritingPageState extends State<WritingPage> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       AppSpace.pageGutter,
                       0,
                       AppSpace.pageGutter,
-                      104,
+                      // Grid tail plus the floating dock's own height.
+                      AppSpace.dockReserve(
+                            MediaQuery.viewPaddingOf(context).bottom,
+                          ) +
+                          48,
                     ),
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -314,20 +319,18 @@ class _WritingPageState extends State<WritingPage> {
             if (!_loading && _documents.isNotEmpty)
               Positioned(
                 right: AppSpace.x6,
-                bottom: AppSpace.x6,
+                // Above the floating dock, not on top of it.
+                bottom: AppSpace.dockReserve(
+                      MediaQuery.viewPaddingOf(context).bottom,
+                    ) +
+                    AppSpace.x2,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: accent,
                     borderRadius: AppRadius.pillAll,
                     // One of the three shadows the system allows: the single
                     // filled primary action of a surface.
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x1F000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                    boxShadow: AppShadow.xs(context.c),
                   ),
                   child: AppButton(
                     label: '新建文稿',

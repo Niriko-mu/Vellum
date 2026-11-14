@@ -29,6 +29,7 @@ class AppPage extends StatelessWidget {
     this.background,
     this.scrollable = false,
     this.controller,
+    this.reserveDock = false,
     super.key,
   }) : assert(
          child != null || sections != null,
@@ -53,11 +54,22 @@ class AppPage extends StatelessWidget {
   final bool scrollable;
   final ScrollController? controller;
 
+  /// Leaves room at the end of the page for the floating dock.
+  ///
+  /// The dock hovers over the content instead of owning a strip of it, so
+  /// without this the last row scrolls under it and becomes untappable.
+  final bool reserveDock;
+
   @override
   Widget build(BuildContext context) {
     final insets = MediaQuery.viewPaddingOf(context);
 
-    final bottom = insets.bottom + AppSpace.x6;
+    // Leave room for the floating dock plus the home indicator. The dock
+    // reserve already accounts for the gap below it, so adding the inset twice
+    // would push the last row a whole dock further up than needed.
+    final bottom = reserveDock
+        ? AppSpace.dockReserve(insets.bottom)
+        : insets.bottom + AppSpace.x6;
     final gutter = padding == null
         ? const EdgeInsets.symmetric(
             horizontal: AppSpace.pageGutter,

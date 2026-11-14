@@ -29,6 +29,11 @@ abstract final class AppRadius {
   /// Menu panel, sheet top corner.
   static const double xl3 = 20.8;
 
+  /// The floating bottom dock. Rounder than a panel because the capsule is
+  /// thumb-height rather than content-height, and a shallow corner on a 64pt
+  /// capsule reads as a rectangle with clipped ends.
+  static const double dock = 26.8;
+
   /// Chips, tags, switch, avatar.
   static const double pill = 9999;
 
@@ -81,4 +86,22 @@ abstract final class AppSpace {
 
   /// Sidebar width in the wide window class.
   static const double sidebarWidth = 280;
+
+  // -------------------------------------------------------- floating dock --
+  // The bottom dock floats over the page instead of owning a strip of it, so
+  // the page needs a matching reservation or its last row sits under the dock.
+
+  /// Height of the dock capsule itself (icons + labels, no insets).
+  static const double dockHeight = 64;
+
+  /// Distance from the bottom safe area to the dock's underside.
+  static const double dockBottomGap = 10;
+
+  /// Side inset of the dock from the window edge.
+  static const double dockSideInset = 20;
+
+  /// Total vertical space a scrolling page must leave free at its end: the dock
+  /// plus both gaps plus the home indicator.
+  static double dockReserve(double bottomInset) =>
+      dockHeight + dockBottomGap * 2 + bottomInset;
 }

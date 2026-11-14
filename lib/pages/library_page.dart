@@ -357,11 +357,15 @@ class _LibraryPageState extends State<LibraryPage> {
                             ? 5
                             : 6;
                         return GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
                             AppSpace.pageGutter,
                             AppSpace.x2,
                             AppSpace.pageGutter,
-                            AppSpace.x6,
+                            // The dock floats over the grid; without this the
+                            // last row is unreachable.
+                            AppSpace.dockReserve(
+                              MediaQuery.viewPaddingOf(context).bottom,
+                            ),
                           ),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(

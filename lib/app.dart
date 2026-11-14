@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/services.dart'
-    show SystemUiOverlayStyle, Uint8List;
+import 'package:flutter/services.dart' show SystemUiOverlayStyle, Uint8List;
 
 import 'package:file_picker/file_picker.dart';
 
@@ -32,6 +31,7 @@ import 'services/reading_stats.dart';
 import 'services/widget_shelf.dart';
 
 import 'theme/app_colors.dart';
+import 'widgets/ui/app_dock.dart';
 import 'theme/app_shape.dart';
 import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
@@ -308,13 +308,12 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
           // the layer tree, so it costs nothing per rebuild — a
           // `SystemChrome.setSystemUIOverlayStyle` call here would cross the
           // platform channel on every tab tap and every theme frame.
-          value: (isDark
-                  ? SystemUiOverlayStyle.light
-                  : SystemUiOverlayStyle.dark)
-              .copyWith(
-                statusBarColor: Colors.transparent,
-                systemNavigationBarColor: Colors.transparent,
-              ),
+          value:
+              (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+                  .copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                  ),
           child: DefaultTextStyle(
             // MaterialApp ships WidgetsApp with a deliberately loud red-on-yellow
             // error text style as its default. Everything we have not styled
@@ -330,35 +329,35 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
         );
       },
       home: LibraryShell(
-      themeModeLabel: _manualBrightness == null
-          ? '跟随系统'
-          : (_manualBrightness == Brightness.dark ? '深色' : '浅色'),
-      onCycleTheme: () => setState(() {
-        if (_manualBrightness == null) {
-          _manualBrightness = _brightness == Brightness.dark
-              ? Brightness.light
-              : Brightness.dark;
-        } else if (_manualBrightness == Brightness.light) {
-          _manualBrightness = Brightness.dark;
-        } else {
-          _manualBrightness = null;
-        }
-      }),
-      isDark: (_manualBrightness ?? _brightness) == Brightness.dark,
+        themeModeLabel: _manualBrightness == null
+            ? '跟随系统'
+            : (_manualBrightness == Brightness.dark ? '深色' : '浅色'),
+        onCycleTheme: () => setState(() {
+          if (_manualBrightness == null) {
+            _manualBrightness = _brightness == Brightness.dark
+                ? Brightness.light
+                : Brightness.dark;
+          } else if (_manualBrightness == Brightness.light) {
+            _manualBrightness = Brightness.dark;
+          } else {
+            _manualBrightness = null;
+          }
+        }),
+        isDark: (_manualBrightness ?? _brightness) == Brightness.dark,
 
-      installedFonts: _installedFonts,
+        installedFonts: _installedFonts,
 
-      activeFontName: _activeFontName,
+        activeFontName: _activeFontName,
 
-      useFontForUi: _useFontForUi,
+        useFontForUi: _useFontForUi,
 
-      useFontForContent: _useFontForContent,
+        useFontForContent: _useFontForContent,
 
-      onImportFonts: _importFonts,
+        onImportFonts: _importFonts,
 
-      onActivateFont: _activateFont,
+        onActivateFont: _activateFont,
 
-      onDeleteFont: _deleteFont,
+        onDeleteFont: _deleteFont,
 
         onFontUsageChanged: _setFontUsage,
       ),
@@ -441,6 +440,22 @@ class _LibraryShellState extends State<LibraryShell>
   /// Tab index as a listenable: tapping a tab changes one int, it does not
   /// rebuild the shell and therefore does not re-run every tab's build.
   final _tab = ValueNotifier<int>(0);
+
+  /// Destinations opened so far. A tab is built on first visit and then kept
+  /// alive — the compromise between "nothing is prebuilt" and "all four run
+  /// their startup work before the first frame".
+  ///
+  /// This is a set, not a high-water mark: opening 设置 must not also start the
+  /// writing page's two-second load, which is exactly what a max-index check
+  /// would do.
+  final Set<int> _visitedTabs = {0};
+
+  /// One Navigator per destination, so each keeps its own back stack and its
+  /// navigation bar is the only hero in its subtree.
+  final List<GlobalKey<NavigatorState>> _tabNavigators = List.generate(
+    4,
+    (_) => GlobalKey<NavigatorState>(),
+  );
 
   bool _importing = false;
 
@@ -831,135 +846,123 @@ class _LibraryShellState extends State<LibraryShell>
   @override
   Widget build(BuildContext context) {
     return Stack(
+      // The shell fills the window. Without this the inner stack — a
+      // non-positioned child — is measured loosely and shrinks to its
+      // content, which floated the dock up the screen instead of pinning it.
+      fit: StackFit.expand,
       children: [
-        CupertinoTabScaffold(
-          tabBar: CupertinoTabBar(
-            currentIndex: _tab.value,
-
-            onTap: (value) => _tab.value = value,
-
-            activeColor: context.c.primary,
-
-            inactiveColor: context.c.mutedForeground,
-
-            iconSize: 22,
-
-            border: Border(top: BorderSide(color: context.c.border)),
-
-            backgroundColor: context.c.background,
-
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.book),
-
-                label: '阅读',
-              ),
-
-              BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.square_stack_3d_up),
-
-                label: '书库',
-              ),
-
-              BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.pencil),
-
-                label: '写作',
-              ),
-
-              BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.gear),
-
-                label: '设置',
-              ),
+        // A destination is built the first time it is opened and then stays
+        // mounted, so scroll offsets, open sheets and drafts survive a dock
+        // tap — but only the visible one is on stage. Offstage (rather than
+        // IndexedStack) also keeps the hidden pages out of the hero and focus
+        // trees: two CupertinoNavigationBars both "on stage" claim the same
+        // default hero tag and break the push animation.
+        ValueListenableBuilder<int>(
+          valueListenable: _tab,
+          builder: (context, index, _) => Stack(
+            fit: StackFit.expand,
+            children: [
+              // A destination is built the first time it is opened and then
+              // stays mounted, so scroll offsets, open sheets and drafts
+              // survive a dock tap. Unvisited tabs are an empty box of the same
+              // size: identical layout, none of that page's startup work.
+              for (var i = 0; i < 4; i++)
+                if (!_visitedTabs.contains(i))
+                  const SizedBox.expand()
+                else
+                  // Only the visible destination is on stage: an offstage page
+                  // must not take taps (it does if it is a Stack child with no
+                  // hit-test guard) and must not join the hero or focus trees,
+                  // where two CupertinoNavigationBars claim the same default
+                  // hero tag and break the push animation.
+                  //
+                  // Each destination owns a Navigator, so a page opened from
+                  // 书库 keeps its back stack while the reader is on screen.
+                  Offstage(
+                    offstage: i != index,
+                    child: TickerMode(
+                      enabled: i == index,
+                      child: Navigator(
+                        key: _tabNavigators[i],
+                        onGenerateRoute: (settings) => PageRouteBuilder<void>(
+                          settings: settings,
+                          pageBuilder: (_, _, _) => KeyedSubtree(
+                            key: ValueKey<int>(i),
+                            child: switch (i) {
+                              0 => HomePage(
+                                books: _books,
+                                continueState: _continueState,
+                                onOpen: _openBook,
+                                onImport: _importBook,
+                              ),
+                              1 => LibraryPage(
+                                books: _books,
+                                folders: _folders,
+                                progressById: _progressById,
+                                onOpen: _openBook,
+                                onImport: _importBook,
+                                onDelete: _deleteBook,
+                                onEditCover: _editBookCover,
+                                onMoveToFolder: _moveBookToFolder,
+                                onCreateFolder: _createFolder,
+                                onDeleteFolder: _deleteFolder,
+                                onRenameFolder: _renameFolder,
+                              ),
+                              2 => const WritingPage(),
+                              _ => SettingsPage(
+                                onCycleTheme: widget.onCycleTheme,
+                                themeModeLabel: widget.themeModeLabel,
+                                isDark: widget.isDark,
+                                installedFonts: widget.installedFonts,
+                                activeFontName: widget.activeFontName,
+                                useFontForUi: widget.useFontForUi,
+                                useFontForContent: widget.useFontForContent,
+                                onImportFonts: widget.onImportFonts,
+                                onActivateFont: widget.onActivateFont,
+                                onDeleteFont: widget.onDeleteFont,
+                                onFontUsageChanged: widget.onFontUsageChanged,
+                                storageUsage: _library.storageUsage,
+                                availableBooks: exportableBooks(_books),
+                                onClearBooks: () async {
+                                  await _library.clearBooks();
+                                  await _library.clearReadingStates();
+                                  if (mounted) {
+                                    setState(() => _books.clear());
+                                    _progressById.clear();
+                                    _widgetCurrentBookId = null;
+                                    _queueWidgetShelfSync(immediate: true);
+                                  }
+                                },
+                                onClearReadingStates:
+                                    _library.clearReadingStates,
+                              ),
+                            },
+                          ),
+                          transitionsBuilder: (_, _, _, child) => child,
+                        ),
+                      ),
+                    ),
+                  ),
             ],
           ),
-
-          tabBuilder: (_, index) {
-            if (index == 0) {
-              return HomePage(
-                books: _books,
-
-                continueState: _continueState,
-
-                onOpen: _openBook,
-
-                onImport: _importBook,
-              );
-            }
-
-            if (index == 1) {
-              return LibraryPage(
-                books: _books,
-
-                folders: _folders,
-
-                progressById: _progressById,
-
-                onOpen: _openBook,
-
-                onImport: _importBook,
-
-                onDelete: _deleteBook,
-
-                onEditCover: _editBookCover,
-
-                onMoveToFolder: _moveBookToFolder,
-
-                onCreateFolder: _createFolder,
-
-                onDeleteFolder: _deleteFolder,
-
-                onRenameFolder: _renameFolder,
-              );
-            }
-
-            if (index == 2) return const WritingPage();
-
-            return SettingsPage(
-              onCycleTheme: widget.onCycleTheme,
-              themeModeLabel: widget.themeModeLabel,
-
-              isDark: widget.isDark,
-
-              installedFonts: widget.installedFonts,
-
-              activeFontName: widget.activeFontName,
-
-              useFontForUi: widget.useFontForUi,
-
-              useFontForContent: widget.useFontForContent,
-
-              onImportFonts: widget.onImportFonts,
-
-              onActivateFont: widget.onActivateFont,
-
-              onDeleteFont: widget.onDeleteFont,
-
-              onFontUsageChanged: widget.onFontUsageChanged,
-
-              storageUsage: _library.storageUsage,
-
-              availableBooks: exportableBooks(_books),
-
-              onClearBooks: () async {
-                await _library.clearBooks();
-
-                await _library.clearReadingStates();
-
-                if (mounted) {
-                  setState(() => _books.clear());
-                  _progressById.clear();
-                  _widgetCurrentBookId = null;
-                  _queueWidgetShelfSync(immediate: true);
-                }
-              },
-
-              onClearReadingStates: _library.clearReadingStates,
-            );
-          },
         ),
 
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _FloatingDock(
+            tab: _tab,
+            bottomInset: MediaQuery.viewPaddingOf(context).bottom,
+            onOpen: (value) {
+              if (_visitedTabs.contains(value)) return;
+              setState(() => _visitedTabs.add(value));
+            },
+          ),
+        ),
+
+        // Import progress paints above the dock: it is a modal outcome, not
+        // page content.
         if (_importing)
           Positioned.fill(
             child: ColoredBox(
@@ -976,7 +979,6 @@ class _LibraryShellState extends State<LibraryShell>
 
                     borderRadius: AppRadius.xl3All,
                   ),
-
 
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1022,4 +1024,58 @@ class _LibraryShellState extends State<LibraryShell>
       ],
     );
   }
+}
+
+/// The dock sits above the page and drives the same [ValueNotifier] the pages
+/// read, so a tap changes one integer and repaints two widgets.
+class _FloatingDock extends StatelessWidget {
+  const _FloatingDock({
+    required this.tab,
+    required this.bottomInset,
+    this.onOpen,
+  });
+
+  final ValueNotifier<int> tab;
+  final double bottomInset;
+
+  /// Lets the shell record the highest destination visited so the stack can
+  /// stop rendering empty boxes for tabs that have been opened.
+  final ValueChanged<int>? onOpen;
+
+  static const _items = <AppDockItem>[
+    AppDockItem(
+      icon: CupertinoIcons.book,
+      selectedIcon: CupertinoIcons.book_solid,
+      label: '阅读',
+    ),
+    AppDockItem(
+      icon: CupertinoIcons.square_stack_3d_up,
+      selectedIcon: CupertinoIcons.square_stack_3d_up_fill,
+      label: '书库',
+    ),
+    AppDockItem(
+      icon: CupertinoIcons.pencil,
+      selectedIcon: CupertinoIcons.pencil,
+      label: '写作',
+    ),
+    AppDockItem(
+      icon: CupertinoIcons.gear,
+      selectedIcon: CupertinoIcons.gear_solid,
+      label: '设置',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<int>(
+    valueListenable: tab,
+    builder: (context, index, _) => AppDock(
+      items: _items,
+      index: index,
+      bottomInset: bottomInset,
+      onSelected: (value) {
+        onOpen?.call(value);
+        tab.value = value;
+      },
+    ),
+  );
 }

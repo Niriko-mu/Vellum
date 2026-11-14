@@ -138,6 +138,7 @@ void main() {
     await tester.tap(find.text('设置').last);
     await tester.pump();
     // Outermost CupertinoTheme is the one mounted by the Material shell.
+    await tester.pump(const Duration(milliseconds: 300));
     final before = tester.widget<CupertinoTheme>(
       find.byType(CupertinoTheme).first,
     );
@@ -158,14 +159,18 @@ void main() {
     await tester.pumpWidget(const VellumApp());
     await tester.tap(find.text('设置').last);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    // The settings tab is built on first visit (it is not prebuilt), so give
+    // its storage/version futures a frame to settle.
+    await tester.pump(const Duration(milliseconds: 300));
 
     // The grouped rows are taller than the old list tiles, so the later
-    // sections sit below the fold and are built as they scroll in.
-    await tester.scrollUntilVisible(find.text('阅读数据'), 200);
+    // sections sit below the fold and are built as they scroll in. Hidden tabs
+    // keep their own scrollables, so scope the search to the visible list.
+    final list = find.byType(Scrollable).last;
+    await tester.scrollUntilVisible(find.text('阅读数据'), 200, scrollable: list);
     expect(find.text('阅读统计'), findsOneWidget);
 
-    await tester.scrollUntilVisible(find.text('存储管理'), 200);
+    await tester.scrollUntilVisible(find.text('存储管理'), 200, scrollable: list);
     expect(find.text('占用空间'), findsOneWidget);
     expect(find.text('清空书库'), findsOneWidget);
     expect(find.text('清除阅读记录'), findsOneWidget);

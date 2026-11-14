@@ -24,7 +24,14 @@ $rules = @(
   @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 165 }
   @{ Name = '圆角字面量'; Pattern = 'BorderRadius\.circular\(\s*[0-9]'; Baseline = 0 }
   @{ Name = '过重字重'; Pattern = 'FontWeight\.(w700|w800|w900|bold)'; Baseline = 5 }
-  @{ Name = '阴影'; Pattern = 'BoxShadow\('; Baseline = 7 }
+  @{ Name = '阴影（token 之外）'; Pattern = 'BoxShadow\('; Baseline = 6; Files = @(
+      'reader\reader_color_picker.dart',
+      'reader\reader_controls.dart',
+      'reader\reader_page_overlay.dart',
+      'reader\reader_paragraph.dart',
+      'reader\reader_page_state_surface_rendering.dart',
+      'reader\tts_bar.dart'
+    ) }
   @{ Name = '缓入/回弹曲线'; Pattern = 'Curves\.(ease|bounce|elastic)'; Baseline = 0; Files = @() }
   @{ Name = 'CupertinoSwitch'; Pattern = 'CupertinoSwitch'; Baseline = 1 }
   @{ Name = 'CupertinoColors'; Pattern = 'CupertinoColors\.'; Baseline = 24 }
