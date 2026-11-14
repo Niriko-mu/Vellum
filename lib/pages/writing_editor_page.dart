@@ -18,6 +18,7 @@ import '../theme/app_motion.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingEditorPage extends StatefulWidget {
@@ -491,7 +492,7 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                 child: SizedBox(
                   width: 40,
                   height: 44,
-                  child: Icon(CupertinoIcons.ellipsis, size: 24, color: ink),
+                  child: Icon(AppIcons.ellipsis, size: 24, color: ink),
                 ),
               ),
             ),
@@ -640,7 +641,7 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                             child: Padding(
                               padding: const EdgeInsets.all(10),
                               child: Icon(
-                                CupertinoIcons.textformat_size,
+                                AppIcons.textformatSize,
                                 size: 23,
                                 color: ink,
                               ),
@@ -682,7 +683,7 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                             child: Padding(
                               padding: const EdgeInsets.all(10),
                               child: Icon(
-                                CupertinoIcons.keyboard_chevron_compact_down,
+                                AppIcons.keyboardChevronCompactDown,
                                 size: 23,
                                 color: muted,
                               ),

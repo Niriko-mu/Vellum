@@ -5,6 +5,7 @@ import 'package:vellum/reader/reader_models.dart';
 import 'package:vellum/services/notes_library.dart';
 import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/vellum_theme.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 void main() {
   testWidgets('catalog greys chapters before the current reading position', (
@@ -219,7 +220,7 @@ void main() {
     expect(find.text('全书 42% · 本章 35% · 第 42 页'), findsOneWidget);
     expect(find.text('读到 35% · 第 42 页'), findsOneWidget);
 
-    await tester.tap(find.byIcon(CupertinoIcons.chevron_forward));
+    await tester.tap(find.byIcon(AppIcons.chevronForward));
     expect(continued, isTrue);
 
     await tester.tap(find.text('第二章').last);

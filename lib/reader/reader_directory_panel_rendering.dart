@@ -9,6 +9,7 @@ import '../theme/app_shape.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
 
 /// Fanqie caloglayout structure: book name → tabs → divider → list.
 /// Parent supplies full band height; panel fills it.
@@ -157,7 +158,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                   child: SizedBox(
                     width: 44,
                     height: 44,
-                    child: Icon(CupertinoIcons.clear, size: 19, color: muted),
+                    child: Icon(AppIcons.clear, size: 19, color: muted),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -187,7 +188,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                   child: SizedBox(
                     width: 44,
                     height: 44,
-                    child: Icon(CupertinoIcons.search, size: 18, color: accent),
+                    child: Icon(AppIcons.search, size: 18, color: accent),
                   ),
                 ),
               const SizedBox(width: 4),
@@ -300,7 +301,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                 child: SizedBox(
                   width: 44,
                   height: 44,
-                  child: Icon(CupertinoIcons.search, size: 19, color: accent),
+                  child: Icon(AppIcons.search, size: 19, color: accent),
                 ),
               ),
             if (tab == 0 && !searching)
@@ -316,7 +317,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
               child: SizedBox(
                 width: 44,
                 height: 44,
-                child: Icon(CupertinoIcons.clear, size: 20, color: muted),
+                child: Icon(AppIcons.clear, size: 20, color: muted),
               ),
             ),
           ],
@@ -341,7 +342,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
       ),
       child: Row(
         children: [
-          Icon(CupertinoIcons.search, size: 16, color: muted),
+          Icon(AppIcons.search, size: 16, color: muted),
           const SizedBox(width: 6),
           Expanded(
             // Its own element, so a panel rebuild cannot recreate the input
@@ -498,7 +499,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Icon(
-                        CupertinoIcons.bookmark_fill,
+                        AppIcons.bookmarkFill,
                         size: 14,
                         color: accent,
                       ),
@@ -548,7 +549,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                         width: 44,
                         height: 44,
                         child: Icon(
-                          CupertinoIcons.delete,
+                          AppIcons.delete,
                           size: 17,
                           color: muted,
                         ),
@@ -596,7 +597,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Icon(
-                      CupertinoIcons.location_fill,
+                      AppIcons.locationFill,
                       size: 18,
                       color: context.c.constantWhite,
                     ),
@@ -684,7 +685,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                     width: 44,
                     height: 44,
                     child: Icon(
-                      CupertinoIcons.chevron_forward,
+                      AppIcons.chevronForward,
                       color: enabled ? accent : muted.withValues(alpha: .45),
                       size: 18,
                     ),

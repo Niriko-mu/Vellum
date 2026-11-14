@@ -7,6 +7,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import 'ui/app_section.dart';
 import 'ui/app_controls.dart';
+import '../theme/app_icons.dart';
 
 /// Picks a book from the shelf, with "keep unassociated" always available.
 ///
@@ -132,7 +133,7 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
                           selected: widget.unassociated,
                           trailing: widget.unassociated
                               ? Icon(
-                                  CupertinoIcons.checkmark_alt,
+                                  AppIcons.checkmarkAlt,
                                   color: accent,
                                 )
                               : null,
@@ -151,7 +152,7 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
                                 !widget.unassociated &&
                                     widget.selected?.id == book.id
                                 ? Icon(
-                                    CupertinoIcons.checkmark_alt,
+                                    AppIcons.checkmarkAlt,
                                     color: accent,
                                   )
                                 : null,

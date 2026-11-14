@@ -10,6 +10,7 @@ import '../widgets/ui/app_pressable.dart';
 import '../widgets/ui/app_section.dart';
 import '../widgets/ui/app_sheet.dart';
 import 'book_widgets.dart';
+import '../theme/app_icons.dart';
 
 class LibraryPage extends StatefulWidget {
   final List<ImportedBook> books;
@@ -258,7 +259,7 @@ class _LibraryPageState extends State<LibraryPage> {
                 child: const SizedBox(
                   width: 44,
                   height: 44,
-                  child: Icon(CupertinoIcons.folder),
+                  child: Icon(AppIcons.folder),
                 ),
               ),
             AppPressable(
@@ -267,7 +268,7 @@ class _LibraryPageState extends State<LibraryPage> {
               child: const SizedBox(
                 width: 44,
                 height: 44,
-                child: Icon(CupertinoIcons.add),
+                child: Icon(AppIcons.add),
               ),
             ),
           ],
@@ -300,7 +301,7 @@ class _LibraryPageState extends State<LibraryPage> {
                           child: const Padding(
                             padding: EdgeInsets.all(4),
                             child: Icon(
-                              CupertinoIcons.xmark_circle_fill,
+                              AppIcons.xmarkCircleFill,
                               size: 16,
                             ),
                           ),
@@ -329,7 +330,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   ? Center(
                       child: AppContentState(
                         kind: AppContentStateKind.empty,
-                        icon: CupertinoIcons.search,
+                        icon: AppIcons.search,
                         title: _query.trim().isEmpty
                             ? '这个文件夹里还没有书'
                             : '没有找到与「${_query.trim()}」相关的书',

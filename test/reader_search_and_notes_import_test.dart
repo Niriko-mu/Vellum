@@ -8,6 +8,7 @@ import 'package:vellum/reader/reader_models.dart';
 import 'package:vellum/services/notes_import.dart';
 import 'package:vellum/services/notes_library.dart';
 import 'package:vellum/theme/vellum_theme.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 /// In-memory notes store: the real one needs `path_provider`, which is not
 /// available in a widget test.
@@ -85,7 +86,7 @@ void main() {
     }
 
     Future<void> type(WidgetTester tester, String query) async {
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), query);
       await settle(tester);
@@ -95,7 +96,7 @@ void main() {
       tester,
     ) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
 
       final field = tester.widget<CupertinoTextField>(
@@ -114,13 +115,13 @@ void main() {
       tester,
     ) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       await tester.tap(find.text('取消'));
       await settle(tester);
       expect(find.byType(EditableText), findsNothing);
 
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       final field = tester.widget<EditableText>(find.byType(EditableText));
       expect(field.focusNode.hasFocus, isTrue);
@@ -131,7 +132,7 @@ void main() {
       await type(tester, '天下');
       expect(find.textContaining('2 段 · 2 处'), findsOneWidget);
 
-      await tester.tap(find.byIcon(CupertinoIcons.xmark_circle_fill));
+      await tester.tap(find.byIcon(AppIcons.xmarkCircleFill));
       await settle(tester);
 
       final field = tester.widget<EditableText>(find.byType(EditableText));
@@ -143,7 +144,7 @@ void main() {
       tester,
     ) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
 
       // Deliberately no second tap on the field: this is the platform's own
@@ -162,7 +163,7 @@ void main() {
       tester,
     ) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       final node = tester
           .widget<EditableText>(find.byType(EditableText))
@@ -182,7 +183,7 @@ void main() {
 
     testWidgets('a deliberate dismissal is not fought', (tester) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       final node = tester
           .widget<EditableText>(find.byType(EditableText))
@@ -200,19 +201,19 @@ void main() {
       tester,
     ) async {
       await pumpPanel(tester);
-      expect(find.byIcon(CupertinoIcons.search), findsOneWidget);
+      expect(find.byIcon(AppIcons.search), findsOneWidget);
 
       // 书签 tab has nothing to search.
       await tester.tap(find.text('书签'));
       await settle(tester);
-      expect(find.byIcon(CupertinoIcons.search), findsNothing);
+      expect(find.byIcon(AppIcons.search), findsNothing);
     });
 
     testWidgets('typing queries the whole book and groups hits by chapter', (
       tester,
     ) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       expect(find.text('搜索全书内容'), findsOneWidget);
 
@@ -268,18 +269,18 @@ void main() {
 
       // Two hits: starts on the first.
       expect(find.text('1/2'), findsOneWidget);
-      expect(find.byIcon(CupertinoIcons.chevron_down), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronDown), findsOneWidget);
 
-      await tester.tap(find.byIcon(CupertinoIcons.chevron_down));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await settle(tester);
       expect(find.text('2/2'), findsOneWidget);
 
       // Down again stays put; up walks back.
-      await tester.tap(find.byIcon(CupertinoIcons.chevron_down));
+      await tester.tap(find.byIcon(AppIcons.chevronDown));
       await settle(tester);
       expect(find.text('2/2'), findsOneWidget);
 
-      await tester.tap(find.byIcon(CupertinoIcons.chevron_up));
+      await tester.tap(find.byIcon(AppIcons.chevronUp));
       await settle(tester);
       expect(find.text('1/2'), findsOneWidget);
     });
@@ -299,7 +300,7 @@ void main() {
       tester,
     ) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
 
       expect(find.text('输入至少 2 个字开始搜索'), findsOneWidget);
@@ -310,7 +311,7 @@ void main() {
 
     testWidgets('the scan waits for a typing pause', (tester) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '天下');
       // Immediately after typing there is no scan result yet.
@@ -324,7 +325,7 @@ void main() {
 
     testWidgets('a query with no hits says so', (tester) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '不存在的内容');
       await settle(tester);
@@ -333,7 +334,7 @@ void main() {
 
     testWidgets('tapping a hit jumps to its paragraph', (tester) async {
       final jumps = await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '文德');
       await settle(tester);
@@ -352,7 +353,7 @@ void main() {
 
     testWidgets('取消 restores the catalogue list', (tester) async {
       await pumpPanel(tester);
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await settle(tester);
       await tester.enterText(find.byType(CupertinoTextField), '天下');
       await settle(tester);
@@ -364,7 +365,7 @@ void main() {
       expect(find.text('第一章 起兵'), findsOneWidget);
       // The order toggle is back in the header slot the search icon borrowed.
       expect(find.text('正序'), findsOneWidget);
-      expect(find.byIcon(CupertinoIcons.search), findsOneWidget);
+      expect(find.byIcon(AppIcons.search), findsOneWidget);
     });
   });
 

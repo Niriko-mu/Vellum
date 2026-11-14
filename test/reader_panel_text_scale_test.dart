@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/reader/reader_control_panels.dart';
 import 'package:vellum/reader/reader_models.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 /// A larger system font scale is common on Chinese phones. It grows every fixed
 /// height and every label in the catalogue panel, which is how the tab row used
@@ -47,7 +48,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     if (search) {
-      await tester.tap(find.byIcon(CupertinoIcons.search));
+      await tester.tap(find.byIcon(AppIcons.search));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(CupertinoTextField), '天下');
       await tester.pump(const Duration(milliseconds: 250));

@@ -35,6 +35,7 @@ import 'widgets/ui/app_dock.dart';
 import 'theme/app_shape.dart';
 import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
+import 'theme/app_icons.dart';
 
 final appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -1044,23 +1045,23 @@ class _FloatingDock extends StatelessWidget {
 
   static const _items = <AppDockItem>[
     AppDockItem(
-      icon: CupertinoIcons.book,
-      selectedIcon: CupertinoIcons.book_solid,
+      icon: AppIcons.book,
+      selectedIcon: AppIcons.bookSolid,
       label: '阅读',
     ),
     AppDockItem(
-      icon: CupertinoIcons.square_stack_3d_up,
-      selectedIcon: CupertinoIcons.square_stack_3d_up_fill,
+      icon: AppIcons.squareStack3dUp,
+      selectedIcon: AppIcons.squareStack3dUpFill,
       label: '书库',
     ),
     AppDockItem(
-      icon: CupertinoIcons.pencil,
-      selectedIcon: CupertinoIcons.pencil,
+      icon: AppIcons.pencil,
+      selectedIcon: AppIcons.pencil,
       label: '写作',
     ),
     AppDockItem(
-      icon: CupertinoIcons.gear,
-      selectedIcon: CupertinoIcons.gear_solid,
+      icon: AppIcons.gear,
+      selectedIcon: AppIcons.gearSolid,
       label: '设置',
     ),
   ];

@@ -29,6 +29,7 @@ import 'reading_stats_page.dart';
 import 'backup_settings_page.dart';
 import 'tts_settings_page.dart';
 import 'update_sheet.dart';
+import '../theme/app_icons.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback onCycleTheme;
@@ -424,26 +425,26 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               AppRow(
                 leading: Icon(
-                  widget.isDark ? CupertinoIcons.sun_max : CupertinoIcons.moon,
+                  widget.isDark ? AppIcons.sunMax : AppIcons.moon,
                 ),
                 label: '界面主题',
                 value: widget.themeModeLabel,
                 onTap: widget.onCycleTheme,
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.plus_circle),
+                leading: const Icon(AppIcons.plusCircle),
                 label: '导入字体',
                 value: '${widget.installedFonts.length}',
                 onTap: widget.onImportFonts,
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.textformat),
+                leading: const Icon(AppIcons.textformat),
                 label: '字体列表',
                 onTap: () => _showFontManager(context),
               ),
               if (hasActiveFont)
                 AppSwitchRow(
-                  leading: const Icon(CupertinoIcons.textformat_size),
+                  leading: const Icon(AppIcons.textformatSize),
                   label: '用于界面字体',
                   value: widget.useFontForUi,
                   onChanged: (value) => widget.onFontUsageChanged(
@@ -452,14 +453,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               AppRow(
-                leading: const Icon(CupertinoIcons.doc_text),
+                leading: const Icon(AppIcons.docText),
                 label: 'MOBI / EPUB 转 TXT',
                 onTap: () => Navigator.of(context).push(
                   CupertinoPageRoute(builder: (_) => const EbookToTxtPage()),
                 ),
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.lock_shield),
+                leading: const Icon(AppIcons.lockShield),
                 label: '数据备份',
                 value: '本地/云端',
                 onTap: () => Navigator.of(context).push(
@@ -467,7 +468,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.speaker_1),
+                leading: const Icon(AppIcons.speaker1),
                 label: '朗读服务（听书）',
                 value: 'TTS 接口',
                 onTap: () => Navigator.of(context).push(
@@ -480,7 +481,7 @@ class _SettingsPageState extends State<SettingsPage> {
           AppSection(
             children: [
               AppRow(
-                leading: const Icon(CupertinoIcons.chart_bar),
+                leading: const Icon(AppIcons.chartBar),
                 label: '阅读统计',
                 value:
                     '今日 ${ReadingStatsService.formatDuration(_readingStats.todaySeconds)}'
@@ -493,43 +494,43 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.doc_text),
+                leading: const Icon(AppIcons.docText),
                 label: '导出阅读笔记',
                 value: 'JSON',
                 onTap: _exportNotes,
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.tray_arrow_down),
+                leading: const Icon(AppIcons.trayArrowDown),
                 label: '导入阅读笔记',
                 value: 'JSON / 文本',
                 onTap: _importNotes,
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.link),
+                leading: const Icon(AppIcons.link),
                 label: unmatchedBookTitle,
                 value: _orphanCount == 0 ? '无' : '$_orphanCount 条',
                 onTap: _openUnassociatedNotes,
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.info_circle),
+                leading: const Icon(AppIcons.infoCircle),
                 label: '当前版本',
                 value: _appVersion.isEmpty ? '—' : 'V$_appVersion',
               ),
               AppSelectRow(
-                leading: const Icon(CupertinoIcons.arrow_down_circle),
+                leading: const Icon(AppIcons.arrowDownCircle),
                 label: '检查更新',
                 value: _checkingUpdate ? '检查中…' : _shortUpdateRepoLabel,
                 enabled: !_checkingUpdate,
                 onTap: _checkingUpdate ? () {} : _checkForUpdate,
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.gear_alt),
+                leading: const Icon(AppIcons.gearAlt),
                 label: '更新仓库',
                 value: '自定义',
                 onTap: _editUpdateRepo,
               ),
               AppSwitchRow(
-                leading: const Icon(CupertinoIcons.arrow_2_circlepath),
+                leading: const Icon(AppIcons.arrow2Circlepath),
                 label: '启动时自动检查更新',
                 value: _autoCheckUpdate,
                 onChanged: _setAutoCheckUpdate,
@@ -545,7 +546,7 @@ class _SettingsPageState extends State<SettingsPage> {
               FutureBuilder<StorageUsage>(
                 future: _usage,
                 builder: (context, snapshot) => AppRow(
-                  leading: const Icon(CupertinoIcons.chart_bar),
+                  leading: const Icon(AppIcons.chartBar),
                   label: '占用空间',
                   value: snapshot.data == null
                       ? '计算中…'
@@ -553,7 +554,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.book),
+                leading: const Icon(AppIcons.book),
                 label: '清空书库',
                 destructive: true,
                 onTap: () => _confirm(
@@ -563,7 +564,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               AppRow(
-                leading: const Icon(CupertinoIcons.clock),
+                leading: const Icon(AppIcons.clock),
                 label: '清除阅读记录',
                 destructive: true,
                 onTap: () => _confirm(

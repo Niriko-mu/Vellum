@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'reader_directory_panel_state.dart';
 import 'reader_models.dart';
 import '../services/notes_library.dart';
+import '../theme/app_icons.dart';
 
 class ReaderDirectoryPanel extends StatefulWidget {
   const ReaderDirectoryPanel({
@@ -183,7 +184,7 @@ class ReaderSearchQueryFieldState extends State<ReaderSearchQueryField> {
           GestureDetector(
             onTap: widget.onClear,
             child: Icon(
-              CupertinoIcons.xmark_circle_fill,
+              AppIcons.xmarkCircleFill,
               size: 16,
               color: widget.placeholderStyle.color,
             ),

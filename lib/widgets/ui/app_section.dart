@@ -5,6 +5,7 @@ import '../../theme/app_shape.dart';
 import '../../theme/app_type.dart';
 import 'app_controls.dart';
 import 'app_pressable.dart';
+import '../../theme/app_icons.dart';
 
 /// A grouped, inset list block — the backbone of every settings, detail and
 /// picker page.
@@ -330,7 +331,7 @@ class AppRow extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: AppSpace.x2),
                 child: Icon(
-                  CupertinoIcons.chevron_right,
+                  AppIcons.chevronRight,
                   key: const ValueKey<String>('app-row-chevron'),
                   size: AppSpace.x5,
                   color: colors.mutedForeground,
@@ -463,7 +464,7 @@ class AppSelectRow extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: AppSpace.x2),
                   child: Icon(
-                    CupertinoIcons.chevron_down,
+                    AppIcons.chevronDown,
                     size: 20,
                     color: colors.mutedForeground,
                   ),

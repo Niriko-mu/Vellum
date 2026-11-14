@@ -15,6 +15,7 @@ import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../theme/app_icons.dart';
 
 enum _ConvertPhase { idle, pickingSource, parsing, pickingPath, done, failed }
 
@@ -206,7 +207,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        CupertinoIcons.doc_text,
+                        AppIcons.docText,
                         size: 32,
                         color: accent,
                       ),
@@ -301,13 +302,13 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
               const CupertinoActivityIndicator(radius: 10)
             else if (_phase == _ConvertPhase.done)
               Icon(
-                CupertinoIcons.checkmark_circle_fill,
+                AppIcons.checkmarkCircleFill,
                 color: accent,
                 size: 20,
               )
             else
               Icon(
-                CupertinoIcons.exclamationmark_circle_fill,
+                AppIcons.exclamationmarkCircleFill,
                 color: CupertinoColors.systemRed,
                 size: 20,
               ),

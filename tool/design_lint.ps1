@@ -39,6 +39,8 @@ $rules = @(
   # 下面两条没有余量：基元之外不允许再出现第三种按钮或第三种列表行。
   @{ Name = 'CupertinoButton'; Pattern = 'CupertinoButton'; Baseline = 0 }
   @{ Name = 'CupertinoListTile'; Pattern = 'CupertinoListTile'; Baseline = 0 }
+  # 图标只能走 AppIcons：它是唯一的字形来源，换字体是一处改动。
+  @{ Name = 'CupertinoIcons'; Pattern = 'CupertinoIcons\.'; Baseline = 0 }
 )
 
 $failed = $false

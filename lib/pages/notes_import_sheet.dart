@@ -8,6 +8,7 @@ import '../widgets/ui/app_section.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../theme/app_icons.dart';
 
 /// Where the imported notes should land, as chosen in [NotesImportSheet].
 class NotesImportOutcome {
@@ -115,8 +116,8 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
                       : widget.match.reason,
                   leading: Icon(
                     _unassociated
-                        ? CupertinoIcons.question_circle
-                        : CupertinoIcons.book,
+                        ? AppIcons.questionCircle
+                        : AppIcons.book,
                     color: _unassociated ? muted : accent,
                   ),
                   onTap: _pickBook,

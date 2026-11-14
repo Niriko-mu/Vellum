@@ -11,6 +11,7 @@ import '../theme/app_shape.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../theme/app_icons.dart';
 
 /// Reader chrome overlay.
 ///
@@ -650,7 +651,7 @@ class _ReaderMenuState extends State<ReaderMenu>
             _actionItem(
               context,
               themeBg,
-              icon: CupertinoIcons.list_bullet,
+              icon: AppIcons.listBullet,
               label: '目录',
               selected: _panel == _AbovePanel.catalog,
               onTap: () => _togglePanel(_AbovePanel.catalog),
@@ -658,7 +659,7 @@ class _ReaderMenuState extends State<ReaderMenu>
             _actionItem(
               context,
               themeBg,
-              icon: isDark ? CupertinoIcons.sun_max : CupertinoIcons.moon,
+              icon: isDark ? AppIcons.sunMax : AppIcons.moon,
               label: isDark ? '日间' : '夜间',
               selected: false,
               onTap: () {
@@ -671,8 +672,8 @@ class _ReaderMenuState extends State<ReaderMenu>
                 context,
                 themeBg,
                 icon: widget.listening
-                    ? CupertinoIcons.speaker_2
-                    : CupertinoIcons.speaker_1,
+                    ? AppIcons.speaker2
+                    : AppIcons.speaker1,
                 label: widget.listening ? '听书中' : '听书',
                 selected: widget.listening,
                 onTap: widget.onListen!,
@@ -680,7 +681,7 @@ class _ReaderMenuState extends State<ReaderMenu>
             _actionItem(
               context,
               themeBg,
-              icon: CupertinoIcons.gear,
+              icon: AppIcons.gear,
               label: '设置',
               selected: _panel == _AbovePanel.settings,
               onTap: () => _togglePanel(_AbovePanel.settings),

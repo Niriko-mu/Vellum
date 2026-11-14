@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingTypographySheet extends StatefulWidget {
@@ -174,7 +175,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                      CupertinoIcons.right_chevron,
+                      AppIcons.rightChevron,
                       size: 16,
                       color: muted,
                     ),

@@ -5,6 +5,7 @@ import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
 
 /// Fanqie top bar (alg.xml): **44dp**, back @16dp. Chapter/book label sits
 /// **left-aligned** next to the back chevron (not centred).
@@ -44,7 +45,7 @@ class ReaderTopBar extends StatelessWidget {
                 child: SizedBox(
                   width: 48,
                   height: 44,
-                  child: Icon(CupertinoIcons.chevron_back, size: 26, color: ink),
+                  child: Icon(AppIcons.chevronBack, size: 26, color: ink),
                 ),
               ),
               Expanded(
@@ -72,8 +73,8 @@ class ReaderTopBar extends StatelessWidget {
                   height: 44,
                   child: Icon(
                     bookmarked
-                        ? CupertinoIcons.bookmark_fill
-                        : CupertinoIcons.bookmark,
+                        ? AppIcons.bookmarkFill
+                        : AppIcons.bookmark,
                     size: 22,
                     color: bookmarked
                         ? context.c.primary
@@ -108,10 +109,10 @@ class ReaderStatusBar extends StatelessWidget {
   /// the tiny reader footer legible on paper backgrounds.
   static IconData batteryIconFor(int level) {
     final value = level.clamp(0, 100);
-    if (value <= 5) return CupertinoIcons.battery_0;
-    if (value <= 50) return CupertinoIcons.battery_25_percent;
-    if (value <= 75) return CupertinoIcons.battery_75_percent;
-    return CupertinoIcons.battery_full;
+    if (value <= 5) return AppIcons.battery0;
+    if (value <= 50) return AppIcons.battery25Percent;
+    if (value <= 75) return AppIcons.battery75Percent;
+    return AppIcons.batteryFull;
   }
 
   @override
@@ -146,7 +147,7 @@ class ReaderStatusBar extends StatelessWidget {
                   children: [
                     Icon(
                       batteryLevel == null
-                          ? CupertinoIcons.battery_75_percent
+                          ? AppIcons.battery75Percent
                           : batteryIconFor(batteryLevel!),
                       size: 14,
                       color: batteryLevel != null && batteryLevel! <= 15
@@ -290,8 +291,8 @@ class BookmarkRibbon extends StatelessWidget {
                                 FadeTransition(opacity: animation, child: child),
                             child: Icon(
                               armed || alreadyBookmarked || pinned
-                                  ? CupertinoIcons.bookmark_fill
-                                  : CupertinoIcons.bookmark,
+                                  ? AppIcons.bookmarkFill
+                                  : AppIcons.bookmark,
                               key: ValueKey(
                                 armed || alreadyBookmarked || pinned,
                               ),

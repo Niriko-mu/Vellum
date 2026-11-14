@@ -7,6 +7,7 @@ import 'reader_directory_panel_state.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 const double readerDirectorySearchListRoom = 96;
 
@@ -119,7 +120,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
               width: 44,
               height: 44,
               child: Icon(
-                CupertinoIcons.chevron_up,
+                AppIcons.chevronUp,
                 size: 16,
                 color: activeIndex <= 0 ? muted.withValues(alpha: .4) : accent,
               ),
@@ -133,7 +134,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
               width: 44,
               height: 44,
               child: Icon(
-                CupertinoIcons.chevron_down,
+                AppIcons.chevronDown,
                 size: 16,
                 color: activeIndex >= hits.length - 1
                     ? muted.withValues(alpha: .4)
@@ -339,7 +340,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(CupertinoIcons.text_badge_plus, size: 30, color: muted),
+              Icon(AppIcons.textBadgePlus, size: 30, color: muted),
               const SizedBox(height: 10),
               Text(
                 '选中正文后可以划线或写笔记。',
@@ -424,7 +425,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                                 width: 44,
                                 height: 44,
                                 child: Icon(
-                                  CupertinoIcons.delete,
+                                  AppIcons.delete,
                                   size: 17,
                                   color: muted,
                                 ),

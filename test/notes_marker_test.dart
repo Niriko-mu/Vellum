@@ -4,6 +4,7 @@ import 'package:vellum/reader/reader_models.dart';
 import 'package:vellum/reader/reader_paragraph.dart';
 import 'package:vellum/services/book_importer.dart';
 import 'package:vellum/services/notes_library.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 void main() {
   group('ReadingNote model', () {
@@ -63,8 +64,8 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(CupertinoIcons.chat_bubble_text), findsOneWidget);
-    await tester.tap(find.byIcon(CupertinoIcons.chat_bubble_text));
+    expect(find.byIcon(AppIcons.chatBubbleText), findsOneWidget);
+    await tester.tap(find.byIcon(AppIcons.chatBubbleText));
     await tester.pump();
     expect(opened, 1);
   });
@@ -93,6 +94,6 @@ void main() {
         ),
       ),
     );
-    expect(find.byIcon(CupertinoIcons.chat_bubble_text), findsNothing);
+    expect(find.byIcon(AppIcons.chatBubbleText), findsNothing);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/vellum.dart';
 import 'package:vellum/widgets/ui/app_controls.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 /// In-memory library so the editor can auto-save without path_provider.
 class _MemoryWritingLibrary extends WritingLibrary {
@@ -134,7 +135,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.byIcon(CupertinoIcons.textformat_size), findsOneWidget);
+      expect(find.byIcon(AppIcons.textformatSize), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -201,7 +202,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.byIcon(CupertinoIcons.textformat_size));
+    await tester.tap(find.byIcon(AppIcons.textformatSize));
     await tester.pumpAndSettle();
     expect(find.text('排版'), findsOneWidget);
     expect(find.text('小说模式'), findsOneWidget);
@@ -254,7 +255,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.byIcon(CupertinoIcons.textformat_size));
+    await tester.tap(find.byIcon(AppIcons.textformatSize));
     await tester.pumpAndSettle();
     expect(find.text('Markdown 模式下不启用，切换到纯文本即可使用'), findsOneWidget);
 

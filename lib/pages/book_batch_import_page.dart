@@ -12,6 +12,7 @@ import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_section.dart';
+import '../theme/app_icons.dart';
 
 /// Returns the updated lightweight library through Navigator.pop.
 class BookBatchImportPage extends StatefulWidget {
@@ -271,8 +272,8 @@ class _BookBatchImportPageState extends State<BookBatchImportPage> {
                           description: file.outcome,
                           leading: Icon(
                             file.selected
-                                ? CupertinoIcons.check_mark_circled_solid
-                                : CupertinoIcons.circle,
+                                ? AppIcons.checkMarkCircledSolid
+                                : AppIcons.circle,
                             color: file.selected
                                 ? context.c.primary
                                 : context.c.mutedForeground,
@@ -292,7 +293,7 @@ class _BookBatchImportPageState extends State<BookBatchImportPage> {
               padding: const EdgeInsets.only(top: AppSpace.x3),
               child: AppButton(
                 label: '导入选中的 ${_files.where((f) => f.selected).length} 本',
-                icon: CupertinoIcons.tray_arrow_down,
+                icon: AppIcons.trayArrowDown,
                 expand: true,
                 onPressed: _busy || !_files.any((f) => f.selected)
                     ? null

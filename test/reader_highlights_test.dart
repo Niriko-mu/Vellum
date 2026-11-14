@@ -9,6 +9,7 @@ import 'package:vellum/reader/reader_selection.dart';
 import 'package:vellum/services/book_importer.dart';
 import 'package:vellum/services/book_library.dart';
 import 'package:vellum/services/notes_library.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 ImportedBook _book({bool withChapter = false}) => ImportedBook(
   title: '测试书',
@@ -120,16 +121,16 @@ void main() {
     );
     final icon = tester.widget<Icon>(find.byType(Icon).first);
     expect(icon.icon, ReaderStatusBar.batteryIconFor(18));
-    expect(icon.icon, isNot(CupertinoIcons.battery_75_percent));
+    expect(icon.icon, isNot(AppIcons.battery75Percent));
   });
 
   test('battery icon buckets clamp edge percentages', () {
-    expect(ReaderStatusBar.batteryIconFor(0), CupertinoIcons.battery_0);
+    expect(ReaderStatusBar.batteryIconFor(0), AppIcons.battery0);
     expect(
       ReaderStatusBar.batteryIconFor(51),
-      CupertinoIcons.battery_75_percent,
+      AppIcons.battery75Percent,
     );
-    expect(ReaderStatusBar.batteryIconFor(101), CupertinoIcons.battery_full);
+    expect(ReaderStatusBar.batteryIconFor(101), AppIcons.batteryFull);
   });
 
   testWidgets('reader running head shows the chapter at top left', (

@@ -11,6 +11,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Checks the release feed and, when a newer build exists, walks the user
 /// through picking an ABI variant and installing it.
@@ -483,8 +484,8 @@ class _AssetRow extends StatelessWidget {
           children: [
             Icon(
               selected
-                  ? CupertinoIcons.checkmark_circle_fill
-                  : CupertinoIcons.circle,
+                  ? AppIcons.checkmarkCircleFill
+                  : AppIcons.circle,
               size: 20,
               color: selected ? accent : context.c.mutedForeground,
             ),

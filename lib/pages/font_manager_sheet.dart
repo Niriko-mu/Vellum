@@ -8,6 +8,7 @@ import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../widgets/ui/app_section.dart' show appHairline;
 import '../widgets/ui/app_sheet.dart';
+import '../theme/app_icons.dart';
 
 class FontManagerSheet extends StatelessWidget {
   final List<InstalledFont> installedFonts;
@@ -45,7 +46,7 @@ class FontManagerSheet extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.x2),
-          child: Icon(CupertinoIcons.plus_circle, color: colors.primary),
+          child: Icon(AppIcons.plusCircle, color: colors.primary),
         ),
       ),
       footer: AppButton(
@@ -57,7 +58,7 @@ class FontManagerSheet extends StatelessWidget {
       child: installedFonts.isEmpty
           ? const AppContentState(
               kind: AppContentStateKind.empty,
-              icon: CupertinoIcons.textformat,
+              icon: AppIcons.textformat,
               title: '暂无字体',
               description: '点击右上角 + 导入字体',
             )
@@ -198,7 +199,7 @@ class _FontCard extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpace.x3),
                         child: Icon(
-                          CupertinoIcons.trash,
+                          AppIcons.trash,
                           color: colors.destructive,
                           size: 20,
                         ),

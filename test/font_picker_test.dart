@@ -4,6 +4,7 @@ import 'package:vellum/reader/reader_font_picker.dart';
 import 'package:vellum/services/book_library.dart';
 import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/vellum_theme.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 const _font = InstalledFont(
   name: 'demo-font',
@@ -122,7 +123,7 @@ void main() {
 
       final label = tester.widget<Text>(find.text('系统字体'));
       expect(label.style!.color, VellumTheme.accent);
-      expect(find.byIcon(CupertinoIcons.checkmark_alt), findsOneWidget);
+      expect(find.byIcon(AppIcons.checkmarkAlt), findsOneWidget);
       final row = tester.widget<Container>(
         find
             .ancestor(of: find.text('系统字体'), matching: find.byType(Container))
@@ -156,7 +157,7 @@ void main() {
       tester.widget<Text>(find.text('系统字体')).style!.color,
       AppColors.dark.primary,
     );
-    expect(find.byIcon(CupertinoIcons.checkmark_alt), findsOneWidget);
+    expect(find.byIcon(AppIcons.checkmarkAlt), findsOneWidget);
   });
 }
 

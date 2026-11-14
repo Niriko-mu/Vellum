@@ -17,6 +17,8 @@
 | 4 | 实心按钮填充 | `foreground`（黑 / 白） | `primary` | 主操作是品牌动作，不是"最黑的东西"。一屏只允许一个 `filled` |
 | 5 | 底部导航 | 标准 tab bar（高 49 + inset） | **浮空 dock**：高 64、圆角 24（8×3） | 产品指定。磨砂仅限胶囊区域（`BackdropFilter` sigma 24），实测滚动 239 帧 0 丢帧 |
 | 6 | 关闭曲线 | 3 条曲线（无 dismiss） | 保留 `dismissCurve` + `dismiss` 180ms | `settle` 是减速曲线，**反演后是缓入**——用它做退场正好是要避免的"界面犹豫了一下"。进/出分流是有意的 |
+| 7 | 图标"实心/描边"两态 | 选中态用实心字形 | **只有描边一态**（Lucide 无实心字形） | Lucide 是纯描边集，与规范要的 2px 描边一致。选中态改由**颜色 + dock 滑块**承担：dock 有滑动指示器，开关有拇指位移，书签有"已加书签"语义标签。代价是少了非颜色的形状线索，故 dock 的选中项另加字重差 |
+| 8 | 图标字体来源 | 依赖 `lucide_icons` pub 包 | **自带 `assets/fonts/Lucide.ttf`** | 0.257.0（最新）里 `LucideIconData extends IconData`，而本 SDK 已把 `IconData` 标为 `final`，该包**无法编译**。字体与 ISC 许可一并入库，码点集中在 `lib/theme/app_icons.dart` |
 
 ---
 
@@ -31,6 +33,7 @@
 - 尾随值：16/24，`foreground`，右对齐，最大 62% 宽
 - chevron：20，`mutedForeground`，左侧间隔 8
 - 圆角阶梯：8 的倍数（4.8 / 6.4 / 8 / 11.2 / 14.4 / 17.6 / 20.8）
+- 图标：只经 `AppIcons` 取字形，`CupertinoIcons` 零引用；字号 16（行内）/ 20（chevron）/ 24（dock）
 - 字号阶梯：13 级严格递增，行高 ≥ 字号
 - 动效：`settle` / `overshoot` 为 `Cubic`，`fast` 200 / `base` 250 / `slow` 350
 - 两套主题声明的角色集合完全一致

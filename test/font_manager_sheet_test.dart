@@ -4,6 +4,7 @@ import 'package:vellum/pages/font_manager_sheet.dart';
 import 'package:vellum/services/book_library.dart';
 import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/vellum_theme.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 const _font = InstalledFont(
   name: 'manager-font',
@@ -64,9 +65,9 @@ void main() {
       AppColors.dark.foreground,
     );
     expect(find.text('当前使用中'), findsOneWidget);
-    expect(find.byIcon(CupertinoIcons.trash), findsOneWidget);
+    expect(find.byIcon(AppIcons.trash), findsOneWidget);
 
-    await tester.tap(find.byIcon(CupertinoIcons.trash));
+    await tester.tap(find.byIcon(AppIcons.trash));
     await tester.pumpAndSettle();
     expect(find.text('删除字体'), findsOneWidget);
     expect(find.text('取消'), findsOneWidget);

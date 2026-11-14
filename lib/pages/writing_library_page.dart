@@ -14,6 +14,7 @@ import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_field.dart';
 import '../widgets/ui/app_pressable.dart';
 import 'writing_editor_page.dart';
+import '../theme/app_icons.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingPage extends StatefulWidget {
@@ -229,7 +230,7 @@ class _WritingPageState extends State<WritingPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Icon(
-                                CupertinoIcons.square_arrow_down,
+                                AppIcons.squareArrowDown,
                                 size: 23,
                                 color: ink,
                               ),
@@ -274,7 +275,7 @@ class _WritingPageState extends State<WritingPage> {
                     child: Center(
                       child: AppContentState(
                         kind: AppContentStateKind.empty,
-                        icon: CupertinoIcons.search,
+                        icon: AppIcons.search,
                         title: '未找到相关文稿',
                         description: '换个关键词，或者新建一篇。',
                       ),
@@ -336,7 +337,7 @@ class _WritingPageState extends State<WritingPage> {
                   ),
                   child: AppButton(
                     label: '新建文稿',
-                    icon: CupertinoIcons.add,
+                    icon: AppIcons.add,
                     pill: true,
                     onPressed: _createDocument,
                   ),
@@ -425,7 +426,7 @@ class _EmptyWritingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppContentState(
       kind: AppContentStateKind.empty,
-      icon: CupertinoIcons.doc_text,
+      icon: AppIcons.docText,
       title: '开始写作',
       description: '文稿保存在本机，可随时继续书写。',
       actions: [

@@ -7,6 +7,7 @@ import '../services/book_importer.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../theme/app_icons.dart';
 
 /// Long-press sheet: edit shelf cover with an image or custom text.
 class CoverEditorSheet extends StatefulWidget {
@@ -136,7 +137,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                 const SizedBox(height: 14),
                 AppButton(
                   label: preview == null ? '上传封面图片' : '更换封面图片',
-                  icon: CupertinoIcons.photo,
+                  icon: AppIcons.photo,
                   expand: true,
                   onPressed: _pickImage,
                 ),

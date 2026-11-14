@@ -9,6 +9,7 @@ import 'package:vellum/reader/reader_paragraph.dart';
 import 'package:vellum/services/library_models.dart';
 import 'package:vellum/services/book_importer.dart';
 import 'package:vellum/services/reader_background.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 /// Two regressions in the reader menu:
 ///
@@ -109,7 +110,7 @@ void main() {
         reason: 'catalogue overflowed with a $keyboard px keyboard',
       );
 
-      final icon = find.byIcon(CupertinoIcons.search);
+      final icon = find.byIcon(AppIcons.search);
       if (icon.evaluate().isEmpty) continue;
       await tester.tap(icon);
       await tester.pumpAndSettle();
@@ -143,7 +144,7 @@ void main() {
 
       await tester.tap(find.text('目录').first);
       await tester.pumpAndSettle();
-      final icon = find.byIcon(CupertinoIcons.search);
+      final icon = find.byIcon(AppIcons.search);
       expect(icon, findsOneWidget);
       await tester.tap(icon);
       await tester.pumpAndSettle();

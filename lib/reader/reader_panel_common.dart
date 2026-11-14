@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 class ReaderPanelTitle extends StatelessWidget {
   const ReaderPanelTitle({
     required this.icon,
@@ -34,7 +35,7 @@ class ReaderPanelTitle extends StatelessWidget {
               child: SizedBox(
                 width: 44,
                 height: 44,
-                child: Icon(CupertinoIcons.chevron_back, size: 20, color: muted),
+                child: Icon(AppIcons.chevronBack, size: 20, color: muted),
               ),
             )
           else
@@ -56,7 +57,7 @@ class ReaderPanelTitle extends StatelessWidget {
             child: SizedBox(
               width: 44,
               height: 44,
-              child: Icon(CupertinoIcons.chevron_down, size: 20, color: muted),
+              child: Icon(AppIcons.chevronDown, size: 20, color: muted),
             ),
           ),
         ],

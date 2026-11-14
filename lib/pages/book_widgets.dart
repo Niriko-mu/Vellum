@@ -7,6 +7,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Destructive affordance shared by the grid cover and the list row.
 ///
@@ -52,7 +53,7 @@ class LibraryDeleteButton extends StatelessWidget {
               ),
             ),
             child: Icon(
-              CupertinoIcons.trash,
+              AppIcons.trash,
               color: onCover ? colors.constantWhite : colors.destructive,
               size: 15,
             ),
@@ -71,7 +72,7 @@ class EmptyLibrary extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: AppContentState(
       kind: AppContentStateKind.empty,
-      icon: CupertinoIcons.book,
+      icon: AppIcons.book,
       title: '书房还没有书',
       description: '导入 EPUB、MOBI 或 TXT，开始你的私人书房。',
       actions: [
@@ -312,7 +313,7 @@ class BookRow extends StatelessWidget {
                 LibraryDeleteButton(onPressed: onDelete!)
               else
                 Icon(
-                  CupertinoIcons.chevron_right,
+                  AppIcons.chevronRight,
                   size: 20,
                   color: colors.foregroundTertiary,
                 ),

@@ -8,6 +8,7 @@ import 'package:vellum/theme/app_type.dart';
 import 'package:vellum/theme/vellum_theme.dart';
 import 'package:vellum/widgets/ui/app_controls.dart';
 import 'package:vellum/widgets/ui/app_section.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 /// The conformance contract, ported from the reference implementation's
 /// \`spec_test.dart\`.
@@ -108,7 +109,7 @@ void main() {
             header: 'Group',
             children: [
               AppRow(
-                leading: const Icon(CupertinoIcons.cloud),
+                leading: const Icon(AppIcons.cloud),
                 label: 'Model service',
                 onTap: _noop,
               ),
@@ -189,8 +190,8 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(CupertinoIcons.chevron_down), findsOneWidget);
-      expect(find.byIcon(CupertinoIcons.chevron_right), findsNothing);
+      expect(find.byIcon(AppIcons.chevronDown), findsOneWidget);
+      expect(find.byIcon(AppIcons.chevronRight), findsNothing);
       expect(
         find.byKey(const ValueKey<String>('app-row-value')),
         findsOneWidget,

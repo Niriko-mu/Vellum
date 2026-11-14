@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_shape.dart';
 import '../../theme/app_type.dart';
+import '../../theme/app_icons.dart';
 
 /// Form field and search field, specified once.
 ///
@@ -53,7 +54,7 @@ class AppTextField extends StatelessWidget {
             children: [
               if (search) ...[
                 Icon(
-                  CupertinoIcons.search,
+                  AppIcons.search,
                   size: 18,
                   color: colors.mutedForeground,
                 ),

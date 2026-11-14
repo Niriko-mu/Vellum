@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/reader/reader_control_panels.dart';
 import 'package:vellum/reader/reader_models.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 /// The catalogue/settings sheet is a fixed slot between the reader's top bar and
 /// its bottom chrome. The soft keyboard shrinks the viewport without shrinking
@@ -57,7 +58,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpPanel(tester, ReaderDirectoryPanel.minPanelHeight);
 
-    await tester.tap(find.byIcon(CupertinoIcons.search));
+    await tester.tap(find.byIcon(AppIcons.search));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(CupertinoTextField), '天下');
     await tester.pump(const Duration(milliseconds: 250));
@@ -78,20 +79,20 @@ void main() {
     await pumpPanel(tester, ReaderDirectoryPanel.minPanelHeight);
 
     // Close, the three tabs and the search entry point survive the squeeze.
-    expect(find.byIcon(CupertinoIcons.clear), findsOneWidget);
+    expect(find.byIcon(AppIcons.clear), findsOneWidget);
     expect(find.text('目录'), findsOneWidget);
     expect(find.text('书签'), findsOneWidget);
     expect(find.text('笔记'), findsOneWidget);
-    expect(find.byIcon(CupertinoIcons.search), findsOneWidget);
+    expect(find.byIcon(AppIcons.search), findsOneWidget);
 
     // 取消 leaves search mode even in the compact layout.
-    await tester.tap(find.byIcon(CupertinoIcons.search));
+    await tester.tap(find.byIcon(AppIcons.search));
     await tester.pumpAndSettle();
     expect(find.text('取消'), findsOneWidget);
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
     expect(find.text('搜索全书内容'), findsNothing);
-    expect(find.byIcon(CupertinoIcons.clear), findsOneWidget);
+    expect(find.byIcon(AppIcons.clear), findsOneWidget);
   });
 
   testWidgets('the full header returns once there is room', (tester) async {
@@ -100,7 +101,7 @@ void main() {
 
     // Book name, tabs and the order toggle are all back.
     expect(find.text('正序'), findsOneWidget);
-    expect(find.byIcon(CupertinoIcons.search), findsOneWidget);
+    expect(find.byIcon(AppIcons.search), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -110,7 +111,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     // A short viewport where the keyboard would leave the sheet at its floor.
     await pumpPanel(tester, ReaderDirectoryPanel.minPanelHeight + 6);
-    await tester.tap(find.byIcon(CupertinoIcons.search));
+    await tester.tap(find.byIcon(AppIcons.search));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(CupertinoTextField), '太祖');
     await tester.pump(const Duration(milliseconds: 250));

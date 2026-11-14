@@ -11,6 +11,7 @@ import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_section.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -333,7 +334,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
             Row(
               children: [
                 Icon(
-                  CupertinoIcons.lock_shield,
+                  AppIcons.lockShield,
                   size: 26,
                   color: colors.primary,
                 ),
@@ -396,7 +397,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
               header: '本地备份',
               children: [
                 AppRow(
-                  leading: const Icon(CupertinoIcons.archivebox),
+                  leading: const Icon(AppIcons.archivebox),
                   label: '创建本地备份',
                   description: _loading
                       ? '读取中…'
@@ -404,13 +405,13 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                   onTap: _busy ? null : _createLocal,
                 ),
                 AppRow(
-                  leading: const Icon(CupertinoIcons.arrow_up_doc),
+                  leading: const Icon(AppIcons.arrowUpDoc),
                   label: '导出到文件',
                   description: '可发送到电脑或其他设备',
                   onTap: _busy ? null : _exportLocal,
                 ),
                 AppRow(
-                  leading: const Icon(CupertinoIcons.arrow_down_doc),
+                  leading: const Icon(AppIcons.arrowDownDoc),
                   label: '从文件恢复',
                   description: '恢复前会校验 VELLUM 清单',
                   onTap: _busy ? null : _restoreLocal,
@@ -426,7 +427,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
               header: '云备份',
               children: [
                 AppSwitchRow(
-                  leading: const Icon(CupertinoIcons.cloud),
+                  leading: const Icon(AppIcons.cloud),
                   label: '对象存储',
                   description: _bucket.text.trim().isEmpty
                       ? '未配置'
@@ -451,8 +452,8 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                         height: 36,
                         child: Icon(
                           _obscureKey
-                              ? CupertinoIcons.eye
-                              : CupertinoIcons.eye_slash,
+                              ? AppIcons.eye
+                              : AppIcons.eyeSlash,
                         ),
                       ),
                     ),
@@ -460,13 +461,13 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                   _field('存储桶', _bucket),
                   _field('路径前缀', _prefix),
                   AppRow(
-                    leading: const Icon(CupertinoIcons.checkmark_seal),
+                    leading: const Icon(AppIcons.checkmarkSeal),
                     label: '保存云配置',
                     description: '仅保存到系统安全存储',
                     onTap: _saveCloud,
                   ),
                   AppRow(
-                    leading: const Icon(CupertinoIcons.cloud_upload),
+                    leading: const Icon(AppIcons.cloudUpload),
                     label: '立即上传备份',
                     description: _busy
                         ? '上传中…'
@@ -474,7 +475,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                     onTap: _busy ? null : _uploadCloud,
                   ),
                   AppRow(
-                    leading: const Icon(CupertinoIcons.refresh),
+                    leading: const Icon(AppIcons.refresh),
                     label: '读取云端备份',
                     description: _cloudLoading
                         ? '读取中…'
@@ -490,7 +491,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                 children: [
                   for (final item in _cloud.take(10))
                     AppRow(
-                      leading: const Icon(CupertinoIcons.cloud_download),
+                      leading: const Icon(AppIcons.cloudDownload),
                       label: item.fileName,
                       description: _cloudItemDetail(item),
                       onTap: _busy ? null : () => _restoreCloud(item),
@@ -503,7 +504,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                 children: [
                   for (final item in _local.take(5))
                     AppRow(
-                      leading: const Icon(CupertinoIcons.doc),
+                      leading: const Icon(AppIcons.doc),
                       label: _basename(item.file.path),
                       value: _formatBytes(item.size),
                     ),

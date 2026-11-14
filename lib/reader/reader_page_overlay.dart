@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_icons.dart';
 
 /// Compact reading-time indicator shown while reader chrome is hidden.
 class ReaderReadingTimePill extends StatelessWidget {
@@ -60,7 +61,7 @@ class ReaderReadingTimePill extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(CupertinoIcons.timer, size: 12, color: accent),
+                      Icon(AppIcons.timer, size: 12, color: accent),
                       const SizedBox(width: 4),
                       Text(
                         '本次 ${compactDuration(session)} · 今日 ${compactDuration(today)}',

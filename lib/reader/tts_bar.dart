@@ -5,6 +5,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Floating control bar while the listen (听书) feature is active.
 ///
@@ -81,20 +82,20 @@ class TtsBar extends StatelessWidget {
                   children: [
                     _icon(
                       context,
-                      CupertinoIcons.backward_end,
+                      AppIcons.backwardEnd,
                       onPrevious,
                       color: muted,
                     ),
                     _icon(
                       context,
-                      playing ? CupertinoIcons.pause : CupertinoIcons.play,
+                      playing ? AppIcons.pause : AppIcons.play,
                       onPlayPause,
                       color: playing ? accent : ink,
                       size: 30,
                     ),
                     _icon(
                       context,
-                      CupertinoIcons.forward_end,
+                      AppIcons.forwardEnd,
                       onNext,
                       color: muted,
                     ),
@@ -114,7 +115,7 @@ class TtsBar extends StatelessWidget {
                     ),
                     _icon(
                       context,
-                      CupertinoIcons.xmark,
+                      AppIcons.xmark,
                       onClose,
                       color: muted,
                       size: 18,

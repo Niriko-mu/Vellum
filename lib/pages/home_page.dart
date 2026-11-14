@@ -10,6 +10,7 @@ import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../widgets/ui/app_section.dart';
 import 'book_widgets.dart';
+import '../theme/app_icons.dart';
 
 class HomePage extends StatelessWidget {
   final List<ImportedBook> books;
@@ -61,7 +62,7 @@ class HomePage extends StatelessWidget {
           child: SizedBox(
             width: 44,
             height: 44,
-            child: Icon(CupertinoIcons.add, color: colors.primary),
+            child: Icon(AppIcons.add, color: colors.primary),
           ),
         ),
       ),
@@ -214,7 +215,7 @@ class _ContinueCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppSpace.x2),
                         Icon(
-                          CupertinoIcons.chevron_right,
+                          AppIcons.chevronRight,
                           size: 20,
                           color: colors.foregroundTertiary,
                         ),

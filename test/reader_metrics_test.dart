@@ -4,6 +4,7 @@ import 'package:vellum/reader/reader_models.dart';
 import 'package:vellum/reader/reader_page.dart';
 import 'package:vellum/services/book_importer.dart';
 import 'package:vellum/services/library_models.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 void main() {
   group('font size aligned to the reference reader', () {
@@ -77,15 +78,15 @@ void main() {
     expect(find.text('目录'), findsOneWidget);
     expect(find.text('上一章'), findsOneWidget);
     expect(find.text('设置'), findsOneWidget);
-    expect(find.byIcon(CupertinoIcons.chevron_back), findsOneWidget);
-    expect(find.byIcon(CupertinoIcons.bookmark), findsOneWidget);
+    expect(find.byIcon(AppIcons.chevronBack), findsOneWidget);
+    expect(find.byIcon(AppIcons.bookmark), findsOneWidget);
 
     // A second centre tap retracts the header entirely; its back/bookmark
     // buttons must not remain on the reader surface.
     await tester.tapAt(const Offset(400, 300));
     await tester.pumpAndSettle();
-    expect(find.byIcon(CupertinoIcons.chevron_back), findsNothing);
-    expect(find.byIcon(CupertinoIcons.bookmark), findsNothing);
+    expect(find.byIcon(AppIcons.chevronBack), findsNothing);
+    expect(find.byIcon(AppIcons.bookmark), findsNothing);
 
     // Re-open controls for the panel assertions below.
     await tester.tapAt(const Offset(400, 300));

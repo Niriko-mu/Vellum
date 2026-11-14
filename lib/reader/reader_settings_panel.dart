@@ -13,6 +13,7 @@ import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_type.dart';
+import '../theme/app_icons.dart';
 class ReaderSettingsPanel extends StatefulWidget {
   const ReaderSettingsPanel({
     required this.fontSize,
@@ -144,7 +145,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
   /// eye-care. Basic swatches live on the first level.
   List<Widget> _backgroundSettings(BuildContext context) => [
     ReaderPanelTitle(
-      icon: CupertinoIcons.photo,
+      icon: AppIcons.photo,
       title: '自定义背景',
       surface: _surface,
       onClose: widget.onClose,
@@ -171,14 +172,14 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           ),
           clipBehavior: Clip.antiAlias,
           child: widget.background.usesImage
-              ? const Icon(CupertinoIcons.photo, size: 18)
+              ? const Icon(AppIcons.photo, size: 18)
               : null,
         ),
         const SizedBox(width: 10),
         Expanded(
           child: AppTextButton(
             label: '导入图片',
-            icon: CupertinoIcons.photo_on_rectangle,
+            icon: AppIcons.photoOnRectangle,
             color: _ink,
             pressedColor: _ink.withValues(alpha: .06),
             onPressed: _pickBackgroundImage,
@@ -485,7 +486,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
 
   List<Widget> _mainSettings(BuildContext context) => [
     ReaderPanelTitle(
-      icon: CupertinoIcons.gear,
+      icon: AppIcons.gear,
       title: '阅读设置',
       surface: _surface,
       onClose: widget.onClose,
@@ -583,7 +584,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                 style: TextStyle(fontSize: 13, color: _muted),
               ),
             ),
-            Icon(CupertinoIcons.chevron_forward, size: 16, color: _muted),
+            Icon(AppIcons.chevronForward, size: 16, color: _muted),
           ],
         ),
       ),
@@ -611,7 +612,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             Expanded(
               child: Text('更多设置', style: TextStyle(fontSize: 13, color: _ink)),
             ),
-            Icon(CupertinoIcons.chevron_forward, size: 16, color: _muted),
+            Icon(AppIcons.chevronForward, size: 16, color: _muted),
           ],
         ),
       ),
@@ -620,7 +621,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
 
   List<Widget> _moreSettings(BuildContext context) => [
     ReaderPanelTitle(
-      icon: CupertinoIcons.slider_horizontal_3,
+      icon: AppIcons.sliderHorizontal3,
       title: '更多设置',
       surface: _surface,
       onClose: widget.onClose,
@@ -698,7 +699,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
 
   Widget _brightnessRow(BuildContext context) => Row(
     children: [
-      Icon(CupertinoIcons.sun_min, size: 16, color: _muted),
+      Icon(AppIcons.sunMin, size: 16, color: _muted),
       Expanded(
         child: CupertinoSlider(
           value: (_followsSystem ? 0.6 : widget.brightness).clamp(0.05, 1.0),

@@ -7,6 +7,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Fanqie-style font picker data: only the built-in system font is listed by
 /// default. User-imported fonts are appended from the real installed list;
@@ -145,7 +146,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                       prefix: Padding(
                         padding: const EdgeInsets.only(left: 10),
                         child: Icon(
-                          CupertinoIcons.search,
+                          AppIcons.search,
                           size: 16,
                           color: muted,
                         ),
@@ -292,7 +293,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
             ),
           if (selected) ...[
             const SizedBox(width: 12),
-            Icon(CupertinoIcons.checkmark_alt, size: 18, color: accent),
+            Icon(AppIcons.checkmarkAlt, size: 18, color: accent),
           ],
         ],
       ),

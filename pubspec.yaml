@@ -71,7 +71,17 @@ flutter:
   assets:
     - assets/epub_reader/
 
-  # No Material icon font: Vellum uses Cupertino icons throughout.
+  # No Material icon font: the interface uses Cupertino glyphs (chrome the
+  # platform draws itself) and Lucide (every glyph we place).
+  #
+  # Lucide ships as a vendored font rather than the pub package: the published
+  # 0.257.0 extends IconData, which this SDK made `final`, so it does not
+  # compile. The .ttf and its ISC licence live in assets/fonts/; the code
+  # points are named in lib/theme/app_icons.dart.
+  fonts:
+    - family: Lucide
+      fonts:
+        - asset: assets/fonts/Lucide.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

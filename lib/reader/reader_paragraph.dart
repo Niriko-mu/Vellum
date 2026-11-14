@@ -11,6 +11,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_icons.dart';
 
 /// Renders one reader paragraph (body, heading, quote, list, image, link).
 class ReaderParagraph extends StatelessWidget {
@@ -501,7 +502,7 @@ class _NoteMarker extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  CupertinoIcons.chat_bubble_text,
+                  AppIcons.chatBubbleText,
                   size: 11,
                   color: CupertinoColors.white,
                 ),

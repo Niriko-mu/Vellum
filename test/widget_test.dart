@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/app_type.dart';
 import 'package:vellum/vellum.dart';
+import 'package:vellum/theme/app_icons.dart';
 
 void main() {
   test('Bing search URI keeps the selected text as q parameter', () {
@@ -143,7 +144,7 @@ void main() {
       find.byType(CupertinoTheme).first,
     );
 
-    await tester.tap(find.byIcon(CupertinoIcons.moon));
+    await tester.tap(find.byIcon(AppIcons.moon));
     await tester.pump();
     // The Material shell cross-fades its ThemeData, so let the transition
     // finish before reading the Cupertino layer that follows it.
@@ -196,7 +197,7 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(CupertinoIcons.trash), findsOneWidget);
+    expect(find.byIcon(AppIcons.trash), findsOneWidget);
   });
 
   testWidgets('reading controls live in the reader overlay', (tester) async {
@@ -273,7 +274,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(ReaderSettingsPanel),
-        matching: find.byIcon(CupertinoIcons.chevron_back),
+        matching: find.byIcon(AppIcons.chevronBack),
       ),
     );
     await tester.pumpAndSettle();
@@ -294,7 +295,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(ReaderSettingsPanel),
-        matching: find.byIcon(CupertinoIcons.chevron_back),
+        matching: find.byIcon(AppIcons.chevronBack),
       ),
     );
     await tester.pumpAndSettle();
