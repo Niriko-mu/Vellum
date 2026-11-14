@@ -88,12 +88,20 @@ class AppDock extends StatelessWidget {
                   ),
                   child: SizedBox(
                     height: AppSpace.dockHeight,
-                    child: _DockItems(
-                      items: items,
-                      index: index,
-                      onSelected: onSelected,
-                      iconSize: _iconSize,
-                      labelGap: _labelGap,
+                    // A tab label is a label, not body copy. Left unclamped,
+                    // a 2x system font turns "设置" into a two-line block that
+                    // overflows the capsule and pushes the icons off centre.
+                    // The dock is the one surface where the system size stops
+                    // being useful: it is four fixed words.
+                    child: MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.3,
+                      child: _DockItems(
+                        items: items,
+                        index: index,
+                        onSelected: onSelected,
+                        iconSize: _iconSize,
+                        labelGap: _labelGap,
+                      ),
                     ),
                   ),
                 ),
