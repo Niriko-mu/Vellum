@@ -5,6 +5,7 @@ import '../services/notes_library.dart';
 import '../util/text_slices.dart' show safeSubstring, buildBingSearchUri;
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 export '../util/text_slices.dart' show buildBingSearchUri;
 
@@ -315,16 +316,19 @@ class NoteSheetBody extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: CupertinoButton(
+                child: AppButton(
+                  label: '取消',
+                  variant: AppButtonVariant.tonal,
+                  expand: true,
                   onPressed: onCancel,
-                  child: Text('取消', style: TextStyle(color: ink)),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpace.x2),
               Expanded(
-                child: CupertinoButton.filled(
+                child: AppButton(
+                  label: '保存',
+                  expand: true,
                   onPressed: onSave,
-                  child: const Text('保存'),
                 ),
               ),
             ],
@@ -434,11 +438,8 @@ Future<void> showParagraphNotesSheet(
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  CupertinoButton(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                    ),
-                                    minimumSize: const Size(0, 32),
+                                  AppTextButton(
+                                    label: '编辑',
                                     onPressed: () async {
                                       final updated = await showAddNoteSheet(
                                         context,
@@ -458,21 +459,11 @@ Future<void> showParagraphNotesSheet(
                                         onChanged();
                                       }
                                     },
-                                    child: Text(
-                                      '编辑',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: CupertinoColors.activeBlue
-                                            .resolveFrom(ctx),
-                                      ),
-                                    ),
                                   ),
                                   const SizedBox(width: 4),
-                                  CupertinoButton(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                    ),
-                                    minimumSize: const Size(0, 32),
+                                  AppTextButton(
+                                    label: '删除',
+                                    color: context.c.destructive,
                                     onPressed: () async {
                                       await notesLibrary.delete(note.id);
                                       items = [
@@ -485,14 +476,6 @@ Future<void> showParagraphNotesSheet(
                                         Navigator.pop(ctx);
                                       }
                                     },
-                                    child: Text(
-                                      '删除',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: CupertinoColors.destructiveRed
-                                            .resolveFrom(ctx),
-                                      ),
-                                    ),
                                   ),
                                 ],
                               ),
@@ -503,9 +486,11 @@ Future<void> showParagraphNotesSheet(
                     ),
                   ),
                   const SizedBox(height: 4),
-                  CupertinoButton(
+                  AppButton(
+                    label: '关闭',
+                    variant: AppButtonVariant.tonal,
+                    expand: true,
                     onPressed: () => Navigator.pop(ctx),
-                    child: Text('关闭', style: TextStyle(color: ink)),
                   ),
                 ],
               ),

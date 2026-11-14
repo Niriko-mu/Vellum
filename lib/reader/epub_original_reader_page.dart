@@ -10,6 +10,9 @@ import '../services/chunked_book_store.dart';
 import '../services/library_models.dart';
 import '../services/notes_library.dart';
 import '../services/epub_original_service.dart';
+import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_section.dart';
 
 String _anchor(String text) =>
     String.fromCharCodes(text.replaceAll(RegExp(r'\s+'), '').runes.take(80));
@@ -285,14 +288,15 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
             height: MediaQuery.sizeOf(context).height * .65,
             child: ListView(
               children: [
-                CupertinoButton(
+                AppTextButton(
+                  label: '关闭目录',
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('关闭目录'),
                 ),
                 for (final entry in _toc)
-                  CupertinoButton(
-                    alignment: Alignment.centerLeft,
-                    onPressed: () {
+                  AppRow(
+                    label:
+                        '${'  ' * ((entry['depth'] as num?)?.toInt() ?? 0)}${entry['title']}',
+                    onTap: () {
                       Navigator.pop(context);
                       unawaited(
                         _controller?.runJavaScript(
@@ -301,9 +305,6 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
                             Future.value(),
                       );
                     },
-                    child: Text(
-                      '${'  ' * ((entry['depth'] as num?)?.toInt() ?? 0)}${entry['title']}',
-                    ),
                   ),
               ],
             ),
@@ -326,10 +327,9 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
   Widget build(BuildContext context) => CupertinoPageScaffold(
     navigationBar: CupertinoNavigationBar(
       middle: Text(widget.book.title),
-      trailing: CupertinoButton(
-        padding: EdgeInsets.zero,
+      trailing: AppTextButton(
+        label: '重排',
         onPressed: widget.onUseReflow == null ? null : _reflow,
-        child: const Text('重排'),
       ),
     ),
     child: SafeArea(
@@ -355,21 +355,27 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CupertinoButton(
+              AppTextButton(
+                label: '上一页',
+                size: AppButtonSize.regular,
+                color: context.c.link,
                 onPressed: _ready
                     ? () => _controller?.runJavaScript('turn(-1)')
                     : null,
-                child: const Text('上一页'),
               ),
-              CupertinoButton(
+              AppTextButton(
+                label: '目录',
+                size: AppButtonSize.regular,
+                color: context.c.link,
                 onPressed: _ready ? _directory : null,
-                child: const Text('目录'),
               ),
-              CupertinoButton(
+              AppTextButton(
+                label: '下一页',
+                size: AppButtonSize.regular,
+                color: context.c.link,
                 onPressed: _ready
                     ? () => _controller?.runJavaScript('turn(1)')
                     : null,
-                child: const Text('下一页'),
               ),
             ],
           ),

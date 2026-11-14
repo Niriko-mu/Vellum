@@ -14,6 +14,7 @@ import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 enum _ConvertPhase { idle, pickingSource, parsing, pickingPath, done, failed }
 
@@ -243,25 +244,16 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      child: CupertinoButton.filled(
-                        borderRadius: BorderRadius.circular(AppRadius.grouped),
-                        onPressed: _busy ? null : _startConvert,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(
-                            _busy
-                                ? '处理中…'
-                                : _phase == _ConvertPhase.done ||
-                                      _phase == _ConvertPhase.failed
-                                ? '再转一本'
-                                : '选择电子书',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
+                    AppButton(
+                      label: _busy
+                          ? '处理中…'
+                          : _phase == _ConvertPhase.done ||
+                                _phase == _ConvertPhase.failed
+                          ? '再转一本'
+                          : '选择电子书',
+                      expand: true,
+                      busy: _busy,
+                      onPressed: _busy ? null : _startConvert,
                     ),
                     const SizedBox(height: 10),
                     Text(

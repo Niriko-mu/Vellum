@@ -6,6 +6,7 @@ import '../theme/vellum_theme.dart';
 import 'reader_directory_panel_state.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_pressable.dart';
 
 const double readerDirectorySearchListRoom = 96;
 
@@ -110,28 +111,34 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
             '$position/${hits.length}',
             style: TextStyle(color: muted, fontSize: 13),
           ),
-          CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            minimumSize: const Size(44, 44),
-            onPressed: activeIndex <= 0 ? null : () => stepHit(-1),
-            child: Icon(
-              CupertinoIcons.chevron_up,
-              size: 16,
-              color: activeIndex <= 0 ? muted.withValues(alpha: .4) : accent,
+          AppPressable(
+            onTap: activeIndex <= 0 ? null : () => stepHit(-1),
+            enabled: activeIndex > 0,
+            semanticLabel: '上一个结果',
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(
+                CupertinoIcons.chevron_up,
+                size: 16,
+                color: activeIndex <= 0 ? muted.withValues(alpha: .4) : accent,
+              ),
             ),
           ),
-          CupertinoButton(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            minimumSize: const Size(44, 44),
-            onPressed: activeIndex >= hits.length - 1
-                ? null
-                : () => stepHit(1),
-            child: Icon(
-              CupertinoIcons.chevron_down,
-              size: 16,
-              color: activeIndex >= hits.length - 1
-                  ? muted.withValues(alpha: .4)
-                  : accent,
+          AppPressable(
+            onTap: activeIndex >= hits.length - 1 ? null : () => stepHit(1),
+            enabled: activeIndex < hits.length - 1,
+            semanticLabel: '下一个结果',
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(
+                CupertinoIcons.chevron_down,
+                size: 16,
+                color: activeIndex >= hits.length - 1
+                    ? muted.withValues(alpha: .4)
+                    : accent,
+              ),
             ),
           ),
         ],
@@ -407,17 +414,20 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                           Semantics(
                             button: true,
                             label: '删除笔记',
-                            child: CupertinoButton(
-                              padding: EdgeInsets.zero,
-                              minimumSize: const Size(44, 44),
-                              onPressed: () async {
+                            child: AppPressable(
+                              onTap: () async {
                                 await widget.onRemoveNote(note.id);
                                 if (mounted) refresh(() {});
                               },
-                              child: Icon(
-                                CupertinoIcons.delete,
-                                size: 17,
-                                color: muted,
+                              semanticLabel: '删除笔记',
+                              child: SizedBox(
+                                width: 44,
+                                height: 44,
+                                child: Icon(
+                                  CupertinoIcons.delete,
+                                  size: 17,
+                                  color: muted,
+                                ),
                               ),
                             ),
                           ),

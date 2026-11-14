@@ -10,6 +10,7 @@ import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_section.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -441,14 +442,18 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                     'SecretKey',
                     _key,
                     obscure: _obscureKey,
-                    suffix: CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () =>
+                    suffix: AppPressable(
+                      onTap: () =>
                           setState(() => _obscureKey = !_obscureKey),
-                      child: Icon(
-                        _obscureKey
-                            ? CupertinoIcons.eye
-                            : CupertinoIcons.eye_slash,
+                      semanticLabel: _obscureKey ? '显示密钥' : '隐藏密钥',
+                      child: SizedBox(
+                        width: 40,
+                        height: 36,
+                        child: Icon(
+                          _obscureKey
+                              ? CupertinoIcons.eye
+                              : CupertinoIcons.eye_slash,
+                        ),
                       ),
                     ),
                   ),

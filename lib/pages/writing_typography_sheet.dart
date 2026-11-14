@@ -9,6 +9,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../theme/app_type.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingTypographySheet extends StatefulWidget {
@@ -136,9 +137,10 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
             // Font row — same picker as the reading page (system + imported).
             Text('字体', style: TextStyle(fontSize: 13, color: muted)),
             const SizedBox(height: 8),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              onPressed: _busyFont ? null : _openFontPicker,
+            AppPressable(
+              onTap: _busyFont ? null : _openFontPicker,
+              enabled: !_busyFont,
+              semanticLabel: '选择字体',
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -184,9 +186,9 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
             Text('字号', style: TextStyle(fontSize: 13, color: muted)),
             Row(
               children: [
-                CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(36, 36),
+                AppTextButton(
+                  label: 'A−',
+                  color: ink,
                   onPressed: () => _update(
                     _typo.copyWith(
                       fontSize: (_typo.fontSize - 1).clamp(
@@ -195,7 +197,6 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                       ),
                     ),
                   ),
-                  child: Text('A−', style: TextStyle(color: ink)),
                 ),
                 Expanded(
                   child: CupertinoSlider(
@@ -208,9 +209,9 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                     onChanged: (v) => _update(_typo.copyWith(fontSize: v)),
                   ),
                 ),
-                CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(36, 36),
+                AppTextButton(
+                  label: 'A+',
+                  color: ink,
                   onPressed: () => _update(
                     _typo.copyWith(
                       fontSize: (_typo.fontSize + 1).clamp(
@@ -219,7 +220,6 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
                       ),
                     ),
                   ),
-                  child: Text('A+', style: TextStyle(color: ink)),
                 ),
                 SizedBox(
                   width: 36,
@@ -325,9 +325,9 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
               ),
             ),
             const SizedBox(height: 12),
-            CupertinoButton(
+            AppTextButton(
+              label: '完成',
               onPressed: () => Navigator.pop(context),
-              child: Text('完成', style: TextStyle(color: accent)),
             ),
           ],
         ),

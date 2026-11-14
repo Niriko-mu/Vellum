@@ -6,6 +6,7 @@ import '../widgets/font_preview.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Fanqie-style font picker data: only the built-in system font is listed by
 /// default. User-imported fonts are appended from the real installed list;
@@ -251,9 +252,9 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
     required Color selectedBorder,
     required VoidCallback onTap,
     Widget? custom,
-  }) => CupertinoButton(
-    padding: EdgeInsets.zero,
-    onPressed: onTap,
+  }) => AppPressable(
+    onTap: onTap,
+    semanticLabel: title,
     child: Container(
       height: 50,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

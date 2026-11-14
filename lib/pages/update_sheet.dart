@@ -9,6 +9,8 @@ import '../services/vellum_update_service.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Checks the release feed and, when a newer build exists, walks the user
 /// through picking an ABI variant and installing it.
@@ -401,10 +403,11 @@ class _UpdateSheetState extends State<UpdateSheet> {
   Widget _buildActions() {
     switch (_phase) {
       case _UpdatePhase.downloading:
-        return CupertinoButton(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        return AppButton(
+          label: '取消下载',
+          variant: AppButtonVariant.tonal,
+          expand: true,
           onPressed: () => setState(() => _cancelled = true),
-          child: const Text('取消下载'),
         );
       case _UpdatePhase.installing:
         return const Padding(
@@ -412,10 +415,10 @@ class _UpdateSheetState extends State<UpdateSheet> {
           child: Center(child: CupertinoActivityIndicator(radius: 10)),
         );
       case _UpdatePhase.installed:
-        return CupertinoButton.filled(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        return AppButton(
+          label: '完成',
+          expand: true,
           onPressed: () => Navigator.pop(context),
-          child: const Text('完成'),
         );
       case _UpdatePhase.failed:
       case _UpdatePhase.ready:
@@ -423,31 +426,29 @@ class _UpdateSheetState extends State<UpdateSheet> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            CupertinoButton.filled(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              onPressed: _assets.isEmpty ? null : _start,
-              child: Text(switch (_phase) {
+            AppButton(
+              label: switch (_phase) {
                 _UpdatePhase.failed => '重试',
                 _UpdatePhase.ready => '安装',
                 _ => _installer.canInstallInApp ? '下载并更新' : '打开下载页',
-              }),
+              },
+              expand: true,
+              onPressed: _assets.isEmpty ? null : _start,
             ),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
+                AppTextButton(
+                  label: '稍后',
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('稍后'),
                 ),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
+                AppTextButton(
+                  label: '发布页',
                   onPressed: () => launchUrl(
                     Uri.parse(widget.release.releaseUrl),
                     mode: LaunchMode.externalApplication,
                   ),
-                  child: const Text('发布页'),
                 ),
               ],
             ),
@@ -473,9 +474,9 @@ class _AssetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = context.c.primary;
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onTap,
+    return AppPressable(
+      onTap: onTap,
+      semanticLabel: asset.label,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(

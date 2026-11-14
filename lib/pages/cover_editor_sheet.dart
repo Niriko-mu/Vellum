@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/book_importer.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../widgets/ui/app_controls.dart';
 
 /// Long-press sheet: edit shelf cover with an image or custom text.
 class CoverEditorSheet extends StatefulWidget {
@@ -106,11 +107,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                       ),
                     ),
                     const Spacer(),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: _save,
-                      child: const Text('保存'),
-                    ),
+                    AppTextButton(label: '保存', onPressed: _save),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -137,18 +134,21 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                CupertinoButton.filled(
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                AppButton(
+                  label: preview == null ? '上传封面图片' : '更换封面图片',
+                  icon: CupertinoIcons.photo,
+                  expand: true,
                   onPressed: _pickImage,
-                  child: Text(preview == null ? '上传封面图片' : '更换封面图片'),
                 ),
-                const SizedBox(height: 8),
-                CupertinoButton(
+                const SizedBox(height: AppSpace.x2),
+                AppButton(
+                  label: '用文字生成封面',
+                  variant: AppButtonVariant.tonal,
+                  expand: true,
                   onPressed: () {
                     setState(() => _mode = 'text');
                     _textFocus.requestFocus();
                   },
-                  child: const Text('用文字生成封面'),
                 ),
                 if (_mode == 'text') ...[
                   const SizedBox(height: 10),
@@ -182,9 +182,11 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                   ),
                 ],
                 const SizedBox(height: 8),
-                CupertinoButton(
+                AppButton(
+                  label: '取消',
+                  variant: AppButtonVariant.ghost,
+                  expand: true,
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('取消'),
                 ),
               ],
             ),

@@ -6,7 +6,7 @@
 # 每一行是「规则 / 当前基线」。改完一批 UI 后重跑，把下降后的数字写回基线。
 $root = Join-Path $PSScriptRoot '..\lib'
 $rules = @(
-  @{ Name = 'widget 内颜色字面量'; Pattern = 'Color\(0x[0-9a-fA-F]{8}\)'; Baseline = 14; Files = @(
+  @{ Name = 'widget 内颜色字面量'; Pattern = 'Color\(0x[0-9a-fA-F]{8}\)'; Baseline = 13; Files = @(
       'reader\reader_color_picker.dart',
       'reader\reader_controls.dart',
       'reader\reader_directory_panel_rendering.dart',
@@ -21,7 +21,7 @@ $rules = @(
       'widgets\ui\app_pressable.dart',
       'app.dart'
     ) }
-  @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 161 }
+  @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 124 }
   @{ Name = '圆角字面量'; Pattern = 'BorderRadius\.circular\(\s*[0-9]'; Baseline = 0 }
   @{ Name = '过重字重'; Pattern = 'FontWeight\.(w700|w800|w900|bold)'; Baseline = 5 }
   @{ Name = '阴影（token 之外）'; Pattern = 'BoxShadow\('; Baseline = 6; Files = @(
@@ -34,8 +34,11 @@ $rules = @(
     ) }
   @{ Name = '缓入/回弹曲线'; Pattern = 'Curves\.(ease|bounce|elastic)'; Baseline = 0; Files = @() }
   @{ Name = 'CupertinoSwitch'; Pattern = 'CupertinoSwitch'; Baseline = 1 }
-  @{ Name = 'CupertinoColors'; Pattern = 'CupertinoColors\.'; Baseline = 24 }
+  @{ Name = 'CupertinoColors'; Pattern = 'CupertinoColors\.'; Baseline = 17 }
   @{ Name = '下限以下字号'; Pattern = 'fontSize: *(10|11|12)\b'; Baseline = 0 }
+  # 下面两条没有余量：基元之外不允许再出现第三种按钮或第三种列表行。
+  @{ Name = 'CupertinoButton'; Pattern = 'CupertinoButton'; Baseline = 0 }
+  @{ Name = 'CupertinoListTile'; Pattern = 'CupertinoListTile'; Baseline = 0 }
 )
 
 $failed = $false

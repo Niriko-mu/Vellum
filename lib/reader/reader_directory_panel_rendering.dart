@@ -1,16 +1,21 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show AlwaysStoppedAnimation, LinearProgressIndicator;
+import 'package:flutter/material.dart'
+    show AlwaysStoppedAnimation, LinearProgressIndicator;
 import '../theme/vellum_theme.dart';
 import 'reader_directory_panel.dart';
 import 'reader_directory_panel_state.dart';
 import 'reader_directory_panel_search_view.dart';
 import '../theme/app_shape.dart';
+import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
 
-  /// Fanqie caloglayout structure: book name → tabs → divider → list.
-  /// Parent supplies full band height; panel fills it.
-Widget renderReaderDirectoryPanel(ReaderDirectoryPanelState state, BuildContext context) => state.renderDirectoryPanel(context);
+/// Fanqie caloglayout structure: book name → tabs → divider → list.
+/// Parent supplies full band height; panel fills it.
+Widget renderReaderDirectoryPanel(
+  ReaderDirectoryPanelState state,
+  BuildContext context,
+) => state.renderDirectoryPanel(context);
 
 extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
   Widget renderDirectoryPanel(BuildContext context) {
@@ -96,11 +101,11 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                   accent: accent,
                 ),
               ),
-              CupertinoButton(
-                padding: const EdgeInsets.only(left: 8, right: 8),
-                minimumSize: const Size(48, 36),
+              AppTextButton(
+                label: '取消',
+                color: accent,
+                pressedColor: ink.withValues(alpha: .06),
                 onPressed: closeSearch,
-                child: Text('取消', style: TextStyle(color: accent)),
               ),
             ],
           ),
@@ -138,19 +143,22 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
           child: Row(
             children: [
               if (searching)
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(48, 36),
+                AppTextButton(
+                  label: '取消',
+                  color: accent,
+                  pressedColor: ink.withValues(alpha: .06),
                   onPressed: closeSearch,
-                  child: Text('取消', style: TextStyle(color: accent)),
                 )
               else ...[
                 const SizedBox(width: 8),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(44, 44),
-                  onPressed: widget.onClose,
-                  child: Icon(CupertinoIcons.clear, size: 19, color: muted),
+                AppPressable(
+                  onTap: widget.onClose,
+                  semanticLabel: '关闭目录',
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(CupertinoIcons.clear, size: 19, color: muted),
+                  ),
                 ),
                 const SizedBox(width: 4),
               ],
@@ -173,11 +181,14 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                       ),
               ),
               if (!searching && canSearch)
-                CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(44, 44),
-                  onPressed: openSearch,
-                  child: Icon(CupertinoIcons.search, size: 18, color: accent),
+                AppPressable(
+                  onTap: openSearch,
+                  semanticLabel: '搜索全书',
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(CupertinoIcons.search, size: 18, color: accent),
+                  ),
                 ),
               const SizedBox(width: 4),
             ],
@@ -283,27 +294,30 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
             // passage they half remember. Fanqie's catalog order toggle shares
             // the slot and hides while searching.
             if (tab == 0 && canSearch && !searching)
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: const Size(44, 44),
-                onPressed: openSearch,
-                child: Icon(CupertinoIcons.search, size: 19, color: accent),
-              ),
-            if (tab == 0 && !searching)
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: const Size(52, 44),
-                onPressed: toggleOrder,
-                child: Text(
-                  descending ? '倒序' : '正序',
-                  style: TextStyle(color: accent, fontSize: 13),
+              AppPressable(
+                onTap: openSearch,
+                semanticLabel: '搜索全书',
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Icon(CupertinoIcons.search, size: 19, color: accent),
                 ),
               ),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(44, 44),
-              onPressed: widget.onClose,
-              child: Icon(CupertinoIcons.clear, size: 20, color: muted),
+            if (tab == 0 && !searching)
+              AppTextButton(
+                label: descending ? '倒序' : '正序',
+                color: accent,
+                pressedColor: ink.withValues(alpha: .06),
+                onPressed: toggleOrder,
+              ),
+            AppPressable(
+              onTap: widget.onClose,
+              semanticLabel: '关闭目录',
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(CupertinoIcons.clear, size: 20, color: muted),
+              ),
             ),
           ],
         ],
@@ -510,7 +524,8 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                         // large text scale the title alone fills it, so the
                         // secondary line steps aside rather than being clipped.
                         if (secondary.isNotEmpty &&
-                            MediaQuery.textScalerOf(context).scale(1) <= 1.4) ...[
+                            MediaQuery.textScalerOf(context).scale(1) <=
+                                1.4) ...[
                           const SizedBox(height: 4),
                           Text(
                             secondary,
@@ -523,17 +538,20 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                     ),
                   ),
                   if (tab == 1)
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(44, 44),
-                      onPressed: () async {
+                    AppPressable(
+                      onTap: () async {
                         await widget.onRemoveBookmark(entry.key);
                         if (mounted) refresh(() {});
                       },
-                      child: Icon(
-                        CupertinoIcons.delete,
-                        size: 17,
-                        color: muted,
+                      semanticLabel: '移除书签',
+                      child: SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Icon(
+                          CupertinoIcons.delete,
+                          size: 17,
+                          color: muted,
+                        ),
                       ),
                     ),
                 ],
@@ -561,19 +579,29 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
           Positioned(
             right: 16,
             bottom: 14,
-            child: CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              minimumSize: const Size(44, 44),
-              borderRadius: BorderRadius.circular(AppRadius.xl3),
-              color: accent,
-              onPressed: () {
+            child: AppPressable(
+              onTap: () {
                 didAutoScroll = false;
                 autoScrollToCurrent();
               },
-              child: const Icon(
-                CupertinoIcons.location_fill,
-                size: 18,
-                color: CupertinoColors.white,
+              borderRadius: AppRadius.xl3All,
+              semanticLabel: '定位到当前章节',
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: AppRadius.xl3All,
+                ),
+                child: SizedBox(
+                  height: 44,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Icon(
+                      CupertinoIcons.location_fill,
+                      size: 18,
+                      color: context.c.constantWhite,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -648,14 +676,18 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                     ],
                   ),
                 ),
-                CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(44, 44),
-                  onPressed: enabled ? widget.onContinueReading : null,
-                  child: Icon(
-                    CupertinoIcons.chevron_forward,
-                    color: enabled ? accent : muted.withValues(alpha: .45),
-                    size: 18,
+                AppPressable(
+                  onTap: enabled ? widget.onContinueReading : null,
+                  enabled: enabled,
+                  semanticLabel: '继续阅读',
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(
+                      CupertinoIcons.chevron_forward,
+                      color: enabled ? accent : muted.withValues(alpha: .45),
+                      size: 18,
+                    ),
                   ),
                 ),
               ],

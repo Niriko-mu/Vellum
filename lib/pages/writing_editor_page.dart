@@ -16,6 +16,8 @@ import '../widgets/markdown_preview.dart';
 import 'writing_typography_sheet.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_type.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_pressable.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingEditorPage extends StatefulWidget {
@@ -449,7 +451,6 @@ class _WritingEditorPageState extends State<WritingEditorPage>
   Widget build(BuildContext context) {
     final muted = context.c.mutedForeground;
     final ink = context.c.foreground;
-    final accent = context.c.primary;
     final paper = context.c.backgroundSubtle;
     final updated = _document.updatedAt.toLocal();
     final date =
@@ -460,15 +461,15 @@ class _WritingEditorPageState extends State<WritingEditorPage>
     return CupertinoPageScaffold(
       backgroundColor: paper,
       navigationBar: CupertinoNavigationBar(
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: AppTextButton(
+          label: '完成',
+          size: AppButtonSize.regular,
           onPressed: () async {
             _autoSaveTimer?.cancel();
             if (_dirty) await _persist();
             if (!context.mounted) return;
             Navigator.pop(context);
           },
-          child: Text('完成', style: TextStyle(color: accent, fontSize: 16)),
         ),
         backgroundColor: paper,
         border: null,
@@ -476,21 +477,22 @@ class _WritingEditorPageState extends State<WritingEditorPage>
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_canPreview)
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+              AppTextButton(
+                label: _previewing ? '编辑' : '预览',
+                size: AppButtonSize.regular,
                 onPressed: _togglePreview,
-                child: Text(
-                  _previewing ? '编辑' : '预览',
-                  style: TextStyle(color: accent, fontSize: 15),
-                ),
               ),
             Semantics(
               label: '更多操作',
               button: true,
-              child: CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                onPressed: _showMoreActions,
-                child: Icon(CupertinoIcons.ellipsis, size: 24, color: ink),
+              child: AppPressable(
+                onTap: _showMoreActions,
+                semanticLabel: '更多操作',
+                child: SizedBox(
+                  width: 40,
+                  height: 44,
+                  child: Icon(CupertinoIcons.ellipsis, size: 24, color: ink),
+                ),
               ),
             ),
           ],
@@ -632,13 +634,16 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                         Semantics(
                           label: '排版',
                           button: true,
-                          child: CupertinoButton(
-                            onPressed: _showTypoSheet,
-                            padding: const EdgeInsets.all(10),
-                            child: Icon(
-                              CupertinoIcons.textformat_size,
-                              size: 23,
-                              color: ink,
+                          child: AppPressable(
+                            onTap: _showTypoSheet,
+                            semanticLabel: '排版',
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Icon(
+                                CupertinoIcons.textformat_size,
+                                size: 23,
+                                color: ink,
+                              ),
                             ),
                           ),
                         ),
@@ -671,13 +676,16 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                         Semantics(
                           label: '收起键盘',
                           button: true,
-                          child: CupertinoButton(
-                            onPressed: () => FocusScope.of(context).unfocus(),
-                            padding: const EdgeInsets.all(10),
-                            child: Icon(
-                              CupertinoIcons.keyboard_chevron_compact_down,
-                              size: 23,
-                              color: muted,
+                          child: AppPressable(
+                            onTap: () => FocusScope.of(context).unfocus(),
+                            semanticLabel: '收起键盘',
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Icon(
+                                CupertinoIcons.keyboard_chevron_compact_down,
+                                size: 23,
+                                color: muted,
+                              ),
                             ),
                           ),
                         ),
