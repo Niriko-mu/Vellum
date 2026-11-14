@@ -151,7 +151,7 @@ class ReaderStatusBar extends StatelessWidget {
                           : batteryIconFor(batteryLevel!),
                       size: 14,
                       color: batteryLevel != null && batteryLevel! <= 15
-                          ? CupertinoColors.systemRed
+                          ? context.c.destructive
                           : ink.withValues(alpha: .55),
                     ),
                     const SizedBox(width: 3),
@@ -297,7 +297,7 @@ class BookmarkRibbon extends StatelessWidget {
                                 armed || alreadyBookmarked || pinned,
                               ),
                               size: 14,
-                              color: CupertinoColors.white,
+                              color: context.c.constantWhite,
                             ),
                           ),
                         ),

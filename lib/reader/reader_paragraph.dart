@@ -492,7 +492,7 @@ class _NoteMarker extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.xl),
               boxShadow: [
                 BoxShadow(
-                  color: CupertinoColors.black.withValues(alpha: .18),
+                  color: context.c.constantBlack.withValues(alpha: .18),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -501,10 +501,10 @@ class _NoteMarker extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   AppIcons.chatBubbleText,
                   size: 11,
-                  color: CupertinoColors.white,
+                  color: context.c.constantWhite,
                 ),
                 if (count > 1) ...[
                   const SizedBox(width: 3),

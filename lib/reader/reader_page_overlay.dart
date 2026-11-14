@@ -123,7 +123,7 @@ class ReaderCoverTurnOverlay extends StatelessWidget {
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
-                            color: CupertinoColors.black.withValues(alpha: .22),
+                            color: context.c.constantBlack.withValues(alpha: .22),
                             blurRadius: 18,
                             spreadRadius: 1,
                             offset: const Offset(10, 0),

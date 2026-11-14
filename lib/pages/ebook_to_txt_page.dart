@@ -303,7 +303,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
             else
               Icon(
                 AppIcons.exclamationmarkCircleFill,
-                color: CupertinoColors.systemRed,
+                color: context.c.destructive,
                 size: 20,
               ),
             const SizedBox(width: 10),

@@ -222,8 +222,8 @@ class _TextCoverPreview extends StatelessWidget {
       textAlign: TextAlign.center,
       maxLines: 5,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        color: CupertinoColors.white,
+      style: TextStyle(
+        color: context.c.constantWhite,
         fontSize: 13,
         fontWeight: FontWeight.w700,
         height: 1.25,

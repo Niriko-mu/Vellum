@@ -303,9 +303,9 @@ class NoteSheetBody extends StatelessWidget {
           if (error != null) ...[
             Text(
               error!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: CupertinoColors.systemRed,
+                color: context.c.destructive,
               ),
             ),
             const SizedBox(height: 8),

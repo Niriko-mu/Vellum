@@ -36,7 +36,9 @@ $rules = @(
     ) }
   @{ Name = '缓入/回弹曲线'; Pattern = 'Curves\.(ease|bounce|elastic)'; Baseline = 0; Files = @() }
   @{ Name = 'CupertinoSwitch'; Pattern = 'CupertinoSwitch'; Baseline = 1 }
-  @{ Name = 'CupertinoColors'; Pattern = 'CupertinoColors\.'; Baseline = 17 }
+  @{ Name = 'CupertinoColors'; Pattern = 'CupertinoColors\.'; Baseline = 1; Files = @(
+      'theme\vellum_theme.dart'
+    ) }
   @{ Name = '下限以下字号'; Pattern = 'fontSize: *(10|11|12)\b'; Baseline = 0 }
   # 下面两条没有余量：基元之外不允许再出现第三种按钮或第三种列表行。
   @{ Name = 'CupertinoButton'; Pattern = 'CupertinoButton'; Baseline = 0 }

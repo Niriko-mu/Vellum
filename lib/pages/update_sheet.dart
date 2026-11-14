@@ -366,9 +366,9 @@ class _UpdateSheetState extends State<UpdateSheet> {
             const SizedBox(height: 10),
             Text(
               _error,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: CupertinoColors.systemRed,
+                color: context.c.destructive,
                 height: 1.4,
               ),
             ),

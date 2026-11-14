@@ -410,7 +410,7 @@ class _ReaderMenuState extends State<ReaderMenu>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: CupertinoColors.black.withValues(alpha: .10),
+                            color: context.c.constantBlack.withValues(alpha: .10),
                             blurRadius: 12,
                             offset: const Offset(0, -2),
                           ),
