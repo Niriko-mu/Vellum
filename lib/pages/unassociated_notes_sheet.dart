@@ -5,6 +5,9 @@ import '../services/notes_library.dart';
 import '../widgets/book_picker_sheet.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_type.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_section.dart';
 
 /// Lists imported notes that never found their book, and links them on request.
 ///
@@ -90,7 +93,7 @@ class _UnassociatedNotesSheetState extends State<UnassociatedNotesSheet> {
     final bg = context.c.card;
     final ink = context.c.foreground;
     final muted = context.c.mutedForeground;
-    final accent = context.c.primary;
+    final colors = context.c;
     final notes = _notes;
 
     return Container(
@@ -141,49 +144,60 @@ class _UnassociatedNotesSheetState extends State<UnassociatedNotesSheet> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(
+                        left: AppSpace.pageGutter,
+                        right: AppSpace.pageGutter,
+                        bottom: AppSpace.x2,
+                      ),
                       itemCount: notes.length,
                       itemBuilder: (context, index) {
                         final note = notes[index];
-                        return CupertinoListTile(
-                          backgroundColor: bg,
-                          backgroundColorActivated: ink.withValues(alpha: .06),
-                          title: Text(
-                            note.selectedText.isEmpty
-                                ? note.note
-                                : note.selectedText,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: ink, fontSize: 15),
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppSpace.x2,
                           ),
-                          subtitle: Text(
-                            note.note.isEmpty || note.selectedText.isEmpty
-                                ? note.kind.label
-                                : note.note,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: muted, fontSize: 13),
-                          ),
-                          trailing: CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 32),
-                            onPressed: () => _link(note),
-                            child: Text(
-                              '关联书籍',
-                              style: TextStyle(color: accent, fontSize: 13),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: colors.card,
+                              borderRadius: AppRadius.groupedAll,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: AppRadius.groupedAll,
+                              // The row itself links the note; the trailing
+                              // word is the affordance, not a second target.
+                              child: AppRow(
+                                label: note.selectedText.isEmpty
+                                    ? note.note
+                                    : note.selectedText,
+                                description:
+                                    note.note.isEmpty ||
+                                        note.selectedText.isEmpty
+                                    ? note.kind.label
+                                    : note.note,
+                                trailing: Text(
+                                  '关联书籍',
+                                  style: AppText.caption(colors.primary),
+                                ),
+                                onTap: () => _link(note),
+                              ),
                             ),
                           ),
-                          onTap: () => _link(note),
                         );
                       },
                     ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-              child: CupertinoButton(
-                color: ink.withValues(alpha: .06),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.pageGutter,
+                AppSpace.x1,
+                AppSpace.pageGutter,
+                AppSpace.x4,
+              ),
+              child: AppButton(
+                label: '关闭',
+                variant: AppButtonVariant.tonal,
+                expand: true,
                 onPressed: () => Navigator.pop(context),
-                child: Text('关闭', style: TextStyle(color: ink)),
               ),
             ),
           ],

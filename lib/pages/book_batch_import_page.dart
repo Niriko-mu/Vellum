@@ -6,6 +6,12 @@ import '../services/book_import_service.dart';
 import '../services/book_library.dart';
 import '../services/book_models.dart';
 import '../services/local_book_scan_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_shape.dart';
+import '../theme/app_type.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_page.dart';
+import '../widgets/ui/app_section.dart';
 
 /// Returns the updated lightweight library through Navigator.pop.
 class BookBatchImportPage extends StatefulWidget {
@@ -196,79 +202,101 @@ class _BookBatchImportPageState extends State<BookBatchImportPage> {
     },
     child: CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
+        backgroundColor: context.c.background,
+        border: null,
         middle: Text(widget.scanDirectory ? '扫描本地电子书' : '批量导入'),
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: AppButton(
+          label: _busy ? '取消' : '完成',
+          variant: AppButtonVariant.ghost,
+          size: AppButtonSize.small,
           onPressed: _busy ? _cancel : () => Navigator.pop(context, _library),
-          child: Text(_busy ? '取消' : '完成'),
         ),
       ),
-      child: SafeArea(
+      child: AppPage(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  if (_busy)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 12),
-                      child: CupertinoActivityIndicator(),
-                    ),
-                  Expanded(child: Text(_status)),
-                ],
-              ),
+            AppContentState(
+              kind: AppContentStateKind.loading,
+              compact: true,
+              title: _status,
             ),
             if (_progress?.value != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text('当前文件：${((_progress!.value!) * 100).round()}%'),
+              Text(
+                '当前文件 ${((_progress!.value!) * 100).round()}%',
+                style: AppText.caption(context.c.mutedForeground),
               ),
             if (!_busy)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  CupertinoButton(onPressed: _pick, child: const Text('重新选择')),
-                  CupertinoButton(
+                  AppButton(
+                    label: '重新选择',
+                    variant: AppButtonVariant.tonal,
+                    size: AppButtonSize.small,
+                    onPressed: _pick,
+                  ),
+                  AppButton(
+                    label: '全选 / 清空',
+                    variant: AppButtonVariant.tonal,
+                    size: AppButtonSize.small,
                     onPressed: () => setState(() {
                       final select = _files.any((f) => !f.selected);
                       for (final f in _files) {
                         f.selected = select;
                       }
                     }),
-                    child: const Text('全选 / 清空'),
                   ),
                 ],
               ),
+            const SizedBox(height: AppSpace.x3),
             Expanded(
               child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.pageGutter,
+                ),
                 itemCount: _files.length,
                 itemBuilder: (context, index) {
                   final file = _files[index];
-                  return CupertinoListTile(
-                    title: Text(file.name),
-                    subtitle: file.outcome == null ? null : Text(file.outcome!),
-                    leading: Icon(
-                      file.selected
-                          ? CupertinoIcons.check_mark_circled_solid
-                          : CupertinoIcons.circle,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpace.x2),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: context.c.card,
+                        borderRadius: AppRadius.groupedAll,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: AppRadius.groupedAll,
+                        child: AppRow(
+                          label: file.name,
+                          description: file.outcome,
+                          leading: Icon(
+                            file.selected
+                                ? CupertinoIcons.check_mark_circled_solid
+                                : CupertinoIcons.circle,
+                            color: file.selected
+                                ? context.c.primary
+                                : context.c.mutedForeground,
+                          ),
+                          onTap: _busy
+                              ? null
+                              : () =>
+                                    setState(() => file.selected = !file.selected),
+                        ),
+                      ),
                     ),
-                    onTap: _busy
-                        ? null
-                        : () => setState(() => file.selected = !file.selected),
                   );
                 },
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: CupertinoButton.filled(
+              padding: const EdgeInsets.only(top: AppSpace.x3),
+              child: AppButton(
+                label: '导入选中的 ${_files.where((f) => f.selected).length} 本',
+                icon: CupertinoIcons.tray_arrow_down,
+                expand: true,
                 onPressed: _busy || !_files.any((f) => f.selected)
                     ? null
                     : _import,
-                child: Text(
-                  '导入选中的 ${_files.where((f) => f.selected).length} 本',
-                ),
               ),
             ),
           ],
@@ -277,3 +305,4 @@ class _BookBatchImportPageState extends State<BookBatchImportPage> {
     ),
   );
 }
+

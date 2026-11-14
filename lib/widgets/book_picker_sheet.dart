@@ -5,6 +5,8 @@ import '../services/notes_import.dart';
 import '../services/notes_library.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
+import 'ui/app_section.dart';
+import 'ui/app_controls.dart';
 
 /// Picks a book from the shelf, with "keep unassociated" always available.
 ///
@@ -58,7 +60,6 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
   Widget build(BuildContext context) {
     final bg = context.c.card;
     final ink = context.c.foreground;
-    final muted = context.c.mutedForeground;
     final accent = context.c.primary;
     final needle = _query.trim().toLowerCase();
     final books = [
@@ -119,47 +120,60 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
                 thumbVisibility: true,
                 child: ListView(
                   shrinkWrap: true,
+                  padding: EdgeInsets.zero,
                   children: [
-                    CupertinoListTile(
-                      backgroundColor: bg,
-                      title: Text(
-                        unmatchedBookTitle,
-                        style: TextStyle(color: ink),
-                      ),
-                      subtitle: Text(
-                        '保留在「未关联笔记」，之后可再关联',
-                        style: TextStyle(color: muted, fontSize: 13),
-                      ),
-                      trailing: widget.unassociated
-                          ? Icon(CupertinoIcons.checkmark_alt, color: accent)
-                          : null,
-                      onTap: () => Navigator.pop(
-                        context,
-                        const BookPickResult(unassociated: true),
-                      ),
+                    AppSection(
+                      margin: EdgeInsets.zero,
+                      children: [
+                        // The fallback first: a notes file that cannot be
+                        // matched is the common case, and it must not look like
+                        // a secondary option.
+                        AppRow(
+                          label: unmatchedBookTitle,
+                          description: '保留在「未关联笔记」，之后可再关联',
+                          selected: widget.unassociated,
+                          trailing: widget.unassociated
+                              ? Icon(
+                                  CupertinoIcons.checkmark_alt,
+                                  color: accent,
+                                )
+                              : null,
+                          onTap: () => Navigator.pop(
+                            context,
+                            const BookPickResult(unassociated: true),
+                          ),
+                        ),
+                        for (final book in books)
+                          AppRow(
+                            label: book.title,
+                            selected:
+                                !widget.unassociated &&
+                                widget.selected?.id == book.id,
+                            trailing:
+                                !widget.unassociated &&
+                                    widget.selected?.id == book.id
+                                ? Icon(
+                                    CupertinoIcons.checkmark_alt,
+                                    color: accent,
+                                  )
+                                : null,
+                            onTap: () => Navigator.pop(
+                              context,
+                              BookPickResult(book: book),
+                            ),
+                          ),
+                      ],
                     ),
                     if (books.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          widget.books.isEmpty
-                              ? '书库还是空的，先导入书籍，或先把笔记存为未关联。'
-                              : '没有匹配的书名。',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: muted, fontSize: 13),
-                        ),
-                      ),
-                    for (final book in books)
-                      CupertinoListTile(
-                        backgroundColor: bg,
-                        title: Text(book.title, style: TextStyle(color: ink)),
-                        trailing:
-                            !widget.unassociated &&
-                                widget.selected?.id == book.id
-                            ? Icon(CupertinoIcons.checkmark_alt, color: accent)
-                            : null,
-                        onTap: () =>
-                            Navigator.pop(context, BookPickResult(book: book)),
+                      AppContentState(
+                        kind: AppContentStateKind.empty,
+                        compact: true,
+                        title: widget.books.isEmpty
+                            ? '书库还是空的'
+                            : '没有匹配的书名',
+                        description: widget.books.isEmpty
+                            ? '先导入书籍，或先把笔记存为未关联。'
+                            : '换个关键词再试。',
                       ),
                   ],
                 ),

@@ -6,6 +6,10 @@ import 'package:just_audio/just_audio.dart';
 import '../services/tts_client.dart';
 import '../services/tts_preferences.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_shape.dart';
+import '../theme/app_type.dart';
+import '../widgets/ui/app_page.dart';
+import '../widgets/ui/app_section.dart';
 
 /// Configuration page for the listen (听书) service.
 ///
@@ -115,32 +119,33 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pageBackground = CupertinoTheme.of(context).scaffoldBackgroundColor;
-    final muted = context.c.mutedForeground;
-    final accent = context.c.primary;
+    final colors = context.c;
     final isAzure = _prefs.provider == TtsProvider.azure;
 
     return CupertinoPageScaffold(
-      backgroundColor: pageBackground,
-      navigationBar: const CupertinoNavigationBar(middle: Text('朗读服务')),
-      child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+      backgroundColor: colors.background,
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: colors.background,
+        border: null,
+        middle: const Text('朗读服务'),
+      ),
+      child: AppPage(
+        scrollable: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-              child: Text(
-                '配置后即可在阅读页点「听书」，从当前页开始朗读；'
-                '语音会缓存在本机以省流量。Key 只保存在这台设备上。',
-                style: TextStyle(fontSize: 13, color: muted, height: 1.5),
-              ),
+            Text(
+              '配置后即可在阅读页点「听书」，从当前页开始朗读；'
+              '语音会缓存在本机以省流量。Key 只保存在这台设备上。',
+              style: AppText.rowDescription(colors.mutedForeground),
             ),
-            CupertinoListSection.insetGrouped(
-              backgroundColor: pageBackground,
-              header: const Text('服务'),
+            const SizedBox(height: AppSpace.x6),
+            AppSection(
+              footer: 'OpenAI 兼容接口按合成音频计费，Azure 按朗读字符数计费；'
+                  '同一本书的语音会缓存，重复听不重复计费。',
               children: [
-                CupertinoListTile(
-                  title: const Text('接口类型'),
+                AppRow(
+                  label: '接口类型',
                   trailing: CupertinoSlidingSegmentedControl<TtsProvider>(
                     groupValue: _prefs.provider,
                     children: {
@@ -149,70 +154,59 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
                     },
                     onValueChanged: (value) {
                       if (value == null) return;
-                      setState(() => _prefs = _collect().copyWith(
-                        provider: value,
-                      ));
+                      setState(
+                        () => _prefs = _collect().copyWith(provider: value),
+                      );
                       _store.save(_collect());
                     },
                   ),
                 ),
-              ],
-            ),
-            CupertinoListSection.insetGrouped(
-              backgroundColor: pageBackground,
-              header: const Text('连接'),
-              children: [
                 _field(
                   '接口地址',
                   _baseUrlController,
-                  isAzure ? 'eastasia 或完整 URL' : 'https://api.openai.com 或中转地址',
+                  isAzure
+                      ? 'eastasia 或完整 URL'
+                      : 'https://api.openai.com 或中转地址',
                 ),
-                _field('API Key', _apiKeyController, 'sk-…（只存本机）', obscure: true),
+                _field(
+                  'API Key',
+                  _apiKeyController,
+                  'sk-…（只存本机）',
+                  obscure: true,
+                ),
                 if (isAzure)
                   _field('音色', _voiceController, 'zh-CN-XiaoxiaoNeural')
                 else ...[
                   _field('模型', _modelController, 'tts-1 / cosyvoice-v1 …'),
                   _field('音色', _voiceController, 'alloy / longxiaochun …'),
                 ],
-              ],
-            ),
-            CupertinoListSection.insetGrouped(
-              backgroundColor: pageBackground,
-              header: const Text('朗读'),
-              children: [
-                CupertinoListTile(
-                  title: const Text('语速'),
-                  additionalInfo: Text('×${_prefs.speed.toStringAsFixed(2)}'),
+                AppRow(
+                  label: '语速',
+                  value: '×${_prefs.speed.toStringAsFixed(2)}',
                   trailing: SizedBox(
-                    width: 180,
+                    width: 160,
                     child: CupertinoSlider(
                       value: _prefs.speed,
                       min: 0.5,
                       max: 2.0,
                       onChanged: (value) {
-                        setState(() => _prefs = _prefs.copyWith(speed: value));
+                        setState(
+                          () => _prefs = _prefs.copyWith(speed: value),
+                        );
                       },
                       onChangeEnd: (_) => _store.save(_collect()),
                     ),
                   ),
                 ),
-                CupertinoListTile(
-                  title: const Text('测试朗读'),
-                  additionalInfo: _testing ? const Text('连接中…') : null,
+                AppRow(
+                  label: '测试朗读',
+                  value: _testing ? '连接中…' : null,
                   trailing: _testing
                       ? const CupertinoActivityIndicator(radius: 9)
-                      : Icon(CupertinoIcons.play_circle, size: 26, color: accent),
+                      : null,
                   onTap: _testing ? null : _testSpeech,
                 ),
               ],
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              child: Text(
-                'OpenAI 兼容接口按合成音频计费、Azure 按朗读字符数计费，'
-                '请在服务商侧留意用量；同一本书的语音会缓存，重复听不重复计费。',
-                style: TextStyle(fontSize: 13, color: muted, height: 1.5),
-              ),
             ),
           ],
         ),
@@ -220,28 +214,48 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
     );
   }
 
+  /// One editable field, laid out like a row so it lines up with the rest of
+  /// the block instead of inventing a second form rhythm.
   Widget _field(
     String label,
     TextEditingController controller,
     String placeholder, {
     bool obscure = false,
   }) {
+    final colors = context.c;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.x4,
+        AppSpace.x3,
+        AppSpace.x4,
+        AppSpace.x3,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13)),
-          const SizedBox(height: 6),
+          Text(label, style: AppText.rowDescription(colors.mutedForeground)),
+          const SizedBox(height: AppSpace.x2),
           CupertinoTextField(
             controller: controller,
             placeholder: placeholder,
             obscureText: obscure,
             onChanged: (_) => _persist(),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            cursorColor: colors.primary,
+            style: AppText.rowTitle(colors.foreground),
+            placeholderStyle: AppText.rowTitle(colors.mutedForeground),
+            decoration: BoxDecoration(
+              color: colors.secondary,
+              borderRadius: AppRadius.lgAll,
+              border: Border.all(color: colors.border),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.x3,
+              vertical: 10,
+            ),
           ),
         ],
       ),
     );
   }
 }
+

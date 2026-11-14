@@ -370,7 +370,7 @@ class AppRow extends StatelessWidget {
 class AppSelectRow extends StatelessWidget {
   const AppSelectRow({
     required this.label,
-    required this.value,
+    this.value,
     required this.onTap,
     this.description,
     this.leading,
@@ -380,7 +380,12 @@ class AppSelectRow extends StatelessWidget {
   });
 
   final String label;
-  final String value;
+
+  /// The current choice. Optional: a row that opens a picker without showing a
+  /// choice (the picker's own label is already the label) still needs the down
+  /// chevron, because that is the affordance, not the value.
+  final String? value;
+
   final VoidCallback onTap;
   final String? description;
   final Widget? leading;
@@ -397,7 +402,7 @@ class AppSelectRow extends StatelessWidget {
       child: AppPressable(
         onTap: enabled ? onTap : null,
         enabled: enabled,
-        semanticLabel: '$label，当前 $value',
+        semanticLabel: value == null ? label : '$label，当前 $value',
         onPressChanged: scope == null
             ? null
             : (pressedNow) =>
@@ -438,22 +443,23 @@ class AppSelectRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.sizeOf(context).width * 0.62,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: AppSpace.x3),
-                    child: Text(
-                      value,
-                      key: const ValueKey<String>('app-row-value'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                      style: AppText.rowValue(colors.foreground),
+                if (value != null)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.sizeOf(context).width * 0.62,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: AppSpace.x3),
+                      child: Text(
+                        value!,
+                        key: const ValueKey<String>('app-row-value'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: AppText.rowValue(colors.foreground),
+                      ),
                     ),
                   ),
-                ),
                 Padding(
                   padding: const EdgeInsets.only(left: AppSpace.x2),
                   child: Icon(

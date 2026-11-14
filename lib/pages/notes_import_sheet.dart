@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show Scrollbar;
 import '../services/notes_import.dart';
 import '../services/notes_library.dart' show unmatchedBookTitle;
 import '../widgets/book_picker_sheet.dart';
+import '../widgets/ui/app_section.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 
@@ -101,27 +102,25 @@ class _NotesImportSheetState extends State<NotesImportSheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Text('关联书籍', style: TextStyle(color: muted, fontSize: 13)),
             ),
-            CupertinoListTile(
-              backgroundColor: bg,
-              backgroundColorActivated: ink.withValues(alpha: .06),
-              leading: Icon(
-                _unassociated
-                    ? CupertinoIcons.question_circle
-                    : CupertinoIcons.book,
-                color: _unassociated ? muted : accent,
-              ),
-              title: Text(
-                _unassociated
-                    ? unmatchedBookTitle
-                    : (_selected?.title ?? unmatchedBookTitle),
-                style: TextStyle(color: ink, fontSize: 16),
-              ),
-              subtitle: Text(
-                _unassociated ? '先存下来，之后可以再关联到某本书' : widget.match.reason,
-                style: TextStyle(color: muted, fontSize: 13),
-              ),
-              trailing: const Icon(CupertinoIcons.chevron_down, size: 16),
-              onTap: _pickBook,
+            AppSection(
+              margin: EdgeInsets.zero,
+              children: [
+                AppSelectRow(
+                  label: _unassociated
+                      ? unmatchedBookTitle
+                      : (_selected?.title ?? unmatchedBookTitle),
+                  description: _unassociated
+                      ? '先存下来，之后可以再关联到某本书'
+                      : widget.match.reason,
+                  leading: Icon(
+                    _unassociated
+                        ? CupertinoIcons.question_circle
+                        : CupertinoIcons.book,
+                    color: _unassociated ? muted : accent,
+                  ),
+                  onTap: _pickBook,
+                ),
+              ],
             ),
             if (widget.import.warning.isNotEmpty)
               Padding(

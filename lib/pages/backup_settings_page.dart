@@ -8,6 +8,8 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_page.dart';
+import '../widgets/ui/app_section.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -312,87 +314,126 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = CupertinoTheme.of(context).scaffoldBackgroundColor;
-    final card = context.c.card;
-    final ink = context.c.foreground;
-    final muted = context.c.mutedForeground;
+    final colors = context.c;
     return CupertinoPageScaffold(
-      backgroundColor: bg,
+      backgroundColor: colors.background,
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('数据备份'),
-        backgroundColor: context.c.background,
+        backgroundColor: colors.background,
         border: null,
+        middle: const Text('数据备份'),
       ),
-      child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      child: AppPage(
+        scrollable: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _heroCard(context, card, ink, muted),
-            const SizedBox(height: 18),
-            Text('备份内容', style: TextStyle(color: muted, fontSize: 13)),
-            const SizedBox(height: 8),
-            _backupContentCard(context, card, muted),
-            const SizedBox(height: 18),
-            Text('本地备份', style: TextStyle(color: muted, fontSize: 13)),
-            const SizedBox(height: 8),
-            _sectionCard(
-              context,
-              card,
+            // An intro, not a card: it is the page's own voice, and a card
+            // would imply it is one more thing to act on.
+            Row(
               children: [
-                _actionTile(
-                  icon: CupertinoIcons.archivebox,
-                  title: '创建本地备份',
-                  detail: _loading
-                      ? '读取中…'
-                      : '${_local.length} 个备份 · ${_encrypt ? '加密' : '未加密'} · ${_selectedSections.length}/${BackupSection.values.length} 类内容',
-                  onTap: _busy ? null : _createLocal,
+                Icon(
+                  CupertinoIcons.lock_shield,
+                  size: 26,
+                  color: colors.primary,
                 ),
-                _actionTile(
-                  icon: CupertinoIcons.arrow_up_doc,
-                  title: '导出到文件',
-                  detail: '可发送到电脑或其他设备',
-                  onTap: _busy ? null : _exportLocal,
-                ),
-                _actionTile(
-                  icon: CupertinoIcons.arrow_down_doc,
-                  title: '从文件恢复',
-                  detail: '恢复前会校验 VELLUM 清单',
-                  onTap: _busy ? null : _restoreLocal,
-                ),
-                CupertinoListTile(
-                  title: const Text('备份加密'),
-                  additionalInfo: Text(_encrypt ? '开启' : '关闭'),
-                  trailing: AppSwitch(
-                    value: _encrypt,
-                    semanticLabel: '备份加密',
-                    onChanged: (value) => setState(() => _encrypt = value),
+                const SizedBox(width: AppSpace.x3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('数据由你掌握', style: AppText.sectionHeader(colors.foreground)),
+                      const SizedBox(height: AppSpace.x1),
+                      Text(
+                        '书库、笔记、阅读进度和设置可随时导出。',
+                        style: AppText.caption(colors.mutedForeground),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
-            Text('云备份', style: TextStyle(color: muted, fontSize: 13)),
-            const SizedBox(height: 8),
-            _sectionCard(
-              context,
-              card,
+            const SizedBox(height: AppSpace.x6),
+            // The primary task, so it comes first and carries no header.
+            AppSection(
+              header: '备份内容',
+              headerTrailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton(
+                    label: '全选',
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.small,
+                    onPressed: () => _setAllSections(true),
+                  ),
+                  AppButton(
+                    label: '清空',
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.small,
+                    onPressed: () => _setAllSections(false),
+                  ),
+                ],
+              ),
               children: [
-                CupertinoListTile(
+                AppRow(
+                  label: '${_selectedSections.length}/{total} 类内容已选择',
+                  value: _encrypt ? '加密' : '未加密',
+                ),
+                for (final section in BackupSection.values)
+                  AppRow(
+                    label: section.label,
+                    description: section.description,
+                    leading: CupertinoCheckbox(
+                      value: _selectedSections.contains(section),
+                      activeColor: colors.primary,
+                      onChanged: (_) => _toggleSection(section),
+                    ),
+                    onTap: () => _toggleSection(section),
+                  ),
+              ],
+            ),
+            AppSection(
+              header: '本地备份',
+              children: [
+                AppRow(
+                  leading: const Icon(CupertinoIcons.archivebox),
+                  label: '创建本地备份',
+                  description: _loading
+                      ? '读取中…'
+                      : '${_local.length} 个备份 · ${_encrypt ? '加密' : '未加密'} · ${_selectedSections.length}/${BackupSection.values.length} 类内容',
+                  onTap: _busy ? null : _createLocal,
+                ),
+                AppRow(
+                  leading: const Icon(CupertinoIcons.arrow_up_doc),
+                  label: '导出到文件',
+                  description: '可发送到电脑或其他设备',
+                  onTap: _busy ? null : _exportLocal,
+                ),
+                AppRow(
+                  leading: const Icon(CupertinoIcons.arrow_down_doc),
+                  label: '从文件恢复',
+                  description: '恢复前会校验 VELLUM 清单',
+                  onTap: _busy ? null : _restoreLocal,
+                ),
+                AppSwitchRow(
+                  label: '备份加密',
+                  value: _encrypt,
+                  onChanged: (value) => setState(() => _encrypt = value),
+                ),
+              ],
+            ),
+            AppSection(
+              header: '云备份',
+              children: [
+                AppSwitchRow(
                   leading: const Icon(CupertinoIcons.cloud),
-                  title: const Text('对象存储'),
-                  additionalInfo: Text(
-                    _bucket.text.trim().isEmpty
-                        ? '未配置'
-                        : VellumCloudConfig(
-                            bucketUrl: _bucket.text,
-                          ).vendorLabel,
-                  ),
-                  trailing: AppSwitch(
-                    value: _showCloud,
-                    semanticLabel: '对象存储',
-                    onChanged: (value) => setState(() => _showCloud = value),
-                  ),
-                  onTap: () => setState(() => _showCloud = !_showCloud),
+                  label: '对象存储',
+                  description: _bucket.text.trim().isEmpty
+                      ? '未配置'
+                      : VellumCloudConfig(
+                          bucketUrl: _bucket.text,
+                        ).vendorLabel,
+                  value: _showCloud,
+                  onChanged: (value) => setState(() => _showCloud = value),
                 ),
                 if (_showCloud) ...[
                   _field('SecretId', _id),
@@ -411,186 +452,64 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                       ),
                     ),
                   ),
-                  _field('存储桶 URL', _bucket),
-                  _field('对象前缀', _prefix),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-                    child: Text(
-                      '支持 https://bucket.cos.region.myqcloud.com 与 https://bucket.oss-cn-region.aliyuncs.com。密钥只保存在本机安全存储。',
-                      style: TextStyle(
-                        color: muted,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                  _actionTile(
-                    icon: CupertinoIcons.checkmark_shield,
-                    title: '保存配置',
-                    detail: '仅保存到系统安全存储',
+                  _field('存储桶', _bucket),
+                  _field('路径前缀', _prefix),
+                  AppRow(
+                    leading: const Icon(CupertinoIcons.checkmark_seal),
+                    label: '保存云配置',
+                    description: '仅保存到系统安全存储',
                     onTap: _saveCloud,
                   ),
-                  _actionTile(
-                    icon: CupertinoIcons.cloud_upload,
-                    title: '立即上传备份',
-                    detail: _busy
+                  AppRow(
+                    leading: const Icon(CupertinoIcons.cloud_upload),
+                    label: '立即上传备份',
+                    description: _busy
                         ? '上传中…'
                         : '上传已选择的${_encrypt ? '加密' : '未加密'}内容',
                     onTap: _busy ? null : _uploadCloud,
                   ),
-                  _actionTile(
-                    icon: CupertinoIcons.refresh,
-                    title: '读取云端备份',
-                    detail: _cloudLoading ? '读取中…' : '${_cloud.length} 个云端备份',
+                  AppRow(
+                    leading: const Icon(CupertinoIcons.refresh),
+                    label: '读取云端备份',
+                    description: _cloudLoading
+                        ? '读取中…'
+                        : '${_cloud.length} 个云端备份',
                     onTap: _busy || _cloudLoading ? null : _loadCloudBackups,
                   ),
-                  if (_cloud.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    for (final item in _cloud.take(10))
-                      CupertinoListTile(
-                        leading: const Icon(CupertinoIcons.cloud_download),
-                        title: Text(item.fileName),
-                        additionalInfo: Text(_cloudItemDetail(item)),
-                        onTap: _busy ? null : () => _restoreCloud(item),
-                      ),
-                  ],
                 ],
               ],
             ),
-            if (_local.isNotEmpty) ...[
-              const SizedBox(height: 18),
-              Text('最近备份', style: TextStyle(color: muted, fontSize: 13)),
-              const SizedBox(height: 8),
-              _sectionCard(
-                context,
-                card,
+            if (_cloud.isNotEmpty)
+              AppSection(
+                header: '云端备份',
                 children: [
-                  for (final item in _local.take(5))
-                    CupertinoListTile(
-                      leading: const Icon(CupertinoIcons.doc),
-                      title: Text(_basename(item.file.path)),
-                      additionalInfo: Text(_formatBytes(item.size)),
+                  for (final item in _cloud.take(10))
+                    AppRow(
+                      leading: const Icon(CupertinoIcons.cloud_download),
+                      label: item.fileName,
+                      description: _cloudItemDetail(item),
+                      onTap: _busy ? null : () => _restoreCloud(item),
                     ),
                 ],
               ),
-            ],
+            if (_local.isNotEmpty)
+              AppSection(
+                header: '最近备份',
+                children: [
+                  for (final item in _local.take(5))
+                    AppRow(
+                      leading: const Icon(CupertinoIcons.doc),
+                      label: _basename(item.file.path),
+                      value: _formatBytes(item.size),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _heroCard(BuildContext context, Color card, Color ink, Color muted) =>
-      Container(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(AppRadius.xl3),
-          border: Border.all(color: context.c.border),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              CupertinoIcons.lock_shield,
-              size: 30,
-              color: context.c.primary,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '数据由你掌握',
-                    style: AppText.sectionHeader(ink),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '书库、笔记、阅读进度和设置可随时导出。',
-                    style: TextStyle(color: muted, fontSize: 13, height: 1.35),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-
-  Widget _backupContentCard(
-    BuildContext context,
-    Color card,
-    Color muted,
-  ) => Container(
-    decoration: BoxDecoration(
-      color: card,
-      borderRadius: BorderRadius.circular(AppRadius.xl2),
-    ),
-    child: Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${_selectedSections.length}/${BackupSection.values.length} 类内容已选择',
-                  style: TextStyle(color: muted, fontSize: 13),
-                ),
-              ),
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: const Size(44, 36),
-                onPressed: () => _setAllSections(true),
-                child: const Text('全选'),
-              ),
-              CupertinoButton(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: const Size(44, 36),
-                onPressed: () => _setAllSections(false),
-                child: const Text('清空'),
-              ),
-            ],
-          ),
-        ),
-        for (final section in BackupSection.values)
-          CupertinoListTile(
-            leading: CupertinoCheckbox(
-              value: _selectedSections.contains(section),
-              activeColor: context.c.primary,
-              onChanged: (_) => _toggleSection(section),
-            ),
-            title: Text(section.label),
-            subtitle: Text(section.description),
-            onTap: () => _toggleSection(section),
-          ),
-      ],
-    ),
-  );
-
-  Widget _sectionCard(
-    BuildContext context,
-    Color card, {
-    required List<Widget> children,
-  }) => Container(
-    decoration: BoxDecoration(
-      color: card,
-      borderRadius: BorderRadius.circular(AppRadius.xl2),
-      border: Border.all(color: context.c.border),
-    ),
-    child: Column(children: children),
-  );
-
-  Widget _actionTile({
-    required IconData icon,
-    required String title,
-    required String detail,
-    required VoidCallback? onTap,
-  }) => CupertinoListTile(
-    leading: Icon(icon),
-    title: Text(title),
-    additionalInfo: Text(detail),
-    onTap: onTap,
-  );
 
   Widget _field(
     String label,
@@ -598,19 +517,33 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
     bool obscure = false,
     Widget? suffix,
   }) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
+    padding: const EdgeInsets.fromLTRB(
+      AppSpace.x4,
+      AppSpace.x3,
+      AppSpace.x4,
+      AppSpace.x3,
+    ),
     child: CupertinoTextField(
       controller: controller,
       obscureText: obscure,
       prefix: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Text(label, style: const TextStyle(fontSize: 13)),
+        padding: const EdgeInsets.only(left: AppSpace.x3),
+        child: Text(
+          label,
+          style: AppText.caption(context.c.mutedForeground),
+        ),
       ),
       suffix: suffix,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.x2,
+        vertical: 11,
+      ),
+      cursorColor: context.c.primary,
+      style: AppText.rowTitle(context.c.foreground),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemFill.resolveFrom(context),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        color: context.c.secondary,
+        borderRadius: AppRadius.lgAll,
+        border: Border.all(color: context.c.border),
       ),
     ),
   );
