@@ -69,7 +69,6 @@ class HomePage extends StatelessWidget {
           : AppPage(
               reserveDock: true,
               sections: [
-                const SizedBox(height: AppSpace.x4),
                 Text(
                   '继续阅读',
                   style: AppText.pageTitle(colors.foreground),

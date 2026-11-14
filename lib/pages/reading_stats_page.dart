@@ -127,7 +127,6 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
           : AppPage(
               reserveDock: true,
               sections: [
-                const SizedBox(height: AppSpace.x4),
                 AppSection(
                   header: '今天',
                   headerTrailing: Text(

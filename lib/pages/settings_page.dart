@@ -14,6 +14,7 @@ import '../services/reading_stats.dart';
 import '../services/vellum_update_service.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_type.dart';
 import '../theme/app_shape.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_page.dart';
@@ -405,16 +406,21 @@ class _SettingsPageState extends State<SettingsPage> {
       navigationBar: CupertinoNavigationBar(
         backgroundColor: colors.background,
         border: null,
-        middle: const Text('设置'),
       ),
       // No text-scale clamp: the grouped rows grow with the reader's system
       // font size instead of pinning the page at 1.2.
+      //
+      // A top-level destination gets a large title in the content area, not an
+      // inline navigation title: the title should be worth reading, and it
+      // scrolls away with the page instead of eating a bar forever.
       child: AppPage(
         reserveDock: true,
         sections: <Widget>[
-          const SizedBox(height: AppSpace.x4),
+          Text('设置', style: AppText.pageTitle(colors.foreground)),
+          const SizedBox(height: AppSpace.x6),
+          // Group 1 — no header. A header on every block is a wall of labels;
+          // only a group that needs distinguishing from its neighbour earns one.
           AppSection(
-            header: '外观',
             children: [
               AppRow(
                 leading: Icon(
@@ -424,11 +430,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: widget.themeModeLabel,
                 onTap: widget.onCycleTheme,
               ),
-            ],
-          ),
-          AppSection(
-            header: '字体管理',
-            children: [
               AppRow(
                 leading: const Icon(CupertinoIcons.plus_circle),
                 label: '导入字体',
@@ -438,34 +439,23 @@ class _SettingsPageState extends State<SettingsPage> {
               AppRow(
                 leading: const Icon(CupertinoIcons.textformat),
                 label: '字体列表',
-                showChevron: true,
                 onTap: () => _showFontManager(context),
               ),
               if (hasActiveFont)
-                AppRow(
+                AppSwitchRow(
+                  leading: const Icon(CupertinoIcons.textformat_size),
                   label: '用于界面字体',
-                  trailing: AppSwitch(
-                    value: widget.useFontForUi,
-                    semanticLabel: '用于界面字体',
-                    onChanged: (value) => widget.onFontUsageChanged(
-                      useForUi: value,
-                      useForContent: widget.useFontForContent,
-                    ),
+                  value: widget.useFontForUi,
+                  onChanged: (value) => widget.onFontUsageChanged(
+                    useForUi: value,
+                    useForContent: widget.useFontForContent,
                   ),
                 ),
-            ],
-          ),
-          AppSection(
-            header: '工具',
-            children: [
               AppRow(
                 leading: const Icon(CupertinoIcons.doc_text),
                 label: 'MOBI / EPUB 转 TXT',
-                showChevron: true,
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute(
-                    builder: (_) => const EbookToTxtPage(),
-                  ),
+                  CupertinoPageRoute(builder: (_) => const EbookToTxtPage()),
                 ),
               ),
               AppRow(
@@ -473,9 +463,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: '数据备份',
                 value: '本地/云端',
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute(
-                    builder: (_) => const BackupSettingsPage(),
-                  ),
+                  CupertinoPageRoute(builder: (_) => const BackupSettingsPage()),
                 ),
               ),
               AppRow(
@@ -483,15 +471,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: '朗读服务（听书）',
                 value: 'TTS 接口',
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute(
-                    builder: (_) => const TtsSettingsPage(),
-                  ),
+                  CupertinoPageRoute(builder: (_) => const TtsSettingsPage()),
                 ),
               ),
             ],
           ),
+          // Group 2 — no header.
           AppSection(
-            header: '阅读数据',
             children: [
               AppRow(
                 leading: const Icon(CupertinoIcons.chart_bar),
@@ -501,9 +487,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ' · 累计 ${ReadingStatsService.formatDuration(_readingStats.totalSeconds)}',
                 onTap: () async {
                   await Navigator.of(context).push(
-                    CupertinoPageRoute(
-                      builder: (_) => const ReadingStatsPage(),
-                    ),
+                    CupertinoPageRoute(builder: (_) => const ReadingStatsPage()),
                   );
                   await _loadReadingStats();
                 },
@@ -526,21 +510,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: _orphanCount == 0 ? '无' : '$_orphanCount 条',
                 onTap: _openUnassociatedNotes,
               ),
-            ],
-          ),
-          AppSection(
-            header: '软件更新',
-            children: [
               AppRow(
                 leading: const Icon(CupertinoIcons.info_circle),
                 label: '当前版本',
                 value: _appVersion.isEmpty ? '—' : 'V$_appVersion',
               ),
-              AppRow(
+              AppSelectRow(
                 leading: const Icon(CupertinoIcons.arrow_down_circle),
                 label: '检查更新',
                 value: _checkingUpdate ? '检查中…' : _shortUpdateRepoLabel,
-                onTap: _checkingUpdate ? null : _checkForUpdate,
+                enabled: !_checkingUpdate,
+                onTap: _checkingUpdate ? () {} : _checkForUpdate,
               ),
               AppRow(
                 leading: const Icon(CupertinoIcons.gear_alt),
@@ -548,20 +528,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: '自定义',
                 onTap: _editUpdateRepo,
               ),
-              AppRow(
+              AppSwitchRow(
                 leading: const Icon(CupertinoIcons.arrow_2_circlepath),
                 label: '启动时自动检查更新',
-                trailing: AppSwitch(
-                  value: _autoCheckUpdate,
-                  semanticLabel: '启动时自动检查更新',
-                  onChanged: _setAutoCheckUpdate,
-                ),
-                onTap: () => _setAutoCheckUpdate(!_autoCheckUpdate),
+                value: _autoCheckUpdate,
+                onChanged: _setAutoCheckUpdate,
               ),
             ],
           ),
+          // Group 3 — the destructive one. It earns a footer because a reader
+          // should be told, once, that this block cannot be undone; folding it
+          // into "storage usage" would bury that.
           AppSection(
-            header: '存储管理',
+            footer: '以下操作不可恢复。',
             children: [
               FutureBuilder<StorageUsage>(
                 future: _usage,
@@ -576,6 +555,7 @@ class _SettingsPageState extends State<SettingsPage> {
               AppRow(
                 leading: const Icon(CupertinoIcons.book),
                 label: '清空书库',
+                destructive: true,
                 onTap: () => _confirm(
                   '清空书库？',
                   '将删除已导入的电子书和对应阅读位置，此操作不可恢复。',
@@ -585,6 +565,7 @@ class _SettingsPageState extends State<SettingsPage> {
               AppRow(
                 leading: const Icon(CupertinoIcons.clock),
                 label: '清除阅读记录',
+                destructive: true,
                 onTap: () => _confirm(
                   '清除阅读记录？',
                   '将重置所有书籍的字号、背景、阅读方式和阅读位置。',

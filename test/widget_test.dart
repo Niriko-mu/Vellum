@@ -163,14 +163,16 @@ void main() {
     // its storage/version futures a frame to settle.
     await tester.pump(const Duration(milliseconds: 300));
 
-    // The grouped rows are taller than the old list tiles, so the later
-    // sections sit below the fold and are built as they scroll in. Hidden tabs
-    // keep their own scrollables, so scope the search to the visible list.
+    // Groups no longer carry headers (a header on every block is a wall of
+    // labels), so the later rows sit below the fold and are built as they
+    // scroll in. Hidden tabs keep their own scrollables: scope the search to
+    // the one on screen.
     final list = find.byType(Scrollable).last;
-    await tester.scrollUntilVisible(find.text('阅读数据'), 200, scrollable: list);
+    expect(find.text('设置'), findsWidgets);
+    await tester.scrollUntilVisible(find.text('阅读统计'), 200, scrollable: list);
     expect(find.text('阅读统计'), findsOneWidget);
 
-    await tester.scrollUntilVisible(find.text('存储管理'), 200, scrollable: list);
+    await tester.scrollUntilVisible(find.text('占用空间'), 200, scrollable: list);
     expect(find.text('占用空间'), findsOneWidget);
     expect(find.text('清空书库'), findsOneWidget);
     expect(find.text('清除阅读记录'), findsOneWidget);

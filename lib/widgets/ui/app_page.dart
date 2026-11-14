@@ -70,13 +70,16 @@ class AppPage extends StatelessWidget {
     final bottom = reserveDock
         ? AppSpace.dockReserve(insets.bottom)
         : insets.bottom + AppSpace.x6;
+    // The page owns the gap between the chrome and its first element. A page
+    // that writes its own leading spacer is how the rhythm drifted before.
+    final top = AppSpace.pageTopGap;
     final gutter = padding == null
         ? const EdgeInsets.symmetric(
             horizontal: AppSpace.pageGutter,
-          ).add(EdgeInsets.only(bottom: bottom))
+          ).add(EdgeInsets.only(top: top, bottom: bottom))
         : const EdgeInsets.symmetric(horizontal: AppSpace.pageGutter)
               .add(padding!)
-              .add(EdgeInsets.only(bottom: bottom));
+              .add(EdgeInsets.only(top: top, bottom: bottom));
 
     final Widget content;
     if (sections != null) {
