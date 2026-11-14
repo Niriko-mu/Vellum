@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show SelectableText, SelectionArea;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vellum/theme/app_colors.dart';
+import 'package:vellum/theme/app_type.dart';
 import 'package:vellum/vellum.dart';
 
 void main() {
@@ -26,17 +28,34 @@ void main() {
     expect(find.text('阅读偏好'), findsNothing);
   });
 
-  test('defines distinct light and dark palettes', () {
-    expect(VellumTheme.light.brightness, Brightness.light);
-    expect(VellumTheme.dark.brightness, Brightness.dark);
+  test('defines distinct light and dark themes from the token layer', () {
+    final light = VellumTheme.forBrightness(Brightness.light);
+    final dark = VellumTheme.forBrightness(Brightness.dark);
+
+    expect(light.brightness, Brightness.light);
+    expect(dark.brightness, Brightness.dark);
+    expect(light.scaffoldBackgroundColor, AppColors.light.background);
+    expect(dark.scaffoldBackgroundColor, AppColors.dark.background);
+    expect(light.scaffoldBackgroundColor, isNot(dark.scaffoldBackgroundColor));
     expect(
-      VellumTheme.light.scaffoldBackgroundColor,
-      isNot(VellumTheme.dark.scaffoldBackgroundColor),
+      light.textTheme.bodyMedium!.color,
+      isNot(dark.textTheme.bodyMedium!.color),
     );
-    expect(
-      VellumTheme.light.textTheme.textStyle.color,
-      isNot(VellumTheme.dark.textTheme.textStyle.color),
-    );
+    // Every role is required in both themes: a missing dark value would be a
+    // compile error, and a null extension would be a runtime crash here.
+    expect(light.extension<AppColors>(), isNotNull);
+    expect(dark.extension<AppColors>(), isNotNull);
+  });
+
+  test('the type scale is monotonic and starts at 13', () {
+    expect(appTypeSequence.first.$1, 13);
+    for (var i = 1; i < appTypeSequence.length; i++) {
+      expect(
+        appTypeSequence[i].$1,
+        greaterThan(appTypeSequence[i - 1].$1),
+        reason: 'step $i must be larger than step ${i - 1}',
+      );
+    }
   });
 
   test('reader papers keep their exact requested text contrast', () {
@@ -84,8 +103,11 @@ void main() {
     expect(VellumTheme.readerAccent, const Color(0xfffa6725));
     // Reader controls and the app shell share the VELLUM terracotta accent;
     // independently selectable for reading comfort.
-    expect(VellumTheme.accent, const Color(0xffa95c46));
-    expect(VellumTheme.darkAccent, const Color(0xffd8896c));
+    // Terracotta is deepened to 5.95:1 on the page canvas so it can carry
+    // text (the old #A95C46 measured 4.40:1 and was used as a label colour).
+    expect(VellumTheme.accent, AppColors.light.primary);
+    expect(VellumTheme.darkAccent, AppColors.dark.primary);
+    expect(VellumTheme.accent.computeLuminance(), lessThan(0.15));
   });
 
   test('legacy reader papers migrate to the standard Fanqie palette', () {
@@ -115,13 +137,21 @@ void main() {
     await tester.pumpWidget(const VellumApp());
     await tester.tap(find.text('设置').last);
     await tester.pump();
-    final before = tester.widget<CupertinoApp>(find.byType(CupertinoApp));
+    // Outermost CupertinoTheme is the one mounted by the Material shell.
+    final before = tester.widget<CupertinoTheme>(
+      find.byType(CupertinoTheme).first,
+    );
 
     await tester.tap(find.byIcon(CupertinoIcons.moon));
     await tester.pump();
+    // The Material shell cross-fades its ThemeData, so let the transition
+    // finish before reading the Cupertino layer that follows it.
+    await tester.pump(const Duration(milliseconds: 300));
 
-    final after = tester.widget<CupertinoApp>(find.byType(CupertinoApp));
-    expect(after.theme?.brightness, isNot(before.theme?.brightness));
+    final after = tester.widget<CupertinoTheme>(
+      find.byType(CupertinoTheme).first,
+    );
+    expect(after.data.brightness, isNot(before.data.brightness));
   });
 
   testWidgets('shows storage management in the settings tab', (tester) async {

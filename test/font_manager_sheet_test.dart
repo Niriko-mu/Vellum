@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/pages/font_manager_sheet.dart';
 import 'package:vellum/services/book_library.dart';
+import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/vellum_theme.dart';
 
 const _font = InstalledFont(
@@ -15,8 +16,8 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const CupertinoApp(
-        theme: VellumTheme.light,
+      CupertinoApp(
+        theme: VellumTheme.cupertinoForBrightness(Brightness.light),
         home: CupertinoPageScaffold(
           child: FontManagerSheet(
             installedFonts: [],
@@ -33,7 +34,7 @@ void main() {
     expect(find.text('暂无字体'), findsOneWidget);
     expect(
       tester.widget<Text>(find.text('暂无字体')).style!.color,
-      VellumTheme.shellMuted,
+      AppColors.light.mutedForeground,
     );
   });
 
@@ -42,7 +43,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       CupertinoApp(
-        theme: VellumTheme.dark,
+        theme: VellumTheme.cupertinoForBrightness(Brightness.dark),
         home: CupertinoPageScaffold(
           child: FontManagerSheet(
             installedFonts: const [_font],
@@ -58,7 +59,7 @@ void main() {
 
     expect(
       tester.widget<Text>(find.text('阅读字体')).style!.color,
-      VellumTheme.shellDarkInk,
+      AppColors.dark.foreground,
     );
     expect(find.text('当前使用中'), findsOneWidget);
     expect(find.byIcon(CupertinoIcons.trash), findsOneWidget);

@@ -1,0 +1,84 @@
+import 'package:flutter/widgets.dart';
+
+/// Shape scale. Base 8; every other step is a multiplier, so the whole scale
+/// moves together. A new radius is a change to this file, never a local number
+/// in a widget.
+abstract final class AppRadius {
+  /// Badge corners.
+  static const double hairlineXs = 2;
+
+  /// Inner chips, small controls.
+  static const double sm = 4.8;
+
+  /// Thumbnails, cover tiles. The only card corner below [lg], because a book
+  /// cover is a physical object and wants a sharper corner than a UI card.
+  static const double md = 6.4;
+
+  /// Fields, small cards.
+  static const double lg = 8;
+
+  /// Default button, input.
+  static const double xl = 11.2;
+
+  /// Grouped section block.
+  static const double grouped = 14.4;
+
+  /// Cover tile stack, floating control container.
+  static const double xl2 = 17.6;
+
+  /// Menu panel, sheet top corner.
+  static const double xl3 = 20.8;
+
+  /// Chips, tags, switch, avatar.
+  static const double pill = 9999;
+
+  static BorderRadius get smAll => BorderRadius.circular(sm);
+  static BorderRadius get mdAll => BorderRadius.circular(md);
+  static BorderRadius get lgAll => BorderRadius.circular(lg);
+  static BorderRadius get xlAll => BorderRadius.circular(xl);
+  static BorderRadius get groupedAll => BorderRadius.circular(grouped);
+  static BorderRadius get xl2All => BorderRadius.circular(xl2);
+  static BorderRadius get xl3All => BorderRadius.circular(xl3);
+  static BorderRadius get pillAll => BorderRadius.circular(pill);
+
+  /// Sheet presentation: top corners only, the bottom runs off screen.
+  static const BorderRadius sheetTop = BorderRadius.vertical(
+    top: Radius.circular(xl3),
+  );
+}
+
+/// Spacing ladder: 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 44 / 56 / 64.
+abstract final class AppSpace {
+  static const double x1 = 4;
+  static const double x2 = 8;
+  static const double x3 = 12;
+  static const double x4 = 16;
+  static const double x5 = 20;
+  static const double x6 = 24;
+  static const double x8 = 32;
+  static const double x10 = 40;
+  static const double x11 = 44;
+  static const double x14 = 56;
+  static const double x16 = 64;
+
+  /// Page gutter, owned by the page shell. Rows carry no outer margin.
+  static const double pageGutter = x4;
+
+  /// Gap between two grouped sections.
+  static const double sectionGap = x6;
+
+  /// Row height without a leading icon.
+  static const double rowMinHeight = x11;
+
+  /// Row height with a leading icon.
+  static const double rowMinHeightLeading = x14;
+
+  /// Grouped section header height.
+  static const double sectionHeaderMinHeight = x10;
+
+  /// Reading measure cap on tablets and desktop windows.
+  static const double contentMaxWidth = 720;
+
+  /// Sidebar width in the wide window class.
+  static const double sidebarWidth = 280;
+}

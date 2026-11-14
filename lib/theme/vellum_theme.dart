@@ -1,154 +1,99 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-/// Semantic palette for Vellum.
+import 'app_colors.dart';
+import 'app_palette.dart';
+import 'app_type.dart';
+
+/// VELLUM's theme assembly point.
 ///
-/// VELLUM's shell uses a warm vellum/terracotta palette. Reader papers remain
-/// independent Fanqie-compatible surfaces so reading comfort is not coupled to
-/// the application's brand theme.
+/// The chain is strictly one-way: [AppPalette] → [AppColors] → widgets. This
+/// file wires the semantic roles into a [ThemeData] (for widgets, focus, ripples
+/// and [ThemeExtension] lookup) and into a [CupertinoThemeData] (for the
+/// Cupertino chrome the product uses on purpose). Widgets read colours through
+/// `context.c` and never through [AppPalette].
+///
+/// **Reader papers are not theme roles.** They are a persisted user choice, so
+/// they live here next to [readerInkFor] and are never derived from [AppColors].
 abstract final class VellumTheme {
   static const systemUiFontFamily = 'sans-serif';
   static String fontFamily = systemUiFontFamily;
   static String contentFontFamily = 'serif';
 
-  // Fanqie reference accent. It remains available for comparing the extracted
-  // palette, but VELLUM controls use the shared shell accent below so the
-  // reader and library feel like one product.
-  static const readerAccent = Color(0xfffa6725);
-  static const readerAccentDark = Color(0xffffa177);
+  // ------------------------------------------------------------------------
+  // Brand.
+  // ------------------------------------------------------------------------
 
-  // Shared app-shell accent (nav bars, library actions and reader controls).
-  // Terracotta keeps the paper-inspired identity legible in both themes.
-  static const accent = Color(0xffa95c46);
-  static const darkAccent = Color(0xffd8896c);
+  /// The single emphasised accent. 5.95:1 on [AppPalette.canvas].
+  static const accent = AppPalette.primary;
+  static const darkAccent = AppPalette.primaryDark;
 
-  // App shell (library / settings).
-  // `paper` is retained as the legacy reading underlay used by older saved
-  // states; the shell uses the warm semantic surfaces below.
-  static const paper = Color(0xfff7e4cf);
-  static const card = Color(0xfffff8ef);
-  static const ink = Color(0xff2a211b);
-  static const muted = Color(0xff7a6558);
-  static const line = Color(0xffe5cdb7);
-  static const darkPaper = Color(0xff111110);
-  static const darkCard = Color(0xff1c1917);
-  static const darkInk = Color(0xfff0ebe1);
-  static const darkMuted = Color(0xffa8a29e);
-  static const darkLine = Color(0xff3a3530);
+  /// Former shell constants. Kept so pre-token call sites and tests keep a name
+  /// to migrate to; they are values from [AppPalette], never a second source.
+  @Deprecated('改用 context.c.background / AppColors')
+  static const shellPaper = AppPalette.canvas;
+  @Deprecated('改用 context.c.card / AppColors')
+  static const shellCard = AppPalette.card;
+  @Deprecated('改用 context.c.foreground / AppColors')
+  static const shellInk = AppPalette.foreground;
+  @Deprecated('改用 context.c.mutedForeground / AppColors')
+  static const shellMuted = AppPalette.mutedForeground;
+  @Deprecated('改用 context.c.border / AppColors')
+  static const shellLine = AppPalette.borderLight;
+  @Deprecated('改用 AppPalette.canvasDark / AppColors')
+  static const shellDarkPaper = AppPalette.canvasDark;
+  @Deprecated('改用 AppPalette.cardDark / AppColors')
+  static const shellDarkCard = AppPalette.cardDark;
+  @Deprecated('改用 AppPalette.foregroundDark / AppColors')
+  static const shellDarkInk = AppPalette.foregroundDark;
+  @Deprecated('改用 AppPalette.mutedForegroundDark / AppColors')
+  static const shellDarkMuted = AppPalette.mutedForegroundDark;
+  @Deprecated('改用 AppPalette.borderDark / AppColors')
+  static const shellDarkLine = AppPalette.borderDark;
 
-  static const shellPaper = Color(0xfff7f3ed);
-  static const shellCard = Color(0xfffffdf8);
-  static const shellInk = Color(0xff2b2723);
-  static const shellMuted = Color(0xff756c65);
-  static const shellLine = Color(0xffe4dcd3);
-  static const shellDarkPaper = Color(0xff151311);
-  static const shellDarkCard = Color(0xff211e1a);
-  static const shellDarkInk = Color(0xfff5efe7);
-  static const shellDarkMuted = Color(0xffb6aaa0);
-  static const shellDarkLine = Color(0xff443a33);
+  /// Comparison token for the extracted Fanqie resources; not used by chrome.
+  static const readerAccent = AppPalette.fanqieReferenceAccent;
+  static const readerAccentDark = Color(0xFFFFA177);
+
+  // ------------------------------------------------------------------------
+  // Reader papers — persisted user choices, upstream of the tokens.
+  // ------------------------------------------------------------------------
+  static const paper = Color(0xFFF7E4CF);
+  static const card = Color(0xFFFFF8EF);
+  static const ink = Color(0xFF2A211B);
+  static const muted = Color(0xFF7A6558);
+  static const line = Color(0xFFE5CDB7);
+  static const darkPaper = Color(0xFF111110);
+  static const darkCard = Color(0xFF1C1917);
+  static const darkInk = Color(0xFFF0EBE1);
+  static const darkMuted = Color(0xFFA8A29E);
+  static const darkLine = Color(0xFF3A3530);
 
   // Fanqie STANDARD reader resources (ReaderBgColorType.STANDARD). The
   // similarly named `*_theme_bg_light` resources are brightness variants,
   // not the normal reading papers shown by the default background picker.
-  static const readerWhite = Color(0xfff6f6f6);
-  static const readerSepia = Color(0xffded9c5);
-  static const readerMint = Color(0xffd8e3cc);
-  static const readerBlue = Color(0xffccd8e3);
-  static const readerNight = Color(0xff0e0e0e);
-  static const readerNightInk = Color(0xffb7b7b7);
-  static const readerCharcoal = Color(0xff1a1a1a);
-  static const readerCharcoalInk = Color(0xff808080);
-  static const readerSoftBlack = Color(0xff262626);
-  static const readerSoftBlackInk = Color(0xff8c8c8c);
+  static const readerWhite = Color(0xFFF6F6F6);
+  static const readerSepia = Color(0xFFDED9C5);
+  static const readerMint = Color(0xFFD8E3CC);
+  static const readerBlue = Color(0xFFCCD8E3);
+  static const readerNight = Color(0xFF0E0E0E);
+  static const readerNightInk = Color(0xFFB7B7B7);
+  static const readerCharcoal = Color(0xFF1A1A1A);
+  static const readerCharcoalInk = Color(0xFF808080);
+  static const readerSoftBlack = Color(0xFF262626);
+  static const readerSoftBlackInk = Color(0xFF8C8C8C);
 
   /// Fanqie body ink on light papers is pure black.
-  static const readerBodyInk = Color(0xff000000);
+  static const readerBodyInk = Color(0xFF000000);
   static const readerHairline = Color(0x14000000);
 
-  static const light = CupertinoThemeData(
-    brightness: Brightness.light,
-    primaryColor: accent,
-    scaffoldBackgroundColor: shellPaper,
-    barBackgroundColor: shellPaper,
-    applyThemeToAll: true,
-    textTheme: CupertinoTextThemeData(
-      textStyle: TextStyle(
-        inherit: false,
-        color: shellInk,
-        fontFamily: systemUiFontFamily,
-      ),
-      navTitleTextStyle: TextStyle(
-        inherit: false,
-        color: shellInk,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        fontFamily: systemUiFontFamily,
-      ),
-      navLargeTitleTextStyle: TextStyle(
-        inherit: false,
-        color: shellInk,
-        fontSize: 34,
-        fontWeight: FontWeight.w700,
-        fontFamily: systemUiFontFamily,
-      ),
-    ),
-  );
-
-  static const dark = CupertinoThemeData(
-    brightness: Brightness.dark,
-    primaryColor: darkAccent,
-    scaffoldBackgroundColor: shellDarkPaper,
-    barBackgroundColor: shellDarkPaper,
-    applyThemeToAll: true,
-    textTheme: CupertinoTextThemeData(
-      textStyle: TextStyle(
-        inherit: false,
-        color: shellDarkInk,
-        fontFamily: systemUiFontFamily,
-      ),
-      navTitleTextStyle: TextStyle(
-        inherit: false,
-        color: shellDarkInk,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        fontFamily: systemUiFontFamily,
-      ),
-      navLargeTitleTextStyle: TextStyle(
-        inherit: false,
-        color: shellDarkInk,
-        fontSize: 34,
-        fontWeight: FontWeight.w700,
-        fontFamily: systemUiFontFamily,
-      ),
-    ),
-  );
-
-  static CupertinoThemeData forBrightness(
-    Brightness brightness, {
-    String fontFamily = systemUiFontFamily,
-  }) {
-    final base = brightness == Brightness.dark ? dark : light;
-    return base.copyWith(
-      textTheme: CupertinoTextThemeData(
-        textStyle: base.textTheme.textStyle.copyWith(fontFamily: fontFamily),
-        navTitleTextStyle: base.textTheme.navTitleTextStyle.copyWith(
-          fontFamily: fontFamily,
-        ),
-        navLargeTitleTextStyle: base.textTheme.navLargeTitleTextStyle.copyWith(
-          fontFamily: fontFamily,
-        ),
-      ),
-    );
-  }
-
-  static Color inkOf(BuildContext context) =>
-      CupertinoTheme.of(context).brightness == Brightness.dark
-      ? shellDarkInk
-      : shellInk;
-
   /// Fanqie body ink on a reader paper (pure black on light, #B7B7B7 night).
+  ///
+  /// This reads the paper, not a token: the paper *is* the surface, so its
+  /// paired ink is the colour decision itself.
   static Color readerInkFor(Color background) {
     if (background == darkPaper) return CupertinoColors.white;
-    if (background == readerSepia) return const Color(0xff141000);
+    if (background == readerSepia) return const Color(0xFF141000);
     if (background == readerNight) return readerNightInk;
     if (background == readerCharcoal) return readerCharcoalInk;
     if (background == readerSoftBlack) return readerSoftBlackInk;
@@ -161,68 +106,249 @@ abstract final class VellumTheme {
   static Color? normalizeReaderBackground(Color? background) {
     if (background == null) return null;
     return switch (background.toARGB32()) {
-      0xffd7d7db => readerWhite,
-      0xfff7e4cf => readerSepia,
-      0xffc9decb => readerMint,
-      0xffc2def0 => readerBlue,
+      0xFFD7D7DB => readerWhite,
+      0xFFF7E4CF => readerSepia,
+      0xFFC9DECB => readerMint,
+      0xFFC2DEF0 => readerBlue,
       // This used to be Vellum's first night swatch (Fanqie theme 5), whose
       // actual STANDARD background is #0E0E0E.
-      0xff262626 => readerNight,
+      0xFF262626 => readerNight,
       _ => background,
     };
   }
 
+  static bool _isNightPaper(Color surface) =>
+      surface == readerNight ||
+      surface == readerCharcoal ||
+      surface == readerSoftBlack;
+
   /// Secondary text on a reader paper (Fanqie `#66000000` body).
   static Color readerMutedInk(Color surface) {
     final ink = readerInkFor(surface);
-    final night =
-        surface == readerNight ||
-        surface == readerCharcoal ||
-        surface == readerSoftBlack;
-    return ink.withValues(alpha: night ? .55 : .4);
+    return ink.withValues(alpha: _isNightPaper(surface) ? .55 : .4);
   }
 
-  /// App-shell surface (nav bar / scaffold) — always matches the page paper.
-  static Color shellOf(BuildContext context) =>
-      CupertinoTheme.of(context).brightness == Brightness.dark
-      ? shellDarkPaper
-      : shellPaper;
-
-  static Color mutedOf(BuildContext context) =>
-      CupertinoTheme.of(context).brightness == Brightness.dark
-      ? shellDarkMuted
-      : shellMuted;
-  static Color accentOf(BuildContext context) =>
-      CupertinoTheme.of(context).brightness == Brightness.dark
-      ? darkAccent
-      : accent;
-
-  /// Shared interactive accent for the reader and the application shell.
+  /// Tertiary text and running heads on a reader paper.
   ///
-  /// The reading paper remains user-selectable (Fanqie's paper mechanism),
-  /// while selection, progress, bookmarks and settings use the same VELLUM
-  /// terracotta as the library and settings pages.
-  static Color readerAccentOf(BuildContext context) => accentOf(context);
-  static Color lineOf(BuildContext context) =>
-      CupertinoTheme.of(context).brightness == Brightness.dark
-      ? shellDarkLine
-      : shellLine;
-  static Color cardOf(BuildContext context) =>
-      CupertinoTheme.of(context).brightness == Brightness.dark
-      ? shellDarkCard
-      : shellCard;
+  /// The alpha floor is pinned at .55 (4.65:1 on the white paper) instead of the
+  /// old .38 (2.64:1, below both the 4.5 text and the 3.0 graphics threshold).
+  static Color readerTertiaryInk(Color surface) {
+    final ink = readerInkFor(surface);
+    return ink.withValues(alpha: _isNightPaper(surface) ? .62 : .58);
+  }
 
-  /// Reader chrome surface. Prefer the active reading paper (Fanqie menu
-  /// sits on theme bg). Defaults to Fanqie white paper in light mode.
+  /// Reader chrome surface. Prefers the active reading paper (the Fanqie menu
+  /// sits on the theme bg). Defaults to the white paper.
   static Color readerChromeOf(BuildContext context, {Color? paper}) {
     if (paper != null) return paper;
-    return CupertinoTheme.of(context).brightness == Brightness.dark
-        ? darkPaper
-        : readerWhite;
+    return context.c.brightness == Brightness.dark ? darkPaper : readerWhite;
   }
 
   static Color readerChromeInk(Color surface) => readerInkFor(surface);
 
-  static Color softAccentOf(BuildContext context) =>
-      accentOf(context).withValues(alpha: .12);
+  // ------------------------------------------------------------------------
+  // Theme construction.
+  // ------------------------------------------------------------------------
+  static const _titleFallback = 'sans-serif';
+
+  static TextTheme _textTheme(String family, AppColors colors) {
+    TextStyle style(int index, FontWeight weight, Color color) {
+      final step = AppTypeStep.at(index);
+      return TextStyle(
+        inherit: false,
+        color: color,
+        fontFamily: family,
+        fontSize: step.size,
+        height: step.heightFactor,
+        fontWeight: weight,
+        letterSpacing: 0,
+      );
+    }
+
+    final ink = colors.foreground;
+    final muted = colors.mutedForeground;
+    return TextTheme(
+      // 页面大标题 → 32/40 semibold
+      headlineMedium: style(AppTypeStep.xxxl, FontWeight.w600, ink),
+      // 分组标题 / 状态标题 → 16/24 semibold
+      titleMedium: style(AppTypeStep.base, FontWeight.w600, ink),
+      // 行标题 / 正文 → 16/24 regular
+      bodyMedium: style(AppTypeStep.base, FontWeight.w400, ink),
+      bodyLarge: style(AppTypeStep.lg, FontWeight.w400, ink),
+      // 次要说明 / 页脚 → 14/20
+      bodySmall: style(AppTypeStep.sm, FontWeight.w400, muted),
+      // 元信息 / 计数 → 13/18
+      labelSmall: style(AppTypeStep.xs, FontWeight.w500, muted),
+      labelLarge: style(AppTypeStep.base, FontWeight.w500, ink),
+      titleLarge: style(AppTypeStep.xl, FontWeight.w600, ink),
+      titleSmall: style(AppTypeStep.sm, FontWeight.w500, ink),
+      displayLarge: style(AppTypeStep.xxxxl, FontWeight.w600, ink),
+    );
+  }
+
+  static ThemeData _build({
+    required Brightness brightness,
+    required AppColors colors,
+    required String family,
+  }) {
+    final textTheme = _textTheme(family, colors);
+    final dark = brightness == Brightness.dark;
+    final base = dark
+        ? ThemeData.dark(useMaterial3: true)
+        : ThemeData.light(useMaterial3: true);
+
+    return base.copyWith(
+      brightness: brightness,
+      scaffoldBackgroundColor: colors.background,
+      canvasColor: colors.background,
+      cardColor: colors.card,
+      dividerColor: colors.border,
+      shadowColor: colors.constantBlack,
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: colors.secondary,
+      hoverColor: colors.secondary,
+      focusColor: colors.primary.withValues(alpha: 0.20),
+      primaryColor: colors.primary,
+      disabledColor: colors.foregroundTertiary,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+      extensions: <ThemeExtension<dynamic>>[colors],
+      colorScheme: (dark ? const ColorScheme.dark() : const ColorScheme.light())
+          .copyWith(
+            brightness: brightness,
+            primary: colors.primary,
+            onPrimary: colors.primaryForeground,
+            secondary: colors.foreground,
+            onSecondary: colors.background,
+            surface: colors.card,
+            onSurface: colors.foreground,
+            error: colors.destructive,
+            onError: colors.constantWhite,
+            outline: colors.borderStrong,
+            outlineVariant: colors.border,
+          ),
+      // The product's own chrome, not Material's: no elevation, no cards with
+      // shadows, no ink ripple. The Material layer exists for text fields,
+      // focus traversal and the ThemeExtension handoff.
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: colors.foreground,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        titleTextStyle: AppText.sectionHeader(colors.foreground).copyWith(
+          fontFamily: family,
+        ),
+      ),
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+      visualDensity: VisualDensity.standard,
+    );
+  }
+
+  static ThemeData get light => _build(
+    brightness: Brightness.light,
+    colors: AppColors.light,
+    family: systemUiFontFamily,
+  );
+
+  static ThemeData get dark => _build(
+    brightness: Brightness.dark,
+    colors: AppColors.dark,
+    family: systemUiFontFamily,
+  );
+
+  static ThemeData forBrightness(
+    Brightness brightness, {
+    String fontFamily = systemUiFontFamily,
+  }) {
+    final family = fontFamily.isEmpty ? _titleFallback : fontFamily;
+    return _build(
+      brightness: brightness,
+      colors: brightness == Brightness.dark ? AppColors.dark : AppColors.light,
+      family: family,
+    );
+  }
+
+  /// The Cupertino layer, mounted inside [MaterialApp.builder] so the Cupertino
+  /// chrome keeps native title/back composition and the edge-swipe pop.
+  static CupertinoThemeData cupertinoOf(BuildContext context) {
+    final theme = Theme.of(context);
+    final family = theme.textTheme.bodyMedium?.fontFamily ?? systemUiFontFamily;
+    return cupertinoFor(theme.brightness, fontFamily: family);
+  }
+
+  /// The Cupertino layer for a bare brightness — used by tests and by any
+  /// Cupertino surface mounted outside the Material shell.
+  static CupertinoThemeData cupertinoForBrightness(
+    Brightness brightness, {
+    String fontFamily = systemUiFontFamily,
+  }) => cupertinoFor(brightness, fontFamily: fontFamily);
+
+  static CupertinoThemeData cupertinoFor(
+    Brightness brightness, {
+    required String fontFamily,
+  }) {
+    final colors = brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    final family = fontFamily;
+    return CupertinoThemeData(
+      brightness: brightness,
+      primaryColor: colors.primary,
+      scaffoldBackgroundColor: colors.background,
+      barBackgroundColor: colors.background,
+      applyThemeToAll: true,
+      textTheme: CupertinoTextThemeData(
+        textStyle: TextStyle(
+          inherit: false,
+          color: colors.foreground,
+          fontFamily: family,
+          decoration: TextDecoration.none,
+        ),
+        navTitleTextStyle: AppText.sectionHeader(
+          colors.foreground,
+        ).copyWith(fontFamily: family, inherit: false),
+        navLargeTitleTextStyle: AppText.pageTitle(
+          colors.foreground,
+        ).copyWith(fontFamily: family, inherit: false),
+        actionTextStyle: AppText.rowTitle(
+          colors.primary,
+        ).copyWith(fontFamily: family, inherit: false),
+        tabLabelTextStyle: AppText.tabLabel(
+          colors.mutedForeground,
+        ).copyWith(fontFamily: family, inherit: false),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------------
+  // Legacy accessors — deprecated, forwarded onto the token layer so the
+  // migration can land file by file. Removed once the last screen is ported.
+  // ------------------------------------------------------------------------
+  static AppColors colorsOf(BuildContext context) => context.c;
+
+  @Deprecated('改用 context.c.foreground')
+  static Color inkOf(BuildContext context) => context.c.foreground;
+
+  @Deprecated('改用 context.c.mutedForeground')
+  static Color mutedOf(BuildContext context) => context.c.mutedForeground;
+
+  @Deprecated('改用 context.c.primary')
+  static Color accentOf(BuildContext context) => context.c.primary;
+
+  @Deprecated('改用 context.c.border')
+  static Color lineOf(BuildContext context) => context.c.border;
+
+  @Deprecated('改用 context.c.card')
+  static Color cardOf(BuildContext context) => context.c.card;
+
+  @Deprecated('改用 context.c.background')
+  static Color shellOf(BuildContext context) => context.c.background;
+
+  @Deprecated('改用 context.c.secondary')
+  static Color softAccentOf(BuildContext context) => context.c.secondary;
+
+  @Deprecated('改用 context.c.primary')
+  static Color readerAccentOf(BuildContext context) => context.c.primary;
 }

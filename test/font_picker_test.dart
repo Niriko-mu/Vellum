@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/reader/reader_font_picker.dart';
 import 'package:vellum/services/book_library.dart';
+import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/vellum_theme.dart';
 
 const _font = InstalledFont(
@@ -106,7 +107,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         CupertinoApp(
-          theme: VellumTheme.light,
+          theme: VellumTheme.cupertinoForBrightness(Brightness.light),
           home: CupertinoPageScaffold(
             child: ReaderFontPickerSheet(
               surface: VellumTheme.readerWhite,
@@ -138,7 +139,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       CupertinoApp(
-        theme: VellumTheme.dark,
+        theme: VellumTheme.cupertinoForBrightness(Brightness.dark),
         home: CupertinoPageScaffold(
           child: ReaderFontPickerSheet(
             surface: VellumTheme.readerNight,
@@ -153,7 +154,7 @@ void main() {
 
     expect(
       tester.widget<Text>(find.text('系统字体')).style!.color,
-      VellumTheme.darkAccent,
+      AppColors.dark.primary,
     );
     expect(find.byIcon(CupertinoIcons.checkmark_alt), findsOneWidget);
   });

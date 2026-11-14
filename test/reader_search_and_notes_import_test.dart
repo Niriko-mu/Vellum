@@ -607,7 +607,7 @@ void main() {
   testWidgets('reader paper keeps the note sheets legible', (tester) async {
     await tester.pumpWidget(
       CupertinoApp(
-        theme: VellumTheme.forBrightness(Brightness.dark),
+        theme: VellumTheme.cupertinoForBrightness(Brightness.dark),
         home: CupertinoPageScaffold(
           child: UnassociatedNotesSheet(
             books: const [BookMatchCandidate(id: 'a', title: '史记')],

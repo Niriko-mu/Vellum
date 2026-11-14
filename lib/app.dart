@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show Uint8List;
 import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show MaterialApp, ThemeMode;
 
 import 'pages/cover_editor_sheet.dart';
 import 'pages/library_pages.dart';
@@ -270,21 +271,31 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) => CupertinoApp(
-    navigatorKey: appNavigatorKey,
-    debugShowCheckedModeBanner: false,
+  Widget build(BuildContext context) {
+    final brightness = _manualBrightness ?? _brightness;
+    final family = _useFontForUi && _activeFontName.isNotEmpty
+        ? 'Font_${_activeFontName.hashCode.abs()}'
+        : VellumTheme.systemUiFontFamily;
 
-    title: 'Vellum',
-
-    theme: VellumTheme.forBrightness(
-      _manualBrightness ?? _brightness,
-
-      fontFamily: _useFontForUi && _activeFontName.isNotEmpty
-          ? 'Font_${_activeFontName.hashCode.abs()}'
-          : VellumTheme.systemUiFontFamily,
-    ),
-
-    home: LibraryShell(
+    // A Material shell exists for two things only: `ThemeExtension` (which
+    // `CupertinoThemeData` cannot carry) and the localizations Material widgets
+    // expect. Every visible surface is still Cupertino — `CupertinoTheme` is
+    // re-mounted in `builder` so `CupertinoPageScaffold`, the navigation bars and
+    // the interactive pop gesture behave exactly as before.
+    return MaterialApp(
+      navigatorKey: appNavigatorKey,
+      debugShowCheckedModeBanner: false,
+      title: 'Vellum',
+      theme: VellumTheme.forBrightness(Brightness.light, fontFamily: family),
+      darkTheme: VellumTheme.forBrightness(Brightness.dark, fontFamily: family),
+      themeMode: brightness == Brightness.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
+      builder: (context, child) => CupertinoTheme(
+        data: VellumTheme.cupertinoOf(context),
+        child: child ?? const SizedBox.shrink(),
+      ),
+      home: LibraryShell(
       themeModeLabel: _manualBrightness == null
           ? '跟随系统'
           : (_manualBrightness == Brightness.dark ? '深色' : '浅色'),
@@ -315,9 +326,10 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
 
       onDeleteFont: _deleteFont,
 
-      onFontUsageChanged: _setFontUsage,
-    ),
-  );
+        onFontUsageChanged: _setFontUsage,
+      ),
+    );
+  }
 }
 
 class LibraryShell extends StatefulWidget {
