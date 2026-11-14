@@ -3,7 +3,12 @@
 > 日期：2026-11-14
 > 范围：`lib/` 全部界面层（主题、页面、阅读器 chrome、浮层）
 > 参考：`D:\Projects\InnovativeSpace\mobile-UI-design-rules\apple-like-skill`
-> 状态：**方案稿，未改任何代码**
+> 状态：**已被取代（2026-11-14）** —— 本文是第一阶段的全量方案稿。
+> 实际执行按其收敛版 `2026-11-14-cherry-f1-implementation-plan.md`（F1 保真度）推进，
+> 偏离项见 `design-fidelity-overrides.md`，落地记录见
+> `2026-11-14-f1-implementation-record.md`。
+> 保留本文的原因只有一个：第 0 节的量化基线（61 个颜色字面量、69 处圆角、214 处 fontSize…）
+> 是"改造前长什么样"的唯一记录，后续对比要用。
 
 ---
 

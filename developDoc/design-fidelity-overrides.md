@@ -19,6 +19,7 @@
 | 6 | 关闭曲线 | 3 条曲线（无 dismiss） | 保留 `dismissCurve` + `dismiss` 180ms | `settle` 是减速曲线，**反演后是缓入**——用它做退场正好是要避免的"界面犹豫了一下"。进/出分流是有意的 |
 | 7 | 图标"实心/描边"两态 | 选中态用实心字形 | **只有描边一态**（Lucide 无实心字形） | Lucide 是纯描边集，与规范要的 2px 描边一致。选中态改由**颜色 + dock 滑块**承担：dock 有滑动指示器，开关有拇指位移，书签有"已加书签"语义标签。代价是少了非颜色的形状线索，故 dock 的选中项另加字重差 |
 | 8 | 图标字体来源 | 依赖 `lucide_icons` pub 包 | **自带 `assets/fonts/Lucide.ttf`** | 0.257.0（最新）里 `LucideIconData extends IconData`，而本 SDK 已把 `IconData` 标为 `final`，该包**无法编译**。字体与 ISC 许可一并入库，码点集中在 `lib/theme/app_icons.dart` |
+| 9 | 子页顶栏 | `AppInlineHeader`（自绘 16/24 + 返回） | 保留 `CupertinoNavigationBar` | 自绘顶栏等于自己重做边缘返回手势、返回按钮的 hit slop、hero 与大标题折叠。用户明确要求保留 Cupertino 组件与边缘返回，这里是那条要求落地的位置。子页用内联标题、顶层 tab 用内容区大标题，是 iOS 自己的分工 |
 
 ---
 
