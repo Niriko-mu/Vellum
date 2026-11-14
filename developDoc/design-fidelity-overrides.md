@@ -35,6 +35,8 @@
 - chevron：20，`mutedForeground`，左侧间隔 8
 - 圆角阶梯：8 的倍数（4.8 / 6.4 / 8 / 11.2 / 14.4 / 17.6 / 20.8）
 - 图标：只经 `AppIcons` 取字形，`CupertinoIcons` 零引用；字号 16（行内）/ 20（chevron）/ 24（dock）
+- 阅读面板强调色：由**纸张**决定（`readerAccentFor`），不跟随应用主题
+- dock 标签：`withClampedTextScaling(1.3)`，正文照常跟随系统字号
 - 字号阶梯：13 级严格递增，行高 ≥ 字号
 - 动效：`settle` / `overshoot` 为 `Cubic`，`fast` 200 / `base` 250 / `slow` 350
 - 两套主题声明的角色集合完全一致
