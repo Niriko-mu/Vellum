@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/services.dart' show Uint8List;
+import 'package:flutter/services.dart'
+    show SystemUiOverlayStyle, SystemChrome, Uint8List;
 
 import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show MaterialApp, ThemeMode;
+import 'package:flutter/material.dart' show MaterialApp, Theme, ThemeMode;
 
 import 'pages/cover_editor_sheet.dart';
 import 'pages/library_pages.dart';
@@ -29,6 +30,9 @@ import 'services/notes_import.dart';
 import 'services/reading_stats.dart';
 import 'services/widget_shelf.dart';
 
+import 'theme/app_colors.dart';
+import 'theme/app_shape.dart';
+import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
 
 final appNavigatorKey = GlobalKey<NavigatorState>();
@@ -291,10 +295,28 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
       themeMode: brightness == Brightness.dark
           ? ThemeMode.dark
           : ThemeMode.light,
-      builder: (context, child) => CupertinoTheme(
-        data: VellumTheme.cupertinoOf(context),
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        // Edge-to-edge: the status and navigation bars are transparent and the
+        // page paints behind them. Their icons follow the resolved brightness.
+        SystemChrome.setSystemUIOverlayStyle(
+          SystemUiOverlayStyle(
+            statusBarColor: const Color(0x00000000),
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: const Color(0x00000000),
+            systemNavigationBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+          ),
+        );
+        return CupertinoTheme(
+          data: VellumTheme.cupertinoOf(context),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: LibraryShell(
       themeModeLabel: _manualBrightness == null
           ? '跟随系统'
@@ -801,15 +823,15 @@ class _LibraryShellState extends State<LibraryShell>
 
             onTap: (value) => setState(() => _tab = value),
 
-            activeColor: VellumTheme.accentOf(context),
+            activeColor: context.c.primary,
 
-            inactiveColor: VellumTheme.mutedOf(context),
+            inactiveColor: context.c.mutedForeground,
 
             iconSize: 22,
 
-            border: Border(top: BorderSide(color: VellumTheme.lineOf(context))),
+            border: Border(top: BorderSide(color: context.c.border)),
 
-            backgroundColor: VellumTheme.shellOf(context),
+            backgroundColor: context.c.background,
 
             items: const [
               BottomNavigationBarItem(
@@ -926,21 +948,20 @@ class _LibraryShellState extends State<LibraryShell>
         if (_importing)
           Positioned.fill(
             child: ColoredBox(
-              color: const Color(0x66000000),
+              color: context.c.scrim,
 
               child: Center(
                 child: Container(
                   width: 280,
 
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpace.x6),
 
                   decoration: BoxDecoration(
-                    color: VellumTheme.cardOf(context),
+                    color: context.c.popover,
 
-                    borderRadius: BorderRadius.circular(20),
-
-                    border: Border.all(color: VellumTheme.lineOf(context)),
+                    borderRadius: AppRadius.xl3All,
                   ),
+
 
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -948,46 +969,34 @@ class _LibraryShellState extends State<LibraryShell>
                     children: [
                       const CupertinoActivityIndicator(radius: 14),
 
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpace.x5),
 
                       Text(
                         '正在导入电子书',
 
-                        style: TextStyle(
-                          color: VellumTheme.inkOf(context),
-
-                          fontSize: 17,
-
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppText.sectionHeader(context.c.foreground),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpace.x2),
 
                       Text(
                         _importStage,
 
                         textAlign: TextAlign.center,
 
-                        style: TextStyle(
-                          color: VellumTheme.mutedOf(context),
-
-                          fontSize: 14,
+                        style: AppText.rowDescription(
+                          context.c.mutedForeground,
                         ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpace.x3),
 
                       Text(
                         '大型 MOBI 需要一点时间，请不要关闭应用。',
 
                         textAlign: TextAlign.center,
 
-                        style: TextStyle(
-                          color: VellumTheme.mutedOf(context),
-
-                          fontSize: 12,
-                        ),
+                        style: AppText.caption(context.c.mutedForeground),
                       ),
                     ],
                   ),
