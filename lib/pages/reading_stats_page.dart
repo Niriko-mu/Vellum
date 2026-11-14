@@ -157,7 +157,7 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
                           Text(
                             _stats.todaySeconds >= goalSeconds
                                 ? '今日目标已完成，继续保持。'
-                                : '再阅读 \${ReadingStatsService.formatDuration(goalSeconds - _stats.todaySeconds)} 达成今日目标。',
+                                : '再阅读 ${ReadingStatsService.formatDuration(goalSeconds - _stats.todaySeconds)} 达成今日目标。',
                             style: AppText.rowDescription(
                               colors.mutedForeground,
                             ),
@@ -216,7 +216,7 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
     if (day.day == DateTime.now().day && day.month == DateTime.now().month) {
       return '今';
     }
-    return '\${day.month}/\${day.day}';
+    return '${day.month}/${day.day}';
   }
 }
 

@@ -43,6 +43,9 @@ $rules = @(
   # 下面两条没有余量：基元之外不允许再出现第三种按钮或第三种列表行。
   @{ Name = 'CupertinoButton'; Pattern = 'CupertinoButton'; Baseline = 0 }
   @{ Name = 'CupertinoListTile'; Pattern = 'CupertinoListTile'; Baseline = 0 }
+  # 用户看得见的文字里不许出现未插值的占位符。
+  # 反斜杠转义的 \${...} 会原样显示成 "${...}"，格式化串没被翻译就是这个形状。
+  @{ Name = '转义掉的插值'; Pattern = '\\\$\{'; Baseline = 0 }
   # 图标只能走 AppIcons：它是唯一的字形来源，换字体是一处改动。
   @{ Name = 'CupertinoIcons'; Pattern = 'CupertinoIcons\.'; Baseline = 0 }
   # 弹窗只能走 AppDialog / AppToast：iOS 弹窗在 Android 上是另一套语言。
