@@ -19,6 +19,8 @@ import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
+import '../widgets/ui/app_dialog.dart';
+import '../widgets/ui/app_toast.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingEditorPage extends StatefulWidget {
@@ -355,42 +357,17 @@ class _WritingEditorPageState extends State<WritingEditorPage>
     }
   }
 
-  void _showToast(String message) {
-    showCupertinoDialog<void>(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('导出'),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('好'),
-          ),
-        ],
-      ),
-    );
-  }
+  void _showToast(String message) => showAppToast(context, message);
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirmed = await showAppConfirm(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('删除《${_document.displayTitle}》？'),
-        content: const Text('文稿将从本机删除，此操作不可恢复。'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+      title: '删除《${_document.displayTitle}》？',
+      message: '文稿将从本机删除，此操作不可恢复。',
+      confirmLabel: '删除',
+      destructive: true,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
     await _library.delete(_document.id);
     widget.onChanged?.call();
     if (mounted) Navigator.pop(context);

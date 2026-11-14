@@ -30,6 +30,7 @@ import 'backup_settings_page.dart';
 import 'tts_settings_page.dart';
 import 'update_sheet.dart';
 import '../theme/app_icons.dart';
+import '../widgets/ui/app_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback onCycleTheme;
@@ -287,42 +288,37 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _editUpdateRepo() async {
     final controller = TextEditingController(text: _updateRepo);
-    final next = await showCupertinoDialog<String>(
+    final next = await showAppDialog<String>(
       context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('更新仓库'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；留空则使用默认仓库。',
-            ),
-            const SizedBox(height: AppSpace.x3),
-            CupertinoTextField(
-              controller: controller,
-              placeholder: vellumDefaultRepository,
-              autofocus: true,
-              maxLines: 2,
-              minLines: 1,
-            ),
-          ],
+      title: '更新仓库',
+      message: '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；'
+          '留空则使用默认仓库。',
+      content: CupertinoTextField(
+        controller: controller,
+        placeholder: vellumDefaultRepository,
+        autofocus: true,
+        maxLines: 2,
+        minLines: 1,
+        cursorColor: context.c.primary,
+        style: AppText.rowTitle(context.c.foreground),
+        decoration: BoxDecoration(
+          color: context.c.secondary,
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(color: context.c.border),
         ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx, ''),
-            child: const Text('恢复默认'),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('保存'),
-          ),
-        ],
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.x3,
+          vertical: 10,
+        ),
       ),
+      actions: [
+        AppDialogAction<String>(label: '恢复默认', value: ''),
+        AppDialogAction<String>(
+          label: '保存',
+          value: controller.text.trim(),
+          isDefault: true,
+        ),
+      ],
     );
     controller.dispose();
     if (next == null || !mounted) return;
@@ -348,19 +344,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   /// In-place outcome feedback. A failure that the reader must act on uses
   /// [AppContentState] instead; an alert is reserved for a decision.
-  Future<void> _showNote(String message) => showCupertinoDialog<void>(
-    context: context,
-    builder: (context) => CupertinoAlertDialog(
-      title: const Text('提示'),
-      content: Text(message),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('好'),
-        ),
-      ],
-    ),
-  );
+  Future<void> _showNote(String message) =>
+      showAppNote(context: context, message: message);
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -373,25 +358,14 @@ class _SettingsPageState extends State<SettingsPage> {
     String message,
     Future<void> Function() action,
   ) async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirmed = await showAppConfirm(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('清理'),
-          ),
-        ],
-      ),
+      title: title,
+      message: message,
+      confirmLabel: '清理',
+      destructive: true,
     );
-    if (confirmed == true) {
+    if (confirmed) {
       await action();
       if (mounted) _refresh();
     }

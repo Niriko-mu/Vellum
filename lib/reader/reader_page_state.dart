@@ -29,6 +29,7 @@ import 'reader_page_state_pagination.dart';
 import 'reader_page_state_gestures.dart';
 import 'reader_page_state_surface_rendering.dart';
 import '../theme/app_motion.dart';
+import '../widgets/ui/app_dialog.dart';
 
 class ReaderPage extends StatefulWidget {
   final ImportedBook book;
@@ -597,23 +598,14 @@ class ReaderPageState extends State<ReaderPage>
     final preferences = await const TtsPreferencesStore().load();
     if (!mounted) return;
     if (!preferences.isConfigured) {
-      final go = await showCupertinoDialog<bool>(
+      final go = await showAppDialog<bool>(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('未配置朗读服务'),
-          content: const Text('先填写 TTS 接口地址和 API Key，之后就能从当前页开始听书。'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('去设置'),
-            ),
-          ],
-        ),
+        title: '未配置朗读服务',
+        message: '先填写 TTS 接口地址和 API Key，之后就能从当前页开始听书。',
+        cancelLabel: '取消',
+        actions: [
+          AppDialogAction<bool>(label: '去设置', value: true, isDefault: true),
+        ],
       );
       if (go != true || !mounted) return;
       await Navigator.of(
@@ -628,23 +620,18 @@ class ReaderPageState extends State<ReaderPage>
     var startParagraph = listenStartParagraph();
     var startSentence = 0;
     if (remembered != null && remembered.paragraphIndex != startParagraph) {
-      final resume = await showCupertinoDialog<bool>(
+      final resume = await showAppDialog<bool>(
         context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('继续听书？'),
-          content: Text('上次听到第 ${remembered.paragraphIndex + 1} 段。'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('从本页开始'),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('继续上次'),
-            ),
-          ],
-        ),
+        title: '继续听书？',
+        message: '上次听到第 ${remembered.paragraphIndex + 1} 段。',
+        cancelLabel: '从本页开始',
+        actions: [
+          AppDialogAction<bool>(
+            label: '继续上次',
+            value: true,
+            isDefault: true,
+          ),
+        ],
       );
       if (!mounted) return;
       if (resume == true) {

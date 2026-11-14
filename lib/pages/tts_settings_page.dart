@@ -10,6 +10,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_section.dart';
+import '../widgets/ui/app_dialog.dart';
 
 /// Configuration page for the listen (听书) service.
 ///
@@ -103,19 +104,8 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
     }
   }
 
-  Future<void> _message(String text) => showCupertinoDialog<void>(
-    context: context,
-    builder: (context) => CupertinoAlertDialog(
-      title: const Text('朗读服务'),
-      content: Text(text),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('好'),
-        ),
-      ],
-    ),
-  );
+  Future<void> _message(String text) =>
+      showAppNote(context: context, title: '朗读服务', message: text);
 
   @override
   Widget build(BuildContext context) {

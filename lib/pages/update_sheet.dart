@@ -12,6 +12,7 @@ import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
+import '../widgets/ui/app_dialog.dart';
 
 /// Checks the release feed and, when a newer build exists, walks the user
 /// through picking an ABI variant and installing it.
@@ -52,19 +53,7 @@ Future<void> showUpdateMessage(
   BuildContext context,
   String message, {
   String title = '检查更新',
-}) => showCupertinoDialog<void>(
-  context: context,
-  builder: (context) => CupertinoAlertDialog(
-    title: Text(title),
-    content: Text(message),
-    actions: [
-      CupertinoDialogAction(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('好'),
-      ),
-    ],
-  ),
-);
+}) => showAppNote(context: context, title: title, message: message);
 
 bool _sheetOpen = false;
 
@@ -226,26 +215,15 @@ class _UpdateSheetState extends State<UpdateSheet> {
     }
   }
 
-  Future<bool?> _askForInstallPermission() => showCupertinoDialog<bool>(
+  Future<bool?> _askForInstallPermission() => showAppDialog<bool>(
     context: context,
-    builder: (context) => CupertinoAlertDialog(
-      title: const Text('需要安装权限'),
-      content: const Text('系统还没有允许 Vellum 安装应用。请在接下来的设置页里打开「允许来自此来源的应用」后返回重试。'),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('取消'),
-        ),
-        CupertinoDialogAction(
-          isDefaultAction: true,
-          onPressed: () async {
-            Navigator.pop(context, true);
-            await _installer.openInstallSettings();
-          },
-          child: const Text('去设置'),
-        ),
-      ],
-    ),
+    title: '需要安装权限',
+    message: '系统还没有允许 Vellum 安装应用。'
+        '请在接下来的设置页里打开「允许来自此来源的应用」后返回重试。',
+    cancelLabel: '取消',
+    actions: [
+      AppDialogAction<bool>(label: '去设置', value: true, isDefault: true),
+    ],
   );
 
   @override

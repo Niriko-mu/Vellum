@@ -9,6 +9,7 @@ import '../widgets/ui/app_pressable.dart';
 import '../widgets/ui/app_section.dart' show appHairline;
 import '../widgets/ui/app_sheet.dart';
 import '../theme/app_icons.dart';
+import '../widgets/ui/app_dialog.dart';
 
 class FontManagerSheet extends StatelessWidget {
   final List<InstalledFont> installedFonts;
@@ -80,26 +81,15 @@ class FontManagerSheet extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, String fontName) async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirmed = await showAppConfirm(
       context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('删除字体'),
-        content: Text('确定要删除 "\$fontName" 吗？'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+      title: '删除字体',
+      message: '删除后，正在用这款字体的书会回到系统字体。',
+      confirmLabel: '删除',
+      destructive: true,
     );
 
-    if (confirmed == true) {
+    if (confirmed) {
       await onDeleteFont(fontName);
       if (context.mounted) Navigator.pop(context);
     }

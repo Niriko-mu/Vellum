@@ -36,6 +36,7 @@ import 'theme/app_shape.dart';
 import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
 import 'theme/app_icons.dart';
+import 'widgets/ui/app_dialog.dart';
 
 final appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -153,19 +154,22 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
         barrierDismissible: false,
         builder: (_) => PopScope(
           canPop: false,
-          child: CupertinoAlertDialog(
-            title: const Text('正在导入字体'),
+          child: AppDialog(
+            title: '正在导入字体',
+            message: '导入完成后会告诉你结果。',
             content: ValueListenableBuilder<String>(
               valueListenable: progress,
-              builder: (_, value, _) => Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Column(
-                  children: [
-                    const CupertinoActivityIndicator(),
-                    const SizedBox(height: 12),
-                    Text(value),
-                  ],
-                ),
+              builder: (_, value, _) => Row(
+                children: [
+                  const CupertinoActivityIndicator(),
+                  const SizedBox(width: AppSpace.x3),
+                  Expanded(
+                    child: Text(
+                      value,
+                      style: AppText.rowDescription(context.c.mutedForeground),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -192,19 +196,15 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) => progress.dispose());
       _importingFonts = false;
     }
-    if (summary != null && mounted) {
-      await showCupertinoDialog<void>(
-        context: navigator!.context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('字体导入结果'),
-          content: SingleChildScrollView(child: Text(summary!)),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('完成'),
-            ),
-          ],
-        ),
+    // Every path through the try/catch above assigns a summary, so reaching
+    // here always has one to report; only a dismissed picker returns early.
+    final host = navigator ?? appNavigatorKey.currentState;
+    if (mounted && host != null) {
+      await showAppDialog<void>(
+        context: host.context,
+        title: '字体导入结果',
+        message: summary,
+        cancelLabel: '完成',
       );
     }
   }
@@ -633,23 +633,7 @@ class _LibraryShellState extends State<LibraryShell>
   }
 
   Future<void> _showError(String message, {String title = '无法导入'}) =>
-      showCupertinoDialog<void>(
-        context: context,
-
-        builder: (context) => CupertinoAlertDialog(
-          title: Text(title),
-
-          content: Text(message),
-
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context),
-
-              child: const Text('好'),
-            ),
-          ],
-        ),
-      );
+      showAppNote(context: context, title: title, message: message);
 
   Future<void> _activateReaderFont(String name) async {
     await widget.onActivateFont(name);
@@ -798,33 +782,15 @@ class _LibraryShellState extends State<LibraryShell>
   }
 
   Future<void> _deleteBook(ImportedBook book) async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirmed = await showAppConfirm(
       context: context,
-
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('删除这本书？'),
-
-        content: Text('《${book.title}》和它的阅读记录将被删除，此操作不可恢复。'),
-
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context, false),
-
-            child: const Text('取消'),
-          ),
-
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-
-            onPressed: () => Navigator.pop(context, true),
-
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+      title: '删除这本书？',
+      message: '《${book.title}》和它的阅读记录将被删除，此操作不可恢复。',
+      confirmLabel: '删除',
+      destructive: true,
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     setState(() => _books.remove(book));
 

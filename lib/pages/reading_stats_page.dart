@@ -12,6 +12,7 @@ import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_section.dart';
+import '../widgets/ui/app_dialog.dart';
 
 /// Settings → 阅读统计：今日/累计 + 每本书阅读时长.
 ///
@@ -61,25 +62,14 @@ class _ReadingStatsPageState extends State<ReadingStatsPage> {
   }
 
   Future<void> _confirmReset() async {
-    final ok = await showCupertinoDialog<bool>(
+    final ok = await showAppConfirm(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('重置阅读统计？'),
-        content: const Text('今日、累计和按书籍的阅读时长都会清零，此操作不可恢复。'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('重置'),
-          ),
-        ],
-      ),
+      title: '重置阅读统计？',
+      message: '今日、累计和按书籍的阅读时长都会清零，此操作不可恢复。',
+      confirmLabel: '重置',
+      destructive: true,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     await _statsService.reset();
     if (!mounted) return;
     await _reload();

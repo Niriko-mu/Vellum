@@ -41,6 +41,11 @@ $rules = @(
   @{ Name = 'CupertinoListTile'; Pattern = 'CupertinoListTile'; Baseline = 0 }
   # 图标只能走 AppIcons：它是唯一的字形来源，换字体是一处改动。
   @{ Name = 'CupertinoIcons'; Pattern = 'CupertinoIcons\.'; Baseline = 0 }
+  # 弹窗只能走 AppDialog / AppToast：iOS 弹窗在 Android 上是另一套语言。
+  # 白名单里允许 1 处 —— app_dialog.dart 的文档注释解释了为什么不用它。
+  @{ Name = 'iOS 弹窗'; Pattern = 'CupertinoAlertDialog|CupertinoDialogAction'; Baseline = 1; Files = @(
+      'widgets\ui\app_dialog.dart'
+    ) }
 )
 
 $failed = $false

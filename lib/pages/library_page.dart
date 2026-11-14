@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/book_importer.dart';
 import '../services/library_models.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_type.dart';
 import '../theme/app_shape.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_field.dart';
@@ -11,6 +12,7 @@ import '../widgets/ui/app_section.dart';
 import '../widgets/ui/app_sheet.dart';
 import 'book_widgets.dart';
 import '../theme/app_icons.dart';
+import '../widgets/ui/app_dialog.dart';
 
 class LibraryPage extends StatefulWidget {
   final List<ImportedBook> books;
@@ -127,27 +129,32 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _promptCreateFolder([ImportedBook? book]) async {
     final controller = TextEditingController();
-    final name = await showCupertinoDialog<String>(
+    final name = await showAppDialog<String>(
       context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('新建文件夹'),
-        content: CupertinoTextField(
-          controller: controller,
-          placeholder: '文件夹名称',
-          autofocus: true,
+      title: '新建文件夹',
+      content: CupertinoTextField(
+        controller: controller,
+        placeholder: '文件夹名称',
+        autofocus: true,
+        cursorColor: context.c.primary,
+        style: AppText.rowTitle(context.c.foreground),
+        decoration: BoxDecoration(
+          color: context.c.secondary,
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(color: context.c.border),
         ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('创建'),
-          ),
-        ],
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.x3,
+          vertical: 10,
+        ),
       ),
+      actions: [
+        AppDialogAction<String>(
+          label: '创建',
+          value: controller.text.trim(),
+          isDefault: true,
+        ),
+      ],
     );
     controller.dispose();
     if (name == null || name.isEmpty || !mounted) return;
@@ -213,23 +220,31 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _promptRenameFolder(LibraryFolder folder) async {
     final controller = TextEditingController(text: folder.name);
-    final name = await showCupertinoDialog<String>(
+    final name = await showAppDialog<String>(
       context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('重命名文件夹'),
-        content: CupertinoTextField(controller: controller, autofocus: true),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('保存'),
-          ),
-        ],
+      title: '重命名文件夹',
+      content: CupertinoTextField(
+        controller: controller,
+        autofocus: true,
+        cursorColor: context.c.primary,
+        style: AppText.rowTitle(context.c.foreground),
+        decoration: BoxDecoration(
+          color: context.c.secondary,
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(color: context.c.border),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.x3,
+          vertical: 10,
+        ),
       ),
+      actions: [
+        AppDialogAction<String>(
+          label: '保存',
+          value: controller.text.trim(),
+          isDefault: true,
+        ),
+      ],
     );
     controller.dispose();
     if (name == null || name.isEmpty) return;

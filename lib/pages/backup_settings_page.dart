@@ -12,6 +12,8 @@ import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_section.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
+import '../widgets/ui/app_dialog.dart';
+import '../widgets/ui/app_toast.dart';
 
 /// Local and object-storage backup settings for VELLUM. The page deliberately
 /// keeps cloud credentials in a separate collapsed section and never displays
@@ -79,30 +81,34 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
     String? placeholder,
   }) async {
     final controller = TextEditingController();
-    final result = await showCupertinoDialog<String?>(
+    final result = await showAppDialog<String>(
       context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: Text(title ?? (required ? '输入备份密码' : '设置备份密码')),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: CupertinoTextField(
-            controller: controller,
-            obscureText: true,
-            autofocus: true,
-            placeholder: placeholder ?? (required ? '解密密码' : '留空则不加密'),
-          ),
+      title: title ?? (required ? '输入备份密码' : '设置备份密码'),
+      message: required ? '这个备份是加密的，需要密码才能恢复。' : null,
+      content: CupertinoTextField(
+        controller: controller,
+        obscureText: true,
+        autofocus: true,
+        placeholder: placeholder ?? (required ? '解密密码' : '留空则不加密'),
+        cursorColor: context.c.primary,
+        style: AppText.rowTitle(context.c.foreground),
+        decoration: BoxDecoration(
+          color: context.c.secondary,
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(color: context.c.border),
         ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('继续'),
-          ),
-        ],
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.x3,
+          vertical: 10,
+        ),
       ),
+      actions: [
+        AppDialogAction<String>(
+          label: '继续',
+          value: controller.text,
+          isDefault: true,
+        ),
+      ],
     );
     controller.dispose();
     if (required && (result == null || result.isEmpty)) return null;
@@ -276,20 +282,11 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
     if (mounted) setState(() => _local = files);
   }
 
+  /// A backup result is an acknowledgement, not a decision: a modal alert for
+  /// "备份已创建" would make a run of actions a run of taps on 「好」.
   void _toast(String message) {
     if (!mounted) return;
-    showCupertinoDialog<void>(
-      context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('好'),
-          ),
-        ],
-      ),
-    );
+    showAppToast(context, message);
   }
 
   bool _ensureBackupSelection() {
