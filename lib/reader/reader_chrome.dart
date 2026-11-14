@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../theme/app_motion.dart';
 import '../theme/vellum_theme.dart';
 
 /// Fanqie top bar (alg.xml): **44dp**, back @16dp. Chapter/book label sits
@@ -49,9 +50,10 @@ class ReaderTopBar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.left,
                     style: TextStyle(
-                      color: ink.withValues(alpha: .72),
+                      color: VellumTheme.readerSecondaryInk(bg),
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
+                      height: 18 / 13,
                     ),
                   ),
                 ),
@@ -123,9 +125,9 @@ class ReaderStatusBar extends StatelessWidget {
                 Text(
                   pageLabel,
                   style: TextStyle(
-                    color: ink.withValues(alpha: .55),
-                    fontSize: 11,
-                    height: 1.2,
+                    color: VellumTheme.readerTertiaryInk(bg),
+                    fontSize: 13,
+                    height: 18 / 13,
                   ),
                 ),
               const Spacer(),
@@ -146,9 +148,9 @@ class ReaderStatusBar extends StatelessWidget {
                     Text(
                       batteryLabel,
                       style: TextStyle(
-                        color: ink.withValues(alpha: .55),
-                        fontSize: 11,
-                        height: 1.2,
+                        color: VellumTheme.readerTertiaryInk(bg),
+                        fontSize: 13,
+                        height: 18 / 13,
                       ),
                     ),
                   ],
@@ -176,7 +178,6 @@ class ReaderRunningHead extends StatelessWidget {
   Widget build(BuildContext context) {
     if (chapterLabel.isEmpty) return const SizedBox.shrink();
     final bg = surface ?? VellumTheme.readerChromeOf(context);
-    final ink = VellumTheme.readerChromeInk(bg);
     return SafeArea(
       bottom: false,
       child: Align(
@@ -188,9 +189,11 @@ class ReaderRunningHead extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: ink.withValues(alpha: .38),
-              fontSize: 11,
-              height: 1.2,
+              // Was alpha .38 — 2.64:1 on the white paper, below both the text
+              // and the graphics floor. Tertiary keeps it quiet but readable.
+              color: VellumTheme.readerTertiaryInk(bg),
+              fontSize: 13,
+              height: 18 / 13,
             ),
           ),
         ),
@@ -260,8 +263,8 @@ class BookmarkRibbon extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  curve: Curves.easeOutCubic,
+                  duration: motionDuration(context, AppMotion.fast),
+                  curve: AppMotion.settle,
                   width: pinned ? 28 : 22 + easedProgress * 3,
                   height: ribbonLength,
                   child: ClipPath(
@@ -273,9 +276,9 @@ class BookmarkRibbon extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 120),
+                            duration: motionDuration(context, AppMotion.fast),
                             transitionBuilder: (child, animation) =>
-                                ScaleTransition(scale: animation, child: child),
+                                FadeTransition(opacity: animation, child: child),
                             child: Icon(
                               armed || alreadyBookmarked || pinned
                                   ? CupertinoIcons.bookmark_fill
@@ -295,12 +298,12 @@ class BookmarkRibbon extends StatelessWidget {
                 if (showLabel) ...[
                   const SizedBox(height: 6),
                   AnimatedOpacity(
-                    duration: const Duration(milliseconds: 120),
-                    curve: Curves.easeOut,
+                    duration: motionDuration(context, AppMotion.fast),
+                    curve: AppMotion.settle,
                     opacity: visibleLabelOpacity,
                     child: AnimatedSlide(
-                      duration: const Duration(milliseconds: 120),
-                      curve: Curves.easeOutCubic,
+                      duration: motionDuration(context, AppMotion.fast),
+                      curve: AppMotion.settle,
                       offset: Offset(0, (1 - easedProgress) * -.18),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -320,8 +323,9 @@ class BookmarkRibbon extends StatelessWidget {
                           label,
                           style: TextStyle(
                             color: armed ? accent : ink,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

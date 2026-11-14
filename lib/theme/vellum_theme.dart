@@ -128,6 +128,16 @@ abstract final class VellumTheme {
     return ink.withValues(alpha: _isNightPaper(surface) ? .55 : .4);
   }
 
+  /// Secondary chrome text on a reader paper (top-bar title, panel labels).
+  ///
+  /// The four alphas below are pinned, not hand-tuned at each call site: the
+  /// page used to derive nine different translucencies on the fly, and two of
+  /// them fell under the contrast floor.
+  static Color readerSecondaryInk(Color surface) {
+    final ink = readerInkFor(surface);
+    return ink.withValues(alpha: _isNightPaper(surface) ? .82 : .78);
+  }
+
   /// Tertiary text and running heads on a reader paper.
   ///
   /// The alpha floor is pinned at .55 (4.65:1 on the white paper) instead of the

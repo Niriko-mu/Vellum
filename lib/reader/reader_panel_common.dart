@@ -20,7 +20,7 @@ class ReaderPanelTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(bg);
-    final muted = ink.withValues(alpha: .55);
+    final muted = VellumTheme.readerSecondaryInk(bg);
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
       child: Row(
@@ -41,6 +41,7 @@ class ReaderPanelTitle extends StatelessWidget {
             style: TextStyle(
               color: ink,
               fontSize: 16,
+              height: 24 / 16,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -73,7 +74,7 @@ class ReaderSettingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = surface ?? VellumTheme.readerChromeOf(context);
-    final muted = VellumTheme.readerChromeInk(bg).withValues(alpha: .55);
+    final muted = VellumTheme.readerSecondaryInk(bg);
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
       child: ConstrainedBox(
@@ -83,7 +84,10 @@ class ReaderSettingRow extends StatelessWidget {
           children: [
             SizedBox(
               width: 56,
-              child: Text(label, style: TextStyle(color: muted, fontSize: 12)),
+              child: Text(
+                label,
+                style: TextStyle(color: muted, fontSize: 13, height: 18 / 13),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(child: child),
