@@ -11,10 +11,10 @@ import '../services/font_registry.dart';
 import '../services/font_storage.dart';
 import '../services/library_models.dart';
 import '../services/writing_library.dart';
+import '../theme/app_colors.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/markdown_preview.dart';
 import 'writing_typography_sheet.dart';
-import 'writing_style.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingEditorPage extends StatefulWidget {
@@ -411,7 +411,7 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
     final muted = VellumTheme.mutedOf(context);
     final ink = VellumTheme.inkOf(context);
     final accent = VellumTheme.accentOf(context);
-    final paper = WritingStyle.paper(context);
+    final paper = context.c.backgroundSubtle;
     final previewDoc = _document.copyWith(
       title: _titleController.text,
       body: _bodyController.text,
@@ -571,10 +571,8 @@ class _WritingEditorPageState extends State<WritingEditorPage> {
                         const SizedBox(width: 16),
                         CupertinoSlidingSegmentedControl<WritingFormat>(
                           groupValue: _format,
-                          backgroundColor: WritingStyle.background(context),
-                          thumbColor: WritingStyle.isDark(context)
-                              ? WritingStyle.field(context)
-                              : CupertinoColors.white,
+                          backgroundColor: context.c.secondary,
+                          thumbColor: context.c.card,
                           children: {
                             for (final format in WritingFormat.values)
                               format: Padding(

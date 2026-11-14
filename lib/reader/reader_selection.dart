@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/notes_library.dart';
 import '../util/text_slices.dart' show safeSubstring, buildBingSearchUri;
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 export '../util/text_slices.dart' show buildBingSearchUri;
 
@@ -245,13 +246,13 @@ class NoteSheetBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xff2c2c2e) : const Color(0xfff7f7f7);
-    final quoteBg = isDark ? const Color(0xff3a3a3c) : const Color(0xffe9e9ec);
-    final ink = isDark ? const Color(0xfff2f2f7) : const Color(0xff1c1c1e);
-    final muted = isDark ? const Color(0xff98989f) : const Color(0xff6c6c70);
-    final fieldBg = isDark ? const Color(0xff1c1c1e) : CupertinoColors.white;
-    final fieldInk = isDark ? const Color(0xfff2f2f7) : const Color(0xff1c1c1e);
+    final colors = context.c;
+    final bg = colors.card;
+    final quoteBg = colors.secondary;
+    final ink = colors.foreground;
+    final muted = colors.mutedForeground;
+    final fieldBg = colors.secondary;
+    final fieldInk = colors.foreground;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
@@ -353,10 +354,11 @@ Future<void> showParagraphNotesSheet(
     context: context,
     builder: (ctx) {
       final isDark = CupertinoTheme.of(ctx).brightness == Brightness.dark;
+    final colors = context.c;
       final bg = isDark ? const Color(0xff2c2c2e) : const Color(0xfff7f7f7);
-      final ink = isDark ? const Color(0xfff2f2f7) : const Color(0xff1c1c1e);
-      final muted = isDark ? const Color(0xff98989f) : const Color(0xff6c6c70);
-      final tileBg = isDark ? const Color(0xff3a3a3c) : CupertinoColors.white;
+      final ink = colors.foreground;
+      final muted = colors.mutedForeground;
+      final tileBg = colors.card;
       return StatefulBuilder(
         builder: (ctx, setLocal) {
           return SafeArea(
