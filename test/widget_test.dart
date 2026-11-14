@@ -22,7 +22,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const VellumApp());
 
-    expect(find.text('书库是空的'), findsOneWidget);
+    expect(find.text('书房还没有书'), findsOneWidget);
     expect(find.text('导入电子书'), findsOneWidget);
     expect(find.text('晚上好，读者'), findsNothing);
     expect(find.text('阅读偏好'), findsNothing);
@@ -160,11 +160,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('阅读数据'), findsOneWidget);
+    // The grouped rows are taller than the old list tiles, so the later
+    // sections sit below the fold and are built as they scroll in.
+    await tester.scrollUntilVisible(find.text('阅读数据'), 200);
     expect(find.text('阅读统计'), findsOneWidget);
 
     await tester.scrollUntilVisible(find.text('存储管理'), 200);
-    expect(find.text('存储管理'), findsOneWidget);
     expect(find.text('占用空间'), findsOneWidget);
     expect(find.text('清空书库'), findsOneWidget);
     expect(find.text('清除阅读记录'), findsOneWidget);

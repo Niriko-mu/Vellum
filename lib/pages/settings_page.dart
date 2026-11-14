@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -13,7 +13,11 @@ import '../services/notes_import.dart';
 import '../services/reading_stats.dart';
 import '../services/vellum_update_service.dart';
 
-import '../theme/vellum_theme.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_shape.dart';
+import '../widgets/ui/app_controls.dart';
+import '../widgets/ui/app_page.dart';
+import '../widgets/ui/app_section.dart';
 
 import 'font_manager_sheet.dart';
 import 'notes_import_sheet.dart';
@@ -48,7 +52,6 @@ class SettingsPage extends StatefulWidget {
 
   final Future<void> Function({
     required bool useForUi,
-
     required bool useForContent,
   })
   onFontUsageChanged;
@@ -65,33 +68,19 @@ class SettingsPage extends StatefulWidget {
   const SettingsPage({
     required this.onCycleTheme,
     required this.themeModeLabel,
-
     required this.isDark,
-
     required this.installedFonts,
-
     required this.activeFontName,
-
     required this.useFontForUi,
-
     required this.useFontForContent,
-
     required this.onImportFonts,
-
     required this.onActivateFont,
-
     required this.onDeleteFont,
-
     required this.onFontUsageChanged,
-
     required this.storageUsage,
-
     required this.onClearBooks,
-
     required this.onClearReadingStates,
-
     this.availableBooks = const [],
-
     super.key,
   });
 
@@ -151,14 +140,14 @@ class _SettingsPageState extends State<SettingsPage> {
       final notes = await notesLibrary.load();
       if (!mounted) return;
       if (notes.isEmpty) {
-        await _showUpdateDialog('暂无阅读笔记。长按正文选中文字后即可添加。');
+        await _showNote('暂无阅读笔记。长按正文选中文字后即可添加。');
         return;
       }
       final bytes = Uint8List.fromList(
         utf8.encode(
-          const JsonEncoder.withIndent(
-            '  ',
-          ).convert([for (final n in notes) n.toJson()]),
+          const JsonEncoder.withIndent('  ').convert([
+            for (final n in notes) n.toJson(),
+          ]),
         ),
       );
       final suggested =
@@ -176,12 +165,12 @@ class _SettingsPageState extends State<SettingsPage> {
         final file = File(path.endsWith('.json') ? path : '$path.json');
         await notesLibrary.exportTo(file.path);
         if (!mounted) return;
-        await _showUpdateDialog('已导出 ${notes.length} 条笔记到\n${file.path}');
+        await _showNote('已导出 ${notes.length} 条笔记到\n${file.path}');
       } else {
-        await _showUpdateDialog('已导出 ${notes.length} 条笔记');
+        await _showNote('已导出 ${notes.length} 条笔记');
       }
     } catch (error) {
-      if (mounted) await _showUpdateDialog('导出笔记失败：$error');
+      if (mounted) await _showNote('导出笔记失败：$error');
     }
   }
 
@@ -232,15 +221,13 @@ class _SettingsPageState extends State<SettingsPage> {
       }
       if (!mounted) return;
       if (content.trim().isEmpty) {
-        await _showUpdateDialog('这个文件是空的，或者无法读取。');
+        await _showNote('这个文件是空的，或者无法读取。');
         return;
       }
 
       final import = parseNotesFile(content: content, fileName: file.name);
       if (import.isEmpty) {
-        await _showUpdateDialog(
-          import.warning.isEmpty ? '没有在文件里找到笔记。' : import.warning,
-        );
+        await _showNote(import.warning.isEmpty ? '没有在文件里找到笔记。' : import.warning);
         return;
       }
 
@@ -269,30 +256,14 @@ class _SettingsPageState extends State<SettingsPage> {
         book: outcome.unassociated ? null : outcome.book,
       );
       if (!mounted) return;
-      await _showUpdateDialog(
+      await _showNote(
         '已导入 $saved 条笔记'
         '${outcome.unassociated ? '（未关联，可稍后再关联书籍）' : '到《${outcome.book!.title}》'}。',
       );
     } catch (error) {
-      if (mounted) await _showUpdateDialog('导入笔记失败：$error');
+      if (mounted) await _showNote('导入笔记失败：$error');
     }
   }
-
-  /// Constrains a tile's trailing info so it cannot push the row past the tile.
-  ///
-  /// `CupertinoListTile` lays `additionalInfo` out at its intrinsic width next to
-  /// the title, so a long value (「今日 0 秒 · 累计 0 秒」, 「JSON / 文本」) makes the
-  /// row wider than the tile on a narrow phone — a horizontal overflow stripe.
-  Widget _info(BuildContext context, Widget child) => ConstrainedBox(
-    constraints: BoxConstraints(
-      maxWidth: MediaQuery.sizeOf(context).width * .4,
-    ),
-    child: DefaultTextStyle.merge(
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      child: child,
-    ),
-  );
 
   Future<void> _loadUpdateRepo() async {
     final repo = await _library.loadUpdateRepository();
@@ -304,7 +275,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return normalized ?? vellumDefaultRepository;
   }
 
-  /// Compact form for list tiles: `Murchey/vellum` instead of `gitee.com/...`.
+  /// Compact form for list rows: \`Murchey/vellum\` instead of \`gitee.com/...\`.
   String get _shortUpdateRepoLabel {
     final full = _updateRepoLabel;
     final hostEnd = full.indexOf('/');
@@ -324,7 +295,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const Text(
               '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；留空则使用默认仓库。',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.x3),
             CupertinoTextField(
               controller: controller,
               placeholder: vellumDefaultRepository,
@@ -354,7 +325,7 @@ class _SettingsPageState extends State<SettingsPage> {
     controller.dispose();
     if (next == null || !mounted) return;
     if (next.isNotEmpty && normalizeUpdateRepository(next) == null) {
-      await _showUpdateDialog('格式无效，请填写 owner/repo 或完整 GitHub 地址。');
+      await _showNote('格式无效，请填写 owner/repo 或完整 GitHub 地址。');
       return;
     }
     await _library.saveUpdateRepository(next);
@@ -373,18 +344,16 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future<void> _showUpdateDialog(String message) => showCupertinoDialog<void>(
+  /// In-place outcome feedback. A failure that the reader must act on uses
+  /// [AppContentState] instead; an alert is reserved for a decision.
+  Future<void> _showNote(String message) => showCupertinoDialog<void>(
     context: context,
-
     builder: (context) => CupertinoAlertDialog(
-      title: const Text('检查更新'),
-
+      title: const Text('提示'),
       content: Text(message),
-
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context),
-
           child: const Text('好'),
         ),
       ],
@@ -393,389 +362,237 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
-
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   Future<void> _confirm(
     String title,
-
     String message,
-
     Future<void> Function() action,
   ) async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
-
       builder: (context) => CupertinoAlertDialog(
         title: Text(title),
-
         content: Text(message),
-
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context, false),
-
             child: const Text('取消'),
           ),
-
           CupertinoDialogAction(
             isDestructiveAction: true,
-
             onPressed: () => Navigator.pop(context, true),
-
             child: const Text('清理'),
           ),
         ],
       ),
     );
-
     if (confirmed == true) {
       await action();
-
       if (mounted) _refresh();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final pageBackground = CupertinoTheme.of(context).scaffoldBackgroundColor;
-
-    final pressedBackground = VellumTheme.accentOf(
-      context,
-    ).withValues(alpha: .10);
-    final tileBackground = VellumTheme.cardOf(context);
-
+    final colors = context.c;
     final hasActiveFont = widget.activeFontName.isNotEmpty;
 
     return CupertinoPageScaffold(
-      backgroundColor: pageBackground,
-
+      backgroundColor: colors.background,
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: VellumTheme.shellOf(context),
+        backgroundColor: colors.background,
         border: null,
         middle: const Text('设置'),
       ),
-
-      child: MediaQuery.withClampedTextScaling(
-        minScaleFactor: 1,
-
-        maxScaleFactor: 1.2,
-
-        child: SafeArea(
-          child: ListView(
+      // No text-scale clamp: the grouped rows grow with the reader's system
+      // font size instead of pinning the page at 1.2.
+      child: AppPage(
+        sections: <Widget>[
+          const SizedBox(height: AppSpace.x4),
+          AppSection(
+            header: '外观',
             children: [
-              CupertinoListSection.insetGrouped(
-                backgroundColor: pageBackground,
-
-                header: const Text('外观'),
-
-                children: [
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: Icon(
-                      widget.isDark
-                          ? CupertinoIcons.sun_max
-                          : CupertinoIcons.moon,
-                    ),
-
-                    title: const Text('界面主题'),
-
-                    additionalInfo: Text(widget.themeModeLabel),
-
-                    onTap: widget.onCycleTheme,
-                  ),
-                ],
-              ),
-
-              CupertinoListSection.insetGrouped(
-                backgroundColor: pageBackground,
-
-                header: const Text('字体管理'),
-
-                children: [
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.plus_circle),
-
-                    title: const Text('导入字体'),
-
-                    additionalInfo: Text('${widget.installedFonts.length}'),
-
-                    onTap: widget.onImportFonts,
-                  ),
-
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.textformat),
-
-                    title: const Text('字体列表'),
-
-                    onTap: () => _showFontManager(context),
-                  ),
-
-                  if (hasActiveFont) ...[
-                    CupertinoListTile(
-                      backgroundColor: tileBackground,
-
-                      backgroundColorActivated: pressedBackground,
-
-                      title: const Text('用于界面字体'),
-
-                      trailing: CupertinoSwitch(
-                        value: widget.useFontForUi,
-
-                        onChanged: (value) => widget.onFontUsageChanged(
-                          useForUi: value,
-
-                          useForContent: widget.useFontForContent,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-
-              CupertinoListSection.insetGrouped(
-                backgroundColor: pageBackground,
-
-                header: const Text('工具'),
-
-                children: [
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.doc_text),
-
-                    title: const Text('MOBI / EPUB 转 TXT'),
-
-                    additionalInfo: const Text('独立页面'),
-
-                    onTap: () => Navigator.of(context).push(
-                      CupertinoPageRoute(
-                        builder: (_) => const EbookToTxtPage(),
-                      ),
-                    ),
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.lock_shield),
-                    title: const Text('数据备份'),
-                    additionalInfo: _info(context, const Text('本地/云端')),
-                    onTap: () => Navigator.of(context).push(
-                      CupertinoPageRoute(
-                        builder: (_) => const BackupSettingsPage(),
-                      ),
-                    ),
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.speaker_1),
-
-                    title: const Text('朗读服务（听书）'),
-
-                    additionalInfo: const Text('TTS 接口'),
-
-                    onTap: () => Navigator.of(context).push(
-                      CupertinoPageRoute(
-                        builder: (_) => const TtsSettingsPage(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              CupertinoListSection.insetGrouped(
-                backgroundColor: pageBackground,
-                header: const Text('阅读数据'),
-                children: [
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.chart_bar),
-                    title: const Text('阅读统计'),
-                    additionalInfo: _info(
-                      context,
-                      Text(
-                        '今日 ${ReadingStatsService.formatDuration(_readingStats.todaySeconds)}'
-                        ' · 累计 ${ReadingStatsService.formatDuration(_readingStats.totalSeconds)}',
-                      ),
-                    ),
-                    onTap: () async {
-                      await Navigator.of(context).push(
-                        CupertinoPageRoute(
-                          builder: (_) => const ReadingStatsPage(),
-                        ),
-                      );
-                      await _loadReadingStats();
-                    },
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.doc_text),
-                    title: const Text('导出阅读笔记'),
-                    additionalInfo: const Text('JSON'),
-                    onTap: _exportNotes,
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.tray_arrow_down),
-                    title: const Text('导入阅读笔记'),
-                    additionalInfo: _info(context, const Text('JSON / 文本')),
-                    onTap: _importNotes,
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.link),
-                    title: const Text(unmatchedBookTitle),
-                    additionalInfo: _info(
-                      context,
-                      Text(_orphanCount == 0 ? '无' : '$_orphanCount 条'),
-                    ),
-                    onTap: _openUnassociatedNotes,
-                  ),
-                ],
-              ),
-
-              CupertinoListSection.insetGrouped(
-                backgroundColor: pageBackground,
-
-                header: const Text('软件更新'),
-
-                children: [
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    leading: const Icon(CupertinoIcons.info_circle),
-                    title: const Text('当前版本'),
-                    additionalInfo: Text(
-                      _appVersion.isEmpty ? '—' : 'V$_appVersion',
-                    ),
-                    onTap: null,
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.arrow_down_circle),
-
-                    title: const Text('检查更新'),
-
-                    additionalInfo: Text(
-                      _checkingUpdate ? '检查中…' : _shortUpdateRepoLabel,
-                    ),
-
-                    onTap: _checkingUpdate ? null : _checkForUpdate,
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.gear_alt),
-                    title: const Text('更新仓库'),
-                    additionalInfo: const Text('自定义'),
-                    onTap: _editUpdateRepo,
-                  ),
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-                    backgroundColorActivated: pressedBackground,
-                    leading: const Icon(CupertinoIcons.arrow_2_circlepath),
-                    title: const Text('启动时自动检查更新'),
-                    additionalInfo: Text(_autoCheckUpdate ? '开' : '关'),
-                    trailing: CupertinoSwitch(
-                      value: _autoCheckUpdate,
-                      onChanged: _setAutoCheckUpdate,
-                    ),
-                    onTap: () => _setAutoCheckUpdate(!_autoCheckUpdate),
-                  ),
-                ],
-              ),
-
-              CupertinoListSection.insetGrouped(
-                backgroundColor: pageBackground,
-
-                header: const Text('存储管理'),
-
-                children: [
-                  FutureBuilder<StorageUsage>(
-                    future: _usage,
-
-                    builder: (context, snapshot) => CupertinoListTile(
-                      backgroundColor: tileBackground,
-
-                      backgroundColorActivated: pressedBackground,
-
-                      leading: const Icon(CupertinoIcons.chart_bar),
-
-                      title: const Text('占用空间'),
-
-                      additionalInfo: Text(
-                        snapshot.data == null
-                            ? '计算中…'
-                            : _formatBytes(snapshot.data!.totalBytes),
-                      ),
-                    ),
-                  ),
-
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.book),
-
-                    title: const Text('清空书库'),
-
-                    onTap: () => _confirm(
-                      '清空书库？',
-
-                      '将删除已导入的电子书和对应阅读位置，此操作不可恢复。',
-
-                      widget.onClearBooks,
-                    ),
-                  ),
-
-                  CupertinoListTile(
-                    backgroundColor: tileBackground,
-
-                    backgroundColorActivated: pressedBackground,
-
-                    leading: const Icon(CupertinoIcons.clock),
-
-                    title: const Text('清除阅读记录'),
-
-                    onTap: () => _confirm(
-                      '清除阅读记录？',
-
-                      '将重置所有书籍的字号、背景、阅读方式和阅读位置。',
-
-                      widget.onClearReadingStates,
-                    ),
-                  ),
-                ],
+              AppRow(
+                leading: Icon(
+                  widget.isDark ? CupertinoIcons.sun_max : CupertinoIcons.moon,
+                ),
+                label: '界面主题',
+                value: widget.themeModeLabel,
+                onTap: widget.onCycleTheme,
               ),
             ],
           ),
-        ),
+          AppSection(
+            header: '字体管理',
+            children: [
+              AppRow(
+                leading: const Icon(CupertinoIcons.plus_circle),
+                label: '导入字体',
+                value: '${widget.installedFonts.length}',
+                onTap: widget.onImportFonts,
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.textformat),
+                label: '字体列表',
+                showChevron: true,
+                onTap: () => _showFontManager(context),
+              ),
+              if (hasActiveFont)
+                AppRow(
+                  label: '用于界面字体',
+                  trailing: AppSwitch(
+                    value: widget.useFontForUi,
+                    semanticLabel: '用于界面字体',
+                    onChanged: (value) => widget.onFontUsageChanged(
+                      useForUi: value,
+                      useForContent: widget.useFontForContent,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          AppSection(
+            header: '工具',
+            children: [
+              AppRow(
+                leading: const Icon(CupertinoIcons.doc_text),
+                label: 'MOBI / EPUB 转 TXT',
+                showChevron: true,
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (_) => const EbookToTxtPage(),
+                  ),
+                ),
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.lock_shield),
+                label: '数据备份',
+                value: '本地/云端',
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (_) => const BackupSettingsPage(),
+                  ),
+                ),
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.speaker_1),
+                label: '朗读服务（听书）',
+                value: 'TTS 接口',
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (_) => const TtsSettingsPage(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          AppSection(
+            header: '阅读数据',
+            children: [
+              AppRow(
+                leading: const Icon(CupertinoIcons.chart_bar),
+                label: '阅读统计',
+                value:
+                    '今日 ${ReadingStatsService.formatDuration(_readingStats.todaySeconds)}'
+                    ' · 累计 ${ReadingStatsService.formatDuration(_readingStats.totalSeconds)}',
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (_) => const ReadingStatsPage(),
+                    ),
+                  );
+                  await _loadReadingStats();
+                },
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.doc_text),
+                label: '导出阅读笔记',
+                value: 'JSON',
+                onTap: _exportNotes,
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.tray_arrow_down),
+                label: '导入阅读笔记',
+                value: 'JSON / 文本',
+                onTap: _importNotes,
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.link),
+                label: unmatchedBookTitle,
+                value: _orphanCount == 0 ? '无' : '$_orphanCount 条',
+                onTap: _openUnassociatedNotes,
+              ),
+            ],
+          ),
+          AppSection(
+            header: '软件更新',
+            children: [
+              AppRow(
+                leading: const Icon(CupertinoIcons.info_circle),
+                label: '当前版本',
+                value: _appVersion.isEmpty ? '—' : 'V$_appVersion',
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.arrow_down_circle),
+                label: '检查更新',
+                value: _checkingUpdate ? '检查中…' : _shortUpdateRepoLabel,
+                onTap: _checkingUpdate ? null : _checkForUpdate,
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.gear_alt),
+                label: '更新仓库',
+                value: '自定义',
+                onTap: _editUpdateRepo,
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.arrow_2_circlepath),
+                label: '启动时自动检查更新',
+                trailing: AppSwitch(
+                  value: _autoCheckUpdate,
+                  semanticLabel: '启动时自动检查更新',
+                  onChanged: _setAutoCheckUpdate,
+                ),
+                onTap: () => _setAutoCheckUpdate(!_autoCheckUpdate),
+              ),
+            ],
+          ),
+          AppSection(
+            header: '存储管理',
+            children: [
+              FutureBuilder<StorageUsage>(
+                future: _usage,
+                builder: (context, snapshot) => AppRow(
+                  leading: const Icon(CupertinoIcons.chart_bar),
+                  label: '占用空间',
+                  value: snapshot.data == null
+                      ? '计算中…'
+                      : _formatBytes(snapshot.data!.totalBytes),
+                ),
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.book),
+                label: '清空书库',
+                onTap: () => _confirm(
+                  '清空书库？',
+                  '将删除已导入的电子书和对应阅读位置，此操作不可恢复。',
+                  widget.onClearBooks,
+                ),
+              ),
+              AppRow(
+                leading: const Icon(CupertinoIcons.clock),
+                label: '清除阅读记录',
+                onTap: () => _confirm(
+                  '清除阅读记录？',
+                  '将重置所有书籍的字号、背景、阅读方式和阅读位置。',
+                  widget.onClearReadingStates,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -783,19 +600,13 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showFontManager(BuildContext context) {
     showCupertinoModalPopup(
       context: context,
-
       builder: (ctx) => FontManagerSheet(
         installedFonts: widget.installedFonts,
-
         activeFontName: widget.activeFontName,
-
         onActivateFont: widget.onActivateFont,
-
         onDeleteFont: widget.onDeleteFont,
-
         onImportFonts: widget.onImportFonts,
       ),
     );
   }
 }
-

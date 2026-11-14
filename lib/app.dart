@@ -312,9 +312,20 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
                 : Brightness.dark,
           ),
         );
-        return CupertinoTheme(
-          data: VellumTheme.cupertinoOf(context),
-          child: child ?? const SizedBox.shrink(),
+        final family =
+            Theme.of(context).textTheme.bodyMedium?.fontFamily ??
+            VellumTheme.systemUiFontFamily;
+        return DefaultTextStyle(
+          // MaterialApp ships WidgetsApp with a deliberately loud red-on-yellow
+          // error text style as its default. Everything we have not styled
+          // explicitly must fall back to the row title instead.
+          style: AppText.rowTitle(
+            Theme.of(context).extension<AppColors>()!.foreground,
+          ).copyWith(fontFamily: family, decoration: TextDecoration.none),
+          child: CupertinoTheme(
+            data: VellumTheme.cupertinoOf(context),
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
       home: LibraryShell(

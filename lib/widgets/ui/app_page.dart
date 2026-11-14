@@ -21,7 +21,8 @@ AppWindowClass appWindowClassOf(BuildContext context) {
 /// applied twice.
 class AppPage extends StatelessWidget {
   const AppPage({
-    required this.child,
+    this.child,
+    this.sections,
     this.padding,
     this.maxWidth = AppSpace.contentMaxWidth,
     this.safeArea = true,
@@ -29,9 +30,16 @@ class AppPage extends StatelessWidget {
     this.scrollable = false,
     this.controller,
     super.key,
-  });
+  }) : assert(
+         child != null || sections != null,
+         'AppPage needs either a child or a list of sections',
+       );
 
-  final Widget child;
+  final Widget? child;
+
+  /// Page sections, stacked in order and scrollable. Use it for a page made of
+  /// grouped blocks; use [child] for anything else.
+  final List<Widget>? sections;
 
   /// Extra padding *inside* the gutter. Use it for section rhythm, never to
   /// re-create the gutter.
@@ -41,8 +49,7 @@ class AppPage extends StatelessWidget {
   final bool safeArea;
   final Color? background;
 
-  /// Wraps the child in a [ListView] so a page of sections scrolls and keeps its
-  /// offset; `List<Widget>` children are expected in that case.
+  /// Wraps the content in a scroll view so a long page keeps its offset.
   final bool scrollable;
   final ScrollController? controller;
 
@@ -50,28 +57,30 @@ class AppPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final insets = MediaQuery.viewPaddingOf(context);
 
-    Widget content = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.pageGutter).add(
-        EdgeInsets.only(bottom: insets.bottom + AppSpace.x6),
-      ),
-      child: child,
-    );
+    final bottom = insets.bottom + AppSpace.x6;
+    final gutter = padding == null
+        ? const EdgeInsets.symmetric(
+            horizontal: AppSpace.pageGutter,
+          ).add(EdgeInsets.only(bottom: bottom))
+        : const EdgeInsets.symmetric(horizontal: AppSpace.pageGutter)
+              .add(padding!)
+              .add(EdgeInsets.only(bottom: bottom));
 
-    if (scrollable && child is List) {
+    final Widget content;
+    if (sections != null) {
       content = ListView(
         controller: controller,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpace.pageGutter)
-            .add(EdgeInsets.only(bottom: insets.bottom + AppSpace.x6)),
-        children: [
-          for (final item in child as List) item,
-        ],
+        padding: gutter,
+        children: sections!,
       );
-    } else if (padding != null) {
-      content = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpace.pageGutter)
-            .add(padding!),
+    } else if (scrollable) {
+      content = SingleChildScrollView(
+        controller: controller,
+        padding: gutter,
         child: child,
       );
+    } else {
+      content = Padding(padding: gutter, child: child);
     }
 
     Widget body = Align(
