@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../theme/vellum_theme.dart';
 import 'reader_chrome.dart';
 import 'reader_controls.dart';
 import 'reader_font_picker.dart';
@@ -17,6 +16,7 @@ import 'reader_page_state_pagination.dart';
 import 'reader_page_state_gestures.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 Widget renderReaderPage(ReaderPageState state, BuildContext context) =>
     state.renderReaderPage(context);
@@ -145,7 +145,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                       // often armed selection first; hold longer before the
                       // gesture is treated as a select.
                       selectionHoldTimer = Timer(
-                        AppMotion.selectionHold,
+                        AppGestureWindow.selectionHold,
                         () {
                           pointerLooksLikeSelection = true;
                         },
@@ -269,7 +269,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                         padding: const EdgeInsets.only(top: 42),
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: VellumTheme.cardOf(context),
+                            color: context.c.card,
                             borderRadius: BorderRadius.circular(AppRadius.xl2),
                             boxShadow: const [
                               BoxShadow(
@@ -286,7 +286,7 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                             child: Text(
                               bookmarkNotice!,
                               style: TextStyle(
-                                color: VellumTheme.inkOf(context),
+                                color: context.c.foreground,
                                 fontSize: 13,
                               ),
                             ),

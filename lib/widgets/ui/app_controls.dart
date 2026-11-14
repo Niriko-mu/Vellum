@@ -48,6 +48,10 @@ class AppSwitch extends StatelessWidget {
         child: Opacity(
           opacity: enabled ? 1 : 0.4,
           child: AnimatedContainer(
+            // The track reports *state*, so it reads the control role, not the
+            // accent. Sharing one role is how every toggle ends up shouting the
+            // brand colour.
+            key: const ValueKey<String>('app-switch-track'),
             duration: motionDuration(context, AppMotion.fast),
             curve: AppMotion.settle,
             width: trackWidth,
@@ -55,7 +59,7 @@ class AppSwitch extends StatelessWidget {
             padding: const EdgeInsets.all(2),
             alignment: value ? Alignment.centerRight : Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: value ? colors.primary : colors.borderSelected,
+              color: value ? colors.controlActive : colors.borderSelected,
               borderRadius: AppRadius.pillAll,
             ),
             child: Container(
@@ -123,7 +127,11 @@ class AppButton extends StatelessWidget {
         colors.primaryForeground,
         null,
       ),
-      AppButtonVariant.tonal => (colors.secondary, colors.foreground, null),
+      AppButtonVariant.tonal => (
+        colors.secondary,
+        colors.secondaryForeground,
+        null,
+      ),
       AppButtonVariant.outline => (
         const Color(0x00000000),
         colors.foreground,
@@ -134,9 +142,11 @@ class AppButton extends StatelessWidget {
         colors.foreground,
         null,
       ),
+      // F1 keeps the destructive fill as the status red; the label reads its
+      // own role instead of borrowing the "chrome over content" constant.
       AppButtonVariant.destructive => (
         colors.destructive,
-        colors.constantWhite,
+        colors.destructiveForeground,
         null,
       ),
     };
@@ -193,6 +203,7 @@ class AppButton extends StatelessWidget {
         borderRadius: radius,
         semanticLabel: label,
         child: DecoratedBox(
+          key: const ValueKey<String>('app-button-surface'),
           decoration: BoxDecoration(color: fill, borderRadius: radius),
           child: content,
         ),

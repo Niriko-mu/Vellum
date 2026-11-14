@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Compact reading-time indicator shown while reader chrome is hidden.
 class ReaderReadingTimePill extends StatelessWidget {
@@ -34,7 +35,7 @@ class ReaderReadingTimePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ink = VellumTheme.readerChromeInk(surface);
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     return SafeArea(
       bottom: false,
       child: Align(

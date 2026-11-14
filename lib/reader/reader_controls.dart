@@ -9,6 +9,7 @@ import 'reader_models.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_colors.dart';
 
 /// Reader chrome overlay.
 ///
@@ -157,7 +158,7 @@ class ReaderMenu extends StatefulWidget {
 const Duration kReaderMenuAnimDuration = AppMotion.base;
 
 /// Short debounce so double-taps do not queue, but buttons still feel live.
-const Duration kReaderActionThrottle = AppMotion.actionThrottle;
+const Duration kReaderActionThrottle = AppGestureWindow.actionThrottle;
 
 enum _AbovePanel { none, catalog, settings }
 
@@ -510,7 +511,7 @@ class _ReaderMenuState extends State<ReaderMenu>
   /// Progress row: labels are tappable chapter steps + seek bar.
   Widget _progressRow(BuildContext context, Color themeBg) {
     final ink = VellumTheme.readerChromeInk(themeBg);
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     final hasChapters = widget.chapterCount > 1;
     final chapterMax = (widget.chapterCount - 1).clamp(0, 1 << 30);
     final chapterValue = widget.currentChapterIndex.clamp(0, chapterMax);
@@ -697,7 +698,7 @@ class _ReaderMenuState extends State<ReaderMenu>
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     final ink = VellumTheme.readerChromeInk(themeBg);
     // Same press feedback as every other tap target in the app: the cell fills,
     // the icon and label do not fade. These four are the most-tapped controls in

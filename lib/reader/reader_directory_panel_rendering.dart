@@ -6,6 +6,7 @@ import 'reader_directory_panel_state.dart';
 import 'reader_directory_panel_search_view.dart';
 import '../theme/app_shape.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../theme/app_colors.dart';
 
   /// Fanqie caloglayout structure: book name → tabs → divider → list.
   /// Parent supplies full band height; panel fills it.
@@ -16,7 +17,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
     final surface = widget.surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(surface);
     final muted = ink.withValues(alpha: .55);
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     final chapterEntries = entries;
     final emptyMessage = switch (tab) {
       0 => '这本书暂未识别出章节标题。',

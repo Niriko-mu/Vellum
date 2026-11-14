@@ -375,7 +375,7 @@ extension ReaderPageGestures on ReaderPageState {
     tapTimer?.cancel();
     pendingTapPos = upPosition;
     pendingTapAction = action;
-    tapTimer = Timer(AppMotion.doubleTapWindow, () {
+    tapTimer = Timer(AppGestureWindow.doubleTap, () {
       tapTimer = null;
       final deferred = pendingTapAction;
       pendingTapAction = null;

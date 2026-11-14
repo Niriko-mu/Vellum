@@ -52,12 +52,17 @@ abstract final class AppMotion {
     damping: 31.5,
   );
 
-  // ------------------------------------------------------ gesture windows --
-  // These are not animation timings. They answer "is this a tap, a long press,
-  // a double tap, a pull?" and must not be reused as durations above.
+}
 
+/// Gesture windows and debounces.
+///
+/// Kept apart from [AppMotion] on purpose. These answer "is this a tap, a long
+/// press, a double tap, a pull, a search?" — they never drive a frame. Mixing
+/// the two is how one screen ended up with thirteen millisecond values that
+/// looked like animation timings but were mostly gesture thresholds.
+abstract final class AppGestureWindow {
   /// Window in which a second tap means "double tap".
-  static const Duration doubleTapWindow = Duration(milliseconds: 200);
+  static const Duration doubleTap = Duration(milliseconds: 200);
 
   /// How long a press must hold before it counts as selecting text.
   static const Duration selectionHold = Duration(milliseconds: 750);

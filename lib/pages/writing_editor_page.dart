@@ -48,7 +48,7 @@ class _WritingEditorPageState extends State<WritingEditorPage>
 
   /// Typing pauses briefly before the disk write, so a burst of keystrokes is
   /// one save rather than one per character.
-  static const Duration _autoSaveDelay = AppMotion.autosaveDelay;
+  static const Duration _autoSaveDelay = AppGestureWindow.autosaveDelay;
   Timer? _autoSaveTimer;
   Timer? _novelFormatTimer;
   final _typoStore = const WritingTypographyStore();

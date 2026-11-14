@@ -29,10 +29,14 @@ abstract final class AppRadius {
   /// Menu panel, sheet top corner.
   static const double xl3 = 20.8;
 
-  /// The floating bottom dock. Rounder than a panel because the capsule is
-  /// thumb-height rather than content-height, and a shallow corner on a 64pt
-  /// capsule reads as a rectangle with clipped ends.
-  static const double dock = 26.8;
+  /// The floating bottom dock: 8 x 3.
+  ///
+  /// A declared extra step (see design-fidelity-overrides.md #5). The capsule
+  /// needs a rounder corner than [xl3] because it is thumb-height rather than
+  /// content-height — a shallower corner on a 64pt capsule reads as a rectangle
+  /// with clipped ends — but it still belongs to the base-8 scale rather than
+  /// sitting off it at 26.8.
+  static const double dock = 24;
 
   /// Chips, tags, switch, avatar.
   static const double pill = 9999;
@@ -68,6 +72,10 @@ abstract final class AppSpace {
 
   /// Page gutter, owned by the page shell. Rows carry no outer margin.
   static const double pageGutter = x4;
+
+  /// Gap between the navigation chrome and the first thing on the page,
+  /// owned by [AppPage] so a page never writes its own leading spacer.
+  static const double pageTopGap = x2;
 
   /// Gap between two grouped sections.
   static const double sectionGap = x6;

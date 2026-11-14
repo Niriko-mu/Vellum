@@ -39,7 +39,7 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
   /// Below this length the scan matches too much to be useful; CJK words are
   /// short, so two characters is the useful floor.
   static const int minQueryLength = 2;
-  static const Duration searchDebounceDelay = AppMotion.searchDebounce;
+  static const Duration searchDebounceDelay = AppGestureWindow.searchDebounce;
 
   /// How long after the field takes focus a spontaneous loss still counts as the
   /// keyboard failing to settle, rather than the reader dismissing it.
@@ -47,7 +47,7 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
 
   /// Delay before recovering from such a loss, so it cannot turn into a fight
   /// with a deliberate dismissal.
-  static const Duration _keyboardRefocusDelay = AppMotion.refocus;
+  static const Duration _keyboardRefocusDelay = AppGestureWindow.refocus;
   Timer? focusLossTimer;
   DateTime? searchOpenedAt;
 

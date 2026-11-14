@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../theme/vellum_theme.dart';
+import '../theme/app_colors.dart';
 class ReaderPanelTitle extends StatelessWidget {
   const ReaderPanelTitle({
     required this.icon,
@@ -34,7 +35,7 @@ class ReaderPanelTitle extends StatelessWidget {
               child: Icon(CupertinoIcons.chevron_back, size: 20, color: muted),
             )
           else
-            Icon(icon, size: 18, color: VellumTheme.readerAccentOf(context)),
+            Icon(icon, size: 18, color: context.c.primary),
           const SizedBox(width: 8),
           Text(
             title,

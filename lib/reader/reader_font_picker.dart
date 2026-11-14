@@ -4,6 +4,7 @@ import '../services/book_library.dart';
 import '../theme/vellum_theme.dart';
 import '../widgets/font_preview.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Fanqie-style font picker data: only the built-in system font is listed by
 /// default. User-imported fonts are appended from the real installed list;
@@ -63,7 +64,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
     final bg = widget.surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(bg);
     final muted = ink.withValues(alpha: .55);
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     final isDarkPaper = bg.computeLuminance() < .24;
     final selectedFill = accent.withValues(alpha: isDarkPaper ? .28 : .13);
     final selectedBorder = accent.withValues(alpha: isDarkPaper ? .92 : .78);

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vellum/reader/reader_control_panels.dart';
 import 'package:vellum/reader/reader_models.dart';
 import 'package:vellum/services/notes_library.dart';
+import 'package:vellum/theme/app_colors.dart';
 import 'package:vellum/theme/vellum_theme.dart';
 
 void main() {
@@ -57,7 +58,7 @@ void main() {
     expect(colorOf('第一章'), readInk);
     expect(colorOf('第二章'), readInk);
     // 第三章 contains current paragraph → accent + not grey.
-    expect(colorOf('第三章'), VellumTheme.readerAccentOf(ctx));
+    expect(colorOf('第三章'), ctx.c.primary);
     // 第四章 is after current → full ink (unread).
     expect(colorOf('第四章'), themeInk);
 
@@ -119,7 +120,7 @@ void main() {
     final ctx = tester.element(find.text('第二章'));
     expect(
       tester.widget<Text>(find.text('第二章')).style?.color,
-      VellumTheme.readerAccentOf(ctx),
+      ctx.c.primary,
     );
   });
 

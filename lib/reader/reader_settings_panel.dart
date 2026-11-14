@@ -10,6 +10,7 @@ import 'reader_models.dart';
 import 'reader_panel_common.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 class ReaderSettingsPanel extends StatefulWidget {
   const ReaderSettingsPanel({
     required this.fontSize,
@@ -441,7 +442,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     required ValueChanged<T> onChanged,
   }) {
     final ink = _ink;
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     final surface = _surface;
     return Container(
       height: 44,
@@ -546,7 +547,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _isSelectedColor(color.toARGB32())
-                              ? VellumTheme.readerAccentOf(context)
+                              ? context.c.primary
                               : _ink.withValues(alpha: .2),
                           width: _isSelectedColor(color.toARGB32()) ? 2 : 1,
                         ),
@@ -723,7 +724,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
             fontSize: 13,
             color: _followsSystem
                 ? _muted
-                : VellumTheme.readerAccentOf(context),
+                : context.c.primary,
           ),
         ),
       ),

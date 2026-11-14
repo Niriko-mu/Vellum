@@ -10,7 +10,6 @@ import '../theme/app_colors.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_shadow.dart';
 import '../theme/app_type.dart';
-import '../theme/vellum_theme.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_field.dart';
 import '../widgets/ui/app_pressable.dart';
@@ -177,9 +176,9 @@ class _WritingPageState extends State<WritingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final ink = VellumTheme.inkOf(context);
-    final muted = VellumTheme.mutedOf(context);
-    final accent = VellumTheme.accentOf(context);
+    final ink = context.c.foreground;
+    final muted = context.c.mutedForeground;
+    final accent = context.c.primary;
     final documents = _visibleDocuments;
     final scale = MediaQuery.textScalerOf(context).scale(1);
     final columns = MediaQuery.sizeOf(context).width >= 360 && scale <= 1.3

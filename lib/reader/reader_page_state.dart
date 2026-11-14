@@ -757,7 +757,7 @@ class ReaderPageState extends State<ReaderPage>
 
   void scheduleSave() {
     saveTimer?.cancel();
-    saveTimer = Timer(AppMotion.saveDebounce, saveState);
+    saveTimer = Timer(AppGestureWindow.saveDebounce, saveState);
   }
 
   /// Scroll notifications arrive every frame. Rebuilding the entire reader

@@ -5,6 +5,7 @@ import '../services/notes_library.dart';
 import '../theme/vellum_theme.dart';
 import 'reader_directory_panel_state.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 const double readerDirectorySearchListRoom = 96;
 
@@ -323,7 +324,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
     final surface = widget.surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(surface);
     final muted = ink.withValues(alpha: .55);
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     if (notes.isEmpty) {
       return Center(
         child: Padding(

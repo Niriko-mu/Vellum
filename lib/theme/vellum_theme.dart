@@ -28,29 +28,6 @@ abstract final class VellumTheme {
   static const accent = AppPalette.primary;
   static const darkAccent = AppPalette.primaryDark;
 
-  /// Former shell constants. Kept so pre-token call sites and tests keep a name
-  /// to migrate to; they are values from [AppPalette], never a second source.
-  @Deprecated('改用 context.c.background / AppColors')
-  static const shellPaper = AppPalette.canvas;
-  @Deprecated('改用 context.c.card / AppColors')
-  static const shellCard = AppPalette.card;
-  @Deprecated('改用 context.c.foreground / AppColors')
-  static const shellInk = AppPalette.foreground;
-  @Deprecated('改用 context.c.mutedForeground / AppColors')
-  static const shellMuted = AppPalette.mutedForeground;
-  @Deprecated('改用 context.c.border / AppColors')
-  static const shellLine = AppPalette.borderLight;
-  @Deprecated('改用 AppPalette.canvasDark / AppColors')
-  static const shellDarkPaper = AppPalette.canvasDark;
-  @Deprecated('改用 AppPalette.cardDark / AppColors')
-  static const shellDarkCard = AppPalette.cardDark;
-  @Deprecated('改用 AppPalette.foregroundDark / AppColors')
-  static const shellDarkInk = AppPalette.foregroundDark;
-  @Deprecated('改用 AppPalette.mutedForegroundDark / AppColors')
-  static const shellDarkMuted = AppPalette.mutedForegroundDark;
-  @Deprecated('改用 AppPalette.borderDark / AppColors')
-  static const shellDarkLine = AppPalette.borderDark;
-
   /// Comparison token for the extracted Fanqie resources; not used by chrome.
   static const readerAccent = AppPalette.fanqieReferenceAccent;
   static const readerAccentDark = Color(0xFFFFA177);
@@ -332,33 +309,10 @@ abstract final class VellumTheme {
     );
   }
 
-  // ------------------------------------------------------------------------
-  // Legacy accessors — deprecated, forwarded onto the token layer so the
-  // migration can land file by file. Removed once the last screen is ported.
-  // ------------------------------------------------------------------------
+  /// The semantic roles for the current theme.
+  ///
+  /// The per-role accessors that used to live here (`inkOf`, `mutedOf`, …) are
+  /// gone: every call site reads `context.c.<role>` directly, so a role has one
+  /// name instead of two.
   static AppColors colorsOf(BuildContext context) => context.c;
-
-  @Deprecated('改用 context.c.foreground')
-  static Color inkOf(BuildContext context) => context.c.foreground;
-
-  @Deprecated('改用 context.c.mutedForeground')
-  static Color mutedOf(BuildContext context) => context.c.mutedForeground;
-
-  @Deprecated('改用 context.c.primary')
-  static Color accentOf(BuildContext context) => context.c.primary;
-
-  @Deprecated('改用 context.c.border')
-  static Color lineOf(BuildContext context) => context.c.border;
-
-  @Deprecated('改用 context.c.card')
-  static Color cardOf(BuildContext context) => context.c.card;
-
-  @Deprecated('改用 context.c.background')
-  static Color shellOf(BuildContext context) => context.c.background;
-
-  @Deprecated('改用 context.c.secondary')
-  static Color softAccentOf(BuildContext context) => context.c.secondary;
-
-  @Deprecated('改用 context.c.primary')
-  static Color readerAccentOf(BuildContext context) => context.c.primary;
 }

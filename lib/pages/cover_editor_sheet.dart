@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../services/book_importer.dart';
-import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 
@@ -162,7 +161,7 @@ class _CoverEditorSheetState extends State<CoverEditorSheet> {
                     textAlignVertical: TextAlignVertical.top,
                     onChanged: (_) => setState(() {}),
                     decoration: BoxDecoration(
-                      color: VellumTheme.paper.withValues(
+                      color: context.c.secondary.withValues(
                         alpha:
                             CupertinoTheme.of(context).brightness ==
                                 Brightness.dark

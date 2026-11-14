@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../theme/app_motion.dart';
 import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Fanqie top bar (alg.xml): **44dp**, back @16dp. Chapter/book label sits
 /// **left-aligned** next to the back chevron (not centred).
@@ -69,7 +70,7 @@ class ReaderTopBar extends StatelessWidget {
                       : CupertinoIcons.bookmark,
                   size: 22,
                   color: bookmarked
-                      ? VellumTheme.readerAccentOf(context)
+                      ? context.c.primary
                       : ink.withValues(alpha: .85),
                 ),
               ),
@@ -235,7 +236,7 @@ class BookmarkRibbon extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = surface ?? VellumTheme.readerChromeOf(context);
     final ink = VellumTheme.readerChromeInk(bg);
-    final accent = VellumTheme.readerAccentOf(context);
+    final accent = context.c.primary;
     final normalizedProgress = progress.clamp(0.0, 1.2);
     final easedProgress = AppMotion.settle.transform(
       (normalizedProgress / 1.2).clamp(0.0, 1.0),

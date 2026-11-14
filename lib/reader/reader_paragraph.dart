@@ -4,11 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show SelectableText;
 
 import '../services/book_importer.dart';
-import '../theme/vellum_theme.dart';
 import '../util/text_slices.dart';
 import 'reader_markup.dart';
 import 'reader_models.dart';
 import '../theme/app_shape.dart';
+import '../theme/app_colors.dart';
 
 /// Renders one reader paragraph (body, heading, quote, list, image, link).
 class ReaderParagraph extends StatelessWidget {
@@ -110,7 +110,7 @@ class ReaderParagraph extends StatelessWidget {
         ? 1.0
         : ReaderMarkup.headingFontScale(effectiveHeading);
     final displayFontSize = fontSize * scale;
-    final bodyInk = target == null ? ink : VellumTheme.readerAccentOf(context);
+    final bodyInk = target == null ? ink : context.c.primary;
     final textStyle = TextStyle(
       fontFamily: fontFamily,
       fontSize: displayFontSize,
@@ -171,11 +171,11 @@ class ReaderParagraph extends StatelessWidget {
         // of it: the highlight must follow whatever the accent step becomes.
         highlightColor:
             highlightColor ??
-            VellumTheme.readerAccentOf(context).withValues(alpha: .22),
+            context.c.primary.withValues(alpha: .22),
         searchHighlight: searchHighlight,
         searchHighlightColor:
             searchHighlightColor ??
-            VellumTheme.readerAccentOf(context).withValues(alpha: .34),
+            context.c.primary.withValues(alpha: .34),
       ),
     ];
     final alignment = effectiveHeading != null
@@ -204,9 +204,7 @@ class ReaderParagraph extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
-                  color: VellumTheme.readerAccentOf(
-                    context,
-                  ).withValues(alpha: .7),
+                  color: context.c.primary.withValues(alpha: .7),
                   width: 3,
                 ),
               ),
@@ -477,7 +475,7 @@ class _NoteMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = VellumTheme.readerAccentOf(context).withValues(alpha: .88);
+    final bg = context.c.primary.withValues(alpha: .88);
     return Semantics(
       button: true,
       label: count == 1
