@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import 'ui/app_section.dart';
 import 'ui/app_controls.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_type.dart';
 
 /// Picks a book from the shelf, with "keep unassociated" always available.
 ///
@@ -87,11 +88,7 @@ class _BookPickerSheetState extends State<BookPickerSheet> {
                 children: [
                   Text(
                     widget.title,
-                    style: TextStyle(
-                      color: ink,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppText.sectionHeader(ink),
                   ),
                   const Spacer(),
                   AppTextButton(

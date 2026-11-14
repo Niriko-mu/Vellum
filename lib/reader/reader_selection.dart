@@ -6,6 +6,7 @@ import '../util/text_slices.dart' show safeSubstring, buildBingSearchUri;
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
+import '../theme/app_type.dart';
 
 export '../util/text_slices.dart' show buildBingSearchUri;
 
@@ -267,11 +268,7 @@ class NoteSheetBody extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: ink,
-            ),
+            style: AppText.sectionHeader(ink),
           ),
           const SizedBox(height: 10),
           Container(
@@ -295,7 +292,7 @@ class NoteSheetBody extends StatelessWidget {
             maxLines: 4,
             minLines: 2,
             padding: const EdgeInsets.all(10),
-            style: TextStyle(color: fieldInk, fontSize: 15, height: 1.35),
+            style: AppText.rowDescription(fieldInk).copyWith(height: 1.35),
             decoration: BoxDecoration(
               color: fieldBg,
               borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -383,11 +380,7 @@ Future<void> showParagraphNotesSheet(
                   Text(
                     '段落笔记',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: ink,
-                    ),
+                    style: AppText.sectionHeader(ink),
                   ),
                   const SizedBox(height: 12),
                   Flexible(

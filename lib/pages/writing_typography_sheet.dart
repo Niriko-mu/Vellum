@@ -122,11 +122,7 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
             Text(
               '排版',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: ink,
-              ),
+              style: AppText.sectionHeader(ink),
             ),
             const SizedBox(height: 4),
             Text(

@@ -13,6 +13,7 @@ import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
 import '../widgets/ui/app_dialog.dart';
+import '../theme/app_type.dart';
 
 /// Checks the release feed and, when a newer build exists, walks the user
 /// through picking an ABI variant and installing it.
@@ -257,11 +258,9 @@ class _UpdateSheetState extends State<UpdateSheet> {
             const SizedBox(height: 16),
             Text(
               '发现新版本 V${widget.release.latestVersion}',
-              style: TextStyle(
+              style: AppText.sectionHeader(ink).copyWith(
                 fontFamily: VellumTheme.fontFamily,
-                fontSize: 19,
-                fontWeight: FontWeight.w600,
-                color: ink,
+                fontSize: AppTypeStep.at(AppTypeStep.lg).size,
               ),
             ),
             const SizedBox(height: 4),
@@ -474,9 +473,9 @@ class _AssetRow extends StatelessWidget {
                 children: [
                   Text(
                     asset.label,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: context.c.foreground,
+                    style: AppText.rowDescription(
+                      context.c.foreground,
+                    ).copyWith(
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),

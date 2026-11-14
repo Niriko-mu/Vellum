@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_type.dart';
 
 /// Fanqie-style font picker data: only the built-in system font is listed by
 /// default. User-imported fonts are appended from the real installed list;
@@ -132,7 +133,7 @@ class _ReaderFontPickerSheetState extends State<ReaderFontPickerSheet> {
                       fontFamily: activeFamily.isEmpty
                           ? VellumTheme.systemUiFontFamily
                           : activeFamily,
-                      fontSize: 19,
+                      fontSize: AppTypeStep.at(AppTypeStep.lg).size,
                       height: 1.25,
                     ),
                   ),

@@ -16,6 +16,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_type.dart';
 
 enum _ConvertPhase { idle, pickingSource, parsing, pickingPath, done, failed }
 
@@ -218,12 +219,9 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: AppText.sectionHeader(ink).copyWith(
                         fontFamily: VellumTheme.fontFamily,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: ink,
-                        height: 1.25,
+                        fontSize: AppTypeStep.at(AppTypeStep.xxl).size,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -279,11 +277,7 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
         children: [
           Text(
             '选择一本电子书开始转换',
-            style: TextStyle(
-              color: ink,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppText.sectionHeader(ink),
           ),
           const SizedBox(height: 6),
           Text(

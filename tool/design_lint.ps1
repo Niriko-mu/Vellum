@@ -21,7 +21,9 @@ $rules = @(
       'widgets\ui\app_pressable.dart',
       'app.dart'
     ) }
-  @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 124 }
+  # 「有多少个字面量」拦不住漂移，「有没有阶梯外的字号」才拦得住。
+  # 阶梯外的字号由下面的阶梯检查逐条列出（硬失败，无基线）。
+  @{ Name = '字体字号字面量'; Pattern = 'fontSize: *[0-9]+'; Baseline = 109 }
   @{ Name = '圆角字面量'; Pattern = 'BorderRadius\.circular\(\s*[0-9]'; Baseline = 0 }
   @{ Name = '过重字重'; Pattern = 'FontWeight\.(w700|w800|w900|bold)'; Baseline = 5 }
   @{ Name = '阴影（token 之外）'; Pattern = 'BoxShadow\('; Baseline = 6; Files = @(
@@ -72,6 +74,30 @@ foreach ($rule in $rules) {
   $state = if ($hits -le $rule.Baseline) { 'OK  ' } else { 'FAIL' }
   if ($hits -gt $rule.Baseline) { $failed = $true }
   '{0} {1,-22} 当前 {2,3}  基线 {3,3}' -f $state, $rule.Name, $hits, $rule.Baseline
+}
+
+# 阶梯检查：字号必须来自 app_type.dart 的 13 级阶梯。
+# 这一条没有基线——出现阶梯外的字号就是发明了一个尺寸。
+$repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ladder = @(13, 14, 16, 18, 20, 24, 32, 40, 48, 60, 72, 96, 128)
+$offLadder = @()
+foreach ($file in (Get-ChildItem -Recurse -File -Filter *.dart $root)) {
+  $hits = Select-String -Path $file.FullName -Pattern 'fontSize: *([0-9]+)' -AllMatches -ErrorAction SilentlyContinue
+  foreach ($hit in $hits) {
+    foreach ($m in $hit.Matches) {
+      $size = [int]$m.Groups[1].Value
+      if ($ladder -notcontains $size) {
+        $rel = $file.FullName.Substring($repo.Length + 1)
+        $offLadder += ('{0}:{1}  fontSize: {2}' -f $rel, $hit.LineNumber, $size)
+      }
+    }
+  }
+}
+if ($offLadder.Count -gt 0) {
+  $failed = $true
+  Write-Output ''
+  Write-Output '阶梯外的字号（改用 AppText 角色或 AppTypeStep）：'
+  $offLadder | ForEach-Object { Write-Output ('  ' + $_) }
 }
 
 if ($failed) {

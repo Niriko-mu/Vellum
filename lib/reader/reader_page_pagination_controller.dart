@@ -28,7 +28,7 @@ class ReaderPaginationController {
   static const int maxBackwardLookbackParagraphs = 512;
 
   static const _initialLayout = PageLayoutConfig(
-    fontSize: 19,
+    fontSize: 18,
     lineSpacing: ReaderLineSpacing.standard,
     fontFamily: 'serif',
     fontWeight: ReaderFontWeight.regular,

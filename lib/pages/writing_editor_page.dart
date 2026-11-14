@@ -486,18 +486,13 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                 placeholder: '标题',
                 maxLines: 1,
                 textInputAction: TextInputAction.next,
-                style: TextStyle(
-                  color: ink,
-                  fontSize: 28,
+                style: AppText.pageTitle(ink).copyWith(
                   fontFamily: _typo.fontFamily,
-                  fontWeight: FontWeight.w600,
                   height: 1.4,
                 ),
-                placeholderStyle: TextStyle(
-                  color: muted.withValues(alpha: .65),
-                  fontSize: 28,
-                  fontWeight: FontWeight.w500,
-                ),
+                placeholderStyle: AppText.pageTitle(
+                  muted.withValues(alpha: .65),
+                ).copyWith(fontWeight: FontWeight.w500),
                 decoration: const BoxDecoration(),
                 padding: const EdgeInsets.symmetric(vertical: 8),
               ),

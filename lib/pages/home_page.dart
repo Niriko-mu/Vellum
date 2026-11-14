@@ -134,9 +134,8 @@ class _Wordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     'VELLUM',
-    style: AppText.sectionHeader(context.c.foreground).copyWith(
+    style: AppText.rowDescription(context.c.foreground).copyWith(
       letterSpacing: 2.2,
-      fontSize: 15,
       fontWeight: FontWeight.w600,
     ),
   );

@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../services/book_library.dart';
 import '../services/font_registry.dart';
+import '../theme/app_type.dart';
 
 /// Renders an imported font using the exact runtime family that is assigned
 /// when it is selected. The preview binds that family before loading finishes;
@@ -103,7 +104,7 @@ class _FontPreviewState extends State<FontPreview> {
             '永',
             style: TextStyle(
               fontFamily: widget.font.family,
-              fontSize: 23,
+              fontSize: AppTypeStep.at(AppTypeStep.xxl).size,
               color: color,
               height: 1,
             ),

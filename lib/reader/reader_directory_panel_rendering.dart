@@ -10,6 +10,7 @@ import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_type.dart';
 
 /// Fanqie caloglayout structure: book name → tabs → divider → list.
 /// Parent supplies full band height; panel fills it.
@@ -513,9 +514,7 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                           entry.value,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: titleColor,
-                            fontSize: 15,
+                          style: AppText.rowTitle(titleColor).copyWith(
                             fontWeight: isCurrent
                                 ? FontWeight.w600
                                 : FontWeight.w400,
