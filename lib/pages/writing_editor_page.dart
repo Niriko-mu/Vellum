@@ -553,6 +553,17 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                 duration: motionDuration(context, AppMotion.fast),
                 switchInCurve: AppMotion.settle,
                 switchOutCurve: AppMotion.dismissCurve,
+                // The default layout is a loose, centre-aligned Stack. A loose
+                // box lets the body field shrink-wrap its one line of
+                // placeholder, and the centre alignment then parks that line
+                // halfway down the page — which is exactly what "the draft
+                // starts in the middle" meant. Expanding gives both children
+                // the full body area, so the caret sits at the top where a
+                // blank page starts.
+                layoutBuilder: (currentChild, previousChildren) => Stack(
+                  fit: StackFit.expand,
+                  children: [...previousChildren, ?currentChild],
+                ),
                 child: _previewing
                     ? MarkdownPreview(
                         key: const ValueKey('preview'),

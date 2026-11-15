@@ -268,4 +268,44 @@ void main() {
     // A disabled switch keeps its callback but reports itself as not tappable.
     expect(novelSwitch.enabled, isFalse);
   });
+
+  testWidgets('the body starts at the top of the page, not halfway down', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: WritingEditorPage(
+          library: _MemoryWritingLibrary(),
+          document: WritingDocument(
+            id: 'w_blank',
+            title: '',
+            body: '',
+            format: WritingFormat.txt,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final page = tester.getSize(find.byType(WritingEditorPage));
+    final field = tester.getSize(find.byKey(const ValueKey('edit')));
+    // The body used to shrink-wrap its single line of placeholder inside
+    // AnimatedSwitcher's loose, centre-aligned Stack, which parked the draft
+    // halfway down the screen. It must claim the body area instead.
+    expect(
+      field.height,
+      greaterThan(page.height / 2),
+      reason: 'the body field must fill the page, not one line',
+    );
+
+    final placeholder = tester.getTopLeft(find.text('写下你的想法…'));
+    expect(
+      placeholder.dy,
+      lessThan(page.height * 0.35),
+      reason: 'a blank draft starts at the top, not in the middle',
+    );
+  });
 }
