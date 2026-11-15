@@ -37,6 +37,7 @@ import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
 import 'theme/app_icons.dart';
 import 'widgets/ui/app_dialog.dart';
+import 'widgets/ui/paper_route.dart';
 
 final appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -657,7 +658,9 @@ class _LibraryShellState extends State<LibraryShell>
     if (!mounted) return;
 
     await Navigator.of(context).push(
-      CupertinoPageRoute(
+      // The reader is the one destination that replaces the whole screen: it
+      // dissolves in instead of arriving as a finished slab (see PaperRoute).
+      PaperRoute<void>(
         builder: (_) => BookReadingHost(
           book: full,
           originalPath: hasOriginal ? originalPath : null,
