@@ -472,6 +472,10 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
     );
   }
 
+  /// Most turns one burst of taps may queue. Each turn is animated, so a few
+  /// in hand feels responsive; dozens in hand is a skipped chapter.
+  static const int _maxQueuedTurns = 3;
+
   void changePage(BuildContext context, int delta) {
     if (!pageController.hasClients) return;
     var totalPages = pageCount;
@@ -523,7 +527,14 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
 
     // Cover (and default): queue rapid taps instead of dropping them.
     if (coverAnim.isAnimating) {
-      pendingPageDelta += delta;
+      // Clamp the queue. Unbounded accumulation turns a burst of taps into one
+      // huge leap: the page-turn animation only covers a single page, so landing
+      // three pages away from where the gesture ended reads as a jump, not as
+      // the turns the reader asked for.
+      pendingPageDelta = (pendingPageDelta + delta).clamp(
+        -_maxQueuedTurns,
+        _maxQueuedTurns,
+      );
       return;
     }
     startCoverTurn(base, target);
