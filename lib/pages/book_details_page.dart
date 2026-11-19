@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/book_importer.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
@@ -311,10 +312,8 @@ class _ReadingProgress extends StatelessWidget {
           borderRadius: AppRadius.pillAll,
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
+            duration: motionDuration(context, AppMotion.slow),
+            curve: AppMotion.settle,
             builder: (_, value, _) => SizedBox(
               height: 4,
               child: DecoratedBox(

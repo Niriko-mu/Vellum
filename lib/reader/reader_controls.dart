@@ -375,83 +375,94 @@ class _ReaderMenuState extends State<ReaderMenu>
                 // stay in the tree to animate the outgoing surface. An empty
                 // child paints nothing and takes no taps.
                 Positioned(
-                    left: 0,
-                    right: 0,
-                    top: panelTop,
-                    bottom: chrome,
-                    child: AnimatedSwitcher(
-                      duration: AppMotion.base,
-                      reverseDuration: AppMotion.dismiss,
-                      switchInCurve: AppMotion.settle,
-                      switchOutCurve: AppMotion.dismissCurve,
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, .06),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
+                  left: 0,
+                  right: 0,
+                  top: panelTop,
+                  bottom: chrome,
+                  child: AnimatedSwitcher(
+                    // Reduced motion lands the panel immediately: a sheet that
+                    // is already open should not take a moment to arrive, and
+                    // the platform asked for no movement, not for a shorter one.
+                    duration: motionDuration(context, AppMotion.base),
+                    reverseDuration: motionDuration(context, AppMotion.dismiss),
+                    switchInCurve: AppMotion.settle,
+                    switchOutCurve: AppMotion.dismissCurve,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, .06),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
                       ),
-                      child: _panel == _AbovePanel.none
-                          ? const SizedBox.expand(
-                              key: ValueKey('reader-panel-none'),
-                            )
-                          : DecoratedBox(
-                              key: ValueKey(_panel),
-                      decoration: BoxDecoration(
-                        color: themeBg,
-                        border: Border(
-                          top: BorderSide(
-                            color: chromeInk.withValues(alpha: .08),
-                            width: 0.5,
-                          ),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.c.constantBlack.withValues(alpha: .10),
-                            blurRadius: 12,
-                            offset: const Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Grabber: tap or flick down closes the sheet only.
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: _closePanel,
-                            onVerticalDragEnd: (details) {
-                              if ((details.primaryVelocity ?? 0) > 280) {
-                                _closePanel();
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Center(
-                                child: Container(
-                                  width: 36,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: chromeInk.withValues(alpha: .22),
-                                    borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
-                                  ),
+                    ),
+                    child: _panel == _AbovePanel.none
+                        ? const SizedBox.expand(
+                            key: ValueKey('reader-panel-none'),
+                          )
+                        : DecoratedBox(
+                            key: ValueKey(_panel),
+                            decoration: BoxDecoration(
+                              color: themeBg,
+                              border: Border(
+                                top: BorderSide(
+                                  color: chromeInk.withValues(alpha: .08),
+                                  width: 0.5,
                                 ),
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: context.c.constantBlack.withValues(
+                                    alpha: .10,
+                                  ),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, -2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Grabber: tap or flick down closes the sheet only.
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: _closePanel,
+                                  onVerticalDragEnd: (details) {
+                                    if ((details.primaryVelocity ?? 0) > 280) {
+                                      _closePanel();
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: Center(
+                                      child: Container(
+                                        width: 36,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: chromeInk.withValues(
+                                            alpha: .22,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            AppRadius.hairlineXs,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _panel == _AbovePanel.catalog
+                                      ? _catalogPanel(context, themeBg)
+                                      : _settingsPanel(context, themeBg),
+                                ),
+                              ],
                             ),
                           ),
-                          Expanded(
-                            child: _panel == _AbovePanel.catalog
-                                ? _catalogPanel(context, themeBg)
-                                : _settingsPanel(context, themeBg),
-                          ),
-                        ],
-                      ),
-                            ),
-                    ),
                   ),
+                ),
 
                 if (chromeVisible && showChrome)
                   Positioned(
@@ -671,9 +682,7 @@ class _ReaderMenuState extends State<ReaderMenu>
               _actionItem(
                 context,
                 themeBg,
-                icon: widget.listening
-                    ? AppIcons.speaker2
-                    : AppIcons.speaker1,
+                icon: widget.listening ? AppIcons.speaker2 : AppIcons.speaker1,
                 label: widget.listening ? '听书中' : '听书',
                 selected: widget.listening,
                 onTap: widget.onListen!,

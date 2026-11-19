@@ -30,7 +30,10 @@ class _ShelfRevealScopeState extends State<ShelfRevealScope>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 520),
+    // The longest reveal in the app: an entire grid assembling, not one
+    // surface arriving. Still built from the vocabulary's slowest step so a
+    // future change to that step moves every reveal together.
+    duration: AppMotion.slow + AppMotion.fast,
     value: widget.enabled ? 0 : 1,
   );
 
