@@ -203,12 +203,24 @@ extension ReaderPageGestures on ReaderPageState {
   /// Release a finger-driven turn: finish past ~38% (or a fast flick),
   /// otherwise spring back. Always settles — never parks the overlay
   /// mid-screen.
+  /// How long after the last move a finger counts as stationary. A flick is a
+  /// release while still moving; a pause longer than this is a decision to stay.
+  static const double _dragVelocityWindow = .12;
+
   void endDragTurn() {
     if (!dragTurn) return;
     final from = dragFromPage;
     final to = dragToPage;
     final progress = dragProgress;
-    final velocityTravel = dragVelocity;
+    // Velocity is sampled per move event, so a finger that travelled fast and
+    // then stopped before lifting still reports the old speed. Trusting it turns
+    // the page under a reader who deliberately parked it. A pause longer than
+    // this window means the finger is stationary, whatever the last sample said.
+    final sinceMove =
+        (DateTime.now().microsecondsSinceEpoch - dragLastMicros) / 1e6;
+    final velocityTravel = sinceMove >= _dragVelocityWindow
+        ? 0.0
+        : dragVelocity;
     dragTurn = false;
     if (from == null || to == null) {
       cancelDragTurn();
