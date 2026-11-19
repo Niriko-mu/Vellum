@@ -19,10 +19,7 @@ void main() {
     title: '旅程之书',
     author: '某作者',
     format: BookFormat.txt,
-    paragraphs: List.generate(
-      120,
-      (i) => '第' + (i + 1).toString() + '段落正文内容，用来构成可阅读的正文。',
-    ),
+    paragraphs: List.generate(120, (i) => '第${i + 1}段落正文内容，用来构成可阅读的正文。'),
     tocEntries: const [
       BookTocEntry(title: '第一章 启程', paragraphIndex: 0),
       BookTocEntry(title: '第二章 山口', paragraphIndex: 40),

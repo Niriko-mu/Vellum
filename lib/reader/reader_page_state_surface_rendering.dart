@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'reader_ambient_chrome.dart';
 import 'reader_chrome.dart';
 import 'reader_controls.dart';
 import 'reader_font_picker.dart';
@@ -198,25 +199,34 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                     ),
                   ),
                 ),
-              // Fanqie BottomIndicator: page + battery only when chrome is hidden.
-              if (!showControls)
-                ReaderStatusBar(
+              // Ambient chrome: page number, running head and reading time
+              // belong to the paper while the menu is away. They leave as the
+              // bars arrive instead of vanishing between two frames.
+              ReaderAmbientChrome(
+                visible: !showControls,
+                alignTop: false,
+                child: ReaderStatusBar(
                   pageLabel: pageProgress,
                   batteryLabel: batteryText,
                   batteryLevel: batteryLevel < 0 ? null : batteryLevel,
                   surface: backgroundFor(context),
                 ),
-              if (!showControls)
-                ReaderRunningHead(
+              ),
+              ReaderAmbientChrome(
+                visible: !showControls,
+                child: ReaderRunningHead(
                   chapterLabel: chapterLabel,
                   surface: backgroundFor(context),
                 ),
-              if (!showControls)
-                ReaderReadingTimePill(
+              ),
+              ReaderAmbientChrome(
+                visible: !showControls,
+                child: ReaderReadingTimePill(
                   sessionSeconds: sessionSeconds,
                   todaySeconds: todaySeconds,
                   surface: backgroundFor(context),
                 ),
+              ),
               if (listening && !showControls)
                 TtsBar(
                   playing: ttsHandler?.isPlaying ?? false,
