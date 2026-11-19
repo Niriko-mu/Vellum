@@ -16,6 +16,7 @@ import '../widgets/ui/app_pressable.dart';
 import 'writing_editor_page.dart';
 import '../theme/app_icons.dart';
 import '../widgets/ui/app_dialog.dart';
+import '../widgets/ui/book_motion.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
 class WritingPage extends StatefulWidget {
@@ -82,8 +83,11 @@ class _WritingPageState extends State<WritingPage> {
   Future<void> _createDocument() async {
     final doc = await _library.create();
     if (!mounted) return;
+    // The same journey route the reading side uses: the editor is a full-screen
+    // paper surface arriving over the list, and it must keep the platform's
+    // interactive back gesture rather than replacing it.
     await Navigator.of(context, rootNavigator: true).push<void>(
-      CupertinoPageRoute(
+      BookJourneyRoute<void>(
         builder: (_) => WritingEditorPage(document: doc, onChanged: _reload),
       ),
     );
@@ -91,8 +95,11 @@ class _WritingPageState extends State<WritingPage> {
   }
 
   Future<void> _openDocument(WritingDocument doc) async {
+    // The same journey route the reading side uses: the editor is a full-screen
+    // paper surface arriving over the list, and it must keep the platform's
+    // interactive back gesture rather than replacing it.
     await Navigator.of(context, rootNavigator: true).push<void>(
-      CupertinoPageRoute(
+      BookJourneyRoute<void>(
         builder: (_) => WritingEditorPage(document: doc, onChanged: _reload),
       ),
     );
@@ -187,10 +194,7 @@ class _WritingPageState extends State<WritingPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '写作',
-                                style: AppText.pageTitle(ink),
-                              ),
+                              Text('写作', style: AppText.pageTitle(ink)),
                               const SizedBox(height: AppSpace.x1),
                               Text(
                                 '${_documents.length} 篇文稿',
@@ -301,7 +305,8 @@ class _WritingPageState extends State<WritingPage> {
               Positioned(
                 right: AppSpace.x6,
                 // Above the floating dock, not on top of it.
-                bottom: AppSpace.dockReserve(
+                bottom:
+                    AppSpace.dockReserve(
                       MediaQuery.viewPaddingOf(context).bottom,
                     ) +
                     AppSpace.x2,
@@ -321,7 +326,7 @@ class _WritingPageState extends State<WritingPage> {
                   ),
                 ),
               ),
-            ],
+          ],
         ),
       ),
     );
@@ -407,9 +412,7 @@ class _EmptyWritingState extends StatelessWidget {
       icon: AppIcons.docText,
       title: '开始写作',
       description: '文稿保存在本机，可随时继续书写。',
-      actions: [
-        AppButton(label: '新建文稿', pill: true, onPressed: onCreate),
-      ],
+      actions: [AppButton(label: '新建文稿', pill: true, onPressed: onCreate)],
     );
   }
 }
