@@ -10,6 +10,7 @@ import '../widgets/ui/app_field.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../widgets/ui/app_section.dart';
 import '../widgets/ui/app_sheet.dart';
+import '../widgets/ui/shelf_reveal.dart';
 import 'book_widgets.dart';
 import '../theme/app_icons.dart';
 import '../widgets/ui/app_dialog.dart';
@@ -383,39 +384,44 @@ class _LibraryPageState extends State<LibraryPage> {
                             : width < 1120
                             ? 5
                             : 6;
-                        return GridView.builder(
-                          padding: EdgeInsets.fromLTRB(
-                            AppSpace.pageGutter,
-                            AppSpace.x2,
-                            AppSpace.pageGutter,
-                            // The dock floats over the grid; without this the
-                            // last row is unreachable.
-                            AppSpace.dockReserve(
-                              MediaQuery.viewPaddingOf(context).bottom,
-                            ),
-                          ),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                crossAxisSpacing: width >= 820 ? 14 : 10,
-                                mainAxisSpacing: 16,
-                                // BookGridCard contains title/meta below its
-                                // cover, so give wider cards a little more
-                                // vertical room to avoid clipped metadata.
-                                childAspectRatio: width >= 820 ? .60 : .55,
+                        return ShelfRevealScope(
+                          child: GridView.builder(
+                            padding: EdgeInsets.fromLTRB(
+                              AppSpace.pageGutter,
+                              AppSpace.x2,
+                              AppSpace.pageGutter,
+                              // The dock floats over the grid; without this the
+                              // last row is unreachable.
+                              AppSpace.dockReserve(
+                                MediaQuery.viewPaddingOf(context).bottom,
                               ),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            final book = filtered[index];
-                            return BookGridCard(
-                              book: book,
-                              progress:
-                                  widget.progressById[book.storageId] ?? 0,
-                              onTap: () => widget.onOpen(book),
-                              onDelete: () => widget.onDelete(book),
-                              onLongPress: () => _showBookActions(book),
-                            );
-                          },
+                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  crossAxisSpacing: width >= 820 ? 14 : 10,
+                                  mainAxisSpacing: 16,
+                                  // BookGridCard contains title/meta below its
+                                  // cover, so give wider cards a little more
+                                  // vertical room to avoid clipped metadata.
+                                  childAspectRatio: width >= 820 ? .60 : .55,
+                                ),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final book = filtered[index];
+                              return ShelfRevealItem(
+                                index: index,
+                                child: BookGridCard(
+                                  book: book,
+                                  progress:
+                                      widget.progressById[book.storageId] ?? 0,
+                                  onTap: () => widget.onOpen(book),
+                                  onDelete: () => widget.onDelete(book),
+                                  onLongPress: () => _showBookActions(book),
+                                ),
+                              );
+                            },
+                          ),
                         );
                       },
                     ),
