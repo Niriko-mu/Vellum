@@ -7,6 +7,7 @@ import '../theme/app_shape.dart';
 import '../theme/app_type.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
+import '../widgets/ui/book_motion.dart';
 import '../theme/app_icons.dart';
 
 /// Destructive affordance shared by the grid cover and the list row.
@@ -75,9 +76,7 @@ class EmptyLibrary extends StatelessWidget {
       icon: AppIcons.book,
       title: '书房还没有书',
       description: '导入 EPUB、MOBI 或 TXT，开始你的私人书房。',
-      actions: [
-        AppButton(label: '导入电子书', pill: true, onPressed: onImport),
-      ],
+      actions: [AppButton(label: '导入电子书', pill: true, onPressed: onImport)],
     ),
   );
 }
@@ -119,71 +118,82 @@ class BookGridCard extends StatelessWidget {
                     onTap: onTap,
                     borderRadius: AppRadius.mdAll,
                     semanticLabel: '打开《${book.title}》',
-                    child: ClipRRect(
-                      borderRadius: AppRadius.mdAll,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          book.coverBytes == null
-                              ? DefaultCover(book: book)
-                              : Image.memory(
-                                  book.coverBytes!,
-                                  fit: BoxFit.cover,
-                                  cacheWidth: 640,
-                                  errorBuilder: (_, _, _) =>
-                                      DefaultCover(book: book),
-                                ),
-                          // Reading progress sits on the cover itself, so it is
-                          // chrome over uncontrolled content: constant colours
-                          // only, never a theme role.
-                          if (percent > 0)
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      colors.constantBlack.withValues(alpha: 0),
-                                      colors.constantBlack.withValues(
-                                        alpha: 0.55,
+                    child: Hero(
+                      // The grid cover flies to the details cover. Tagged by
+                      // storage id: two books with the same title must not
+                      // share a flight.
+                      tag: bookCoverHeroTag(book.storageId),
+                      child: ClipRRect(
+                        borderRadius: AppRadius.mdAll,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            book.coverBytes == null
+                                ? DefaultCover(book: book)
+                                : Image.memory(
+                                    book.coverBytes!,
+                                    fit: BoxFit.cover,
+                                    cacheWidth: 640,
+                                    errorBuilder: (_, _, _) =>
+                                        DefaultCover(book: book),
+                                  ),
+                            // Reading progress sits on the cover itself, so it is
+                            // chrome over uncontrolled content: constant colours
+                            // only, never a theme role.
+                            if (percent > 0)
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        colors.constantBlack.withValues(
+                                          alpha: 0,
+                                        ),
+                                        colors.constantBlack.withValues(
+                                          alpha: 0.55,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            AppRadius.hairlineXs,
+                                          ),
+                                          child: LinearProgressIndicator(
+                                            value: progress.clamp(0.0, 1.0),
+                                            minHeight: 3,
+                                            backgroundColor: colors
+                                                .constantWhite
+                                                .withValues(alpha: 0.25),
+                                            valueColor: AlwaysStoppedAnimation(
+                                              colors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '$percent%',
+                                        style: AppText.caption(
+                                          colors.constantWhite,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(AppRadius.hairlineXs),
-                                        child: LinearProgressIndicator(
-                                          value: progress.clamp(0.0, 1.0),
-                                          minHeight: 3,
-                                          backgroundColor: colors.constantWhite
-                                              .withValues(alpha: 0.25),
-                                          valueColor: AlwaysStoppedAnimation(
-                                            colors.primary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '$percent%',
-                                      style: AppText.caption(
-                                        colors.constantWhite,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
