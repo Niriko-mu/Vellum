@@ -19,12 +19,17 @@ class HomePage extends StatelessWidget {
   final ValueChanged<ImportedBook> onOpen;
   final ValueChanged<ImportedBook> onOpenDetails;
   final VoidCallback onImport;
+
+  /// Debug-only seeding hook; null in release builds.
+  final VoidCallback? onDebugSeed;
+
   const HomePage({
     required this.books,
     required this.onOpen,
     required this.onOpenDetails,
     required this.onImport,
     this.continueState,
+    this.onDebugSeed,
     super.key,
   });
 
@@ -70,7 +75,12 @@ class HomePage extends StatelessWidget {
         ),
       ),
       child: books.isEmpty
-          ? AppPage(child: EmptyLibrary(onImport: onImport))
+          ? AppPage(
+              child: EmptyLibrary(
+                onImport: onImport,
+                onDebugSeed: onDebugSeed,
+              ),
+            )
           // The home page assembles the same way the shelf does: one shared
           // clock, blocks arriving in order. Reusing the shelf's scope rather
           // than writing a second reveal keeps the two screens from drifting.

@@ -35,6 +35,9 @@ class LibraryPage extends StatefulWidget {
   /// one-tap behaviour can pass the same callback for both.
   final ValueChanged<ImportedBook>? onOpenDetails;
 
+  /// Debug-only seeding hook; null in release builds.
+  final VoidCallback? onDebugSeed;
+
   const LibraryPage({
     required this.books,
     required this.onOpen,
@@ -48,6 +51,7 @@ class LibraryPage extends StatefulWidget {
     this.onDeleteFolder,
     this.onRenameFolder,
     this.onOpenDetails,
+    this.onDebugSeed,
     super.key,
   });
 
@@ -344,7 +348,10 @@ class _LibraryPageState extends State<LibraryPage> {
             ],
             Expanded(
               child: showEmptyLibrary
-                  ? EmptyLibrary(onImport: widget.onImport)
+                  ? EmptyLibrary(
+                      onImport: widget.onImport,
+                      onDebugSeed: widget.onDebugSeed,
+                    )
                   : showEmptySearch
                   ? Center(
                       child: AppContentState(

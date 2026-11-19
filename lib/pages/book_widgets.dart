@@ -67,16 +67,39 @@ class LibraryDeleteButton extends StatelessWidget {
 
 class EmptyLibrary extends StatelessWidget {
   final VoidCallback onImport;
-  const EmptyLibrary({required this.onImport, super.key});
+
+  /// Debug-only escape hatch: seeds a book from the bundled fixture so the
+  /// reader can be exercised on a device without the system file picker. The
+  /// caller decides whether to pass it; this widget stays free of build-mode
+  /// logic of its own.
+  final VoidCallback? onDebugSeed;
+
+  const EmptyLibrary({required this.onImport, this.onDebugSeed, super.key});
 
   @override
   Widget build(BuildContext context) => Center(
-    child: AppContentState(
-      kind: AppContentStateKind.empty,
-      icon: AppIcons.book,
-      title: '书房还没有书',
-      description: '导入 EPUB、MOBI 或 TXT，开始你的私人书房。',
-      actions: [AppButton(label: '导入电子书', pill: true, onPressed: onImport)],
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppContentState(
+          kind: AppContentStateKind.empty,
+          icon: AppIcons.book,
+          title: '书房还没有书',
+          description: '导入 EPUB、MOBI 或 TXT，开始你的私人书房。',
+          actions: [
+            AppButton(label: '导入电子书', pill: true, onPressed: onImport),
+          ],
+        ),
+        if (onDebugSeed != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpace.x2),
+            child: AppTextButton(
+              key: const Key('debug-seed-book'),
+              label: '导入测试书（调试）',
+              onPressed: onDebugSeed,
+            ),
+          ),
+      ],
     ),
   );
 }

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle, Uint8List;
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart'
@@ -25,6 +26,7 @@ import 'pages/book_batch_import_page.dart';
 import 'services/book_importer.dart';
 
 import 'services/book_library.dart';
+import 'services/debug_book_seeder.dart';
 import 'services/font_registry.dart';
 import 'services/font_import_service.dart';
 import 'services/notes_import.dart';
@@ -643,6 +645,23 @@ class _LibraryShellState extends State<LibraryShell>
     await widget.onActivateFont(name);
   }
 
+  /// Debug builds only: seed a book from the bundled fixture, then refresh the
+  /// shelf. This exists so the reader's animations can be checked on a device
+  /// without the system file picker, which adb cannot drive.
+  Future<void> _seedDebugBook() async {
+    try {
+      final book = await DebugBookSeeder.seed();
+      if (!mounted) return;
+      await _loadLibrary();
+      if (!mounted) return;
+      setState(() => _visitedTabs.add(1));
+      _tab.value = 1;
+      await showAppNote(context: context, title: '已放入书库', message: book.title);
+    } catch (error) {
+      if (mounted) await _showError('$error', title: '调试导入失败');
+    }
+  }
+
   /// The shelf opens a book through its details page: the cover flies over
   /// (Hero, tagged by storage id), the shelf recedes, and reading stays one
   /// tap away. Metadata only — the body is not loaded until the reader opens.
@@ -906,6 +925,9 @@ class _LibraryShellState extends State<LibraryShell>
                                   onOpen: _openBook,
                                   onOpenDetails: _openBookDetails,
                                   onImport: _importBook,
+                                  onDebugSeed: kDebugMode
+                                      ? _seedDebugBook
+                                      : null,
                                 ),
                                 1 => LibraryPage(
                                   books: _books,
@@ -914,6 +936,9 @@ class _LibraryShellState extends State<LibraryShell>
                                   onOpen: _openBookDetails,
                                   onOpenDetails: _openBookDetails,
                                   onImport: _importBook,
+                                  onDebugSeed: kDebugMode
+                                      ? _seedDebugBook
+                                      : null,
                                   onDelete: _deleteBook,
                                   onEditCover: _editBookCover,
                                   onMoveToFolder: _moveBookToFolder,
