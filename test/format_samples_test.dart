@@ -14,7 +14,7 @@ void main() {
   const importer = BookImporter();
 
   ImportedBook parse(String name) {
-    final file = File('developDoc/samples/$name');
+    final file = File('test/fixtures/$name');
     expect(file.existsSync(), isTrue, reason: 'run the sample generator first');
     return importer.decode(
       filename: name,

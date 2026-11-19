@@ -4,7 +4,9 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 
 void main() {
-  final dir = Directory('developDoc/samples')..createSync(recursive: true);
+  // Writes the committed fixtures, so re-running regenerates exactly what the
+  // parser tests read rather than a parallel copy that could drift.
+  final dir = Directory('test/fixtures')..createSync(recursive: true);
   final archive = Archive()
     ..addFile(ArchiveFile.string('META-INF/container.xml',
         '<container><rootfiles><rootfile full-path="OPS/book.opf"/></rootfiles></container>'));
