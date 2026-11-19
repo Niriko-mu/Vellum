@@ -32,6 +32,15 @@ Future<Uint8List> _fixtureBytes(String asset) async {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  // The shelf on a developer's device is not empty, and an import that finds a
+  // matching id returns a blank shell instead of the book. Starting from a
+  // known-empty library makes the assertions below about the pipeline rather
+  // than about whatever was already installed.
+  setUp(() async {
+    const library = BookLibrary();
+    await library.saveIndex(const []);
+  });
+
   testWidgets('an EPUB imported on device lands on the shelf and opens', (
     tester,
   ) async {
