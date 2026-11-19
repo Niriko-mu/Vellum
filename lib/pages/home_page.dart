@@ -16,10 +16,12 @@ class HomePage extends StatelessWidget {
   final List<ImportedBook> books;
   final ReadingState? continueState;
   final ValueChanged<ImportedBook> onOpen;
+  final ValueChanged<ImportedBook> onOpenDetails;
   final VoidCallback onImport;
   const HomePage({
     required this.books,
     required this.onOpen,
+    required this.onOpenDetails,
     required this.onImport,
     this.continueState,
     super.key,
@@ -67,16 +69,11 @@ class HomePage extends StatelessWidget {
         ),
       ),
       child: books.isEmpty
-          ? AppPage(
-              child: EmptyLibrary(onImport: onImport),
-            )
+          ? AppPage(child: EmptyLibrary(onImport: onImport))
           : AppPage(
               reserveDock: true,
               sections: [
-                Text(
-                  '继续阅读',
-                  style: AppText.pageTitle(colors.foreground),
-                ),
+                Text('继续阅读', style: AppText.pageTitle(colors.foreground)),
                 const SizedBox(height: AppSpace.x4),
                 _ContinueCard(
                   book: continueBook!,
@@ -104,7 +101,7 @@ class HomePage extends StatelessWidget {
                               ),
                             BookRow(
                               book: books[i],
-                              onTap: () => onOpen(books[i]),
+                              onTap: () => onOpenDetails(books[i]),
                             ),
                           ],
                         ],
@@ -134,10 +131,9 @@ class _Wordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     'VELLUM',
-    style: AppText.rowDescription(context.c.foreground).copyWith(
-      letterSpacing: 2.2,
-      fontWeight: FontWeight.w600,
-    ),
+    style: AppText.rowDescription(
+      context.c.foreground,
+    ).copyWith(letterSpacing: 2.2, fontWeight: FontWeight.w600),
   );
 }
 
@@ -154,10 +150,7 @@ class _RecentHeader extends StatelessWidget {
       textBaseline: TextBaseline.alphabetic,
       children: [
         Expanded(
-          child: Text(
-            '最近加入',
-            style: AppText.sectionHeader(colors.foreground),
-          ),
+          child: Text('最近加入', style: AppText.sectionHeader(colors.foreground)),
         ),
         Text('$count 本', style: AppText.caption(colors.mutedForeground)),
       ],

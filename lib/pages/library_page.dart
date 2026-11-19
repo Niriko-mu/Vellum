@@ -29,6 +29,11 @@ class LibraryPage extends StatefulWidget {
   final Future<void> Function(String folderId)? onDeleteFolder;
   final Future<void> Function(String folderId, String name)? onRenameFolder;
 
+  /// Opens the book's details page (cover Hero + metadata) instead of the
+  /// reader directly. Distinct from [onOpen] so entries that keep the old
+  /// one-tap behaviour can pass the same callback for both.
+  final ValueChanged<ImportedBook>? onOpenDetails;
+
   const LibraryPage({
     required this.books,
     required this.onOpen,
@@ -41,6 +46,7 @@ class LibraryPage extends StatefulWidget {
     this.onCreateFolder,
     this.onDeleteFolder,
     this.onRenameFolder,
+    this.onOpenDetails,
     super.key,
   });
 
@@ -315,10 +321,7 @@ class _LibraryPageState extends State<LibraryPage> {
                           semanticLabel: '清除搜索',
                           child: const Padding(
                             padding: EdgeInsets.all(4),
-                            child: Icon(
-                              AppIcons.xmarkCircleFill,
-                              size: 16,
-                            ),
+                            child: Icon(AppIcons.xmarkCircleFill, size: 16),
                           ),
                         ),
                 ),
@@ -474,10 +477,7 @@ class _FolderPickerSheet extends StatelessWidget {
           child: Column(
             children: [
               if (onSelectAll != null)
-                AppRow(
-                  label: trailingAllLabel ?? '全部',
-                  onTap: onSelectAll!,
-                ),
+                AppRow(label: trailingAllLabel ?? '全部', onTap: onSelectAll!),
               if (extraActionLabel != null && onExtraAction != null)
                 AppRow(label: extraActionLabel!, onTap: onExtraAction!),
               for (final folder in folders)

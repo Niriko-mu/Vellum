@@ -9,6 +9,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart'
     show Colors, MaterialApp, Theme, ThemeMode;
 
+import 'pages/book_details_page.dart';
 import 'pages/cover_editor_sheet.dart';
 import 'pages/library_pages.dart';
 
@@ -32,6 +33,7 @@ import 'services/widget_shelf.dart';
 
 import 'theme/app_colors.dart';
 import 'widgets/ui/app_dock.dart';
+import 'widgets/ui/book_motion.dart';
 import 'theme/app_shape.dart';
 import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
@@ -640,6 +642,31 @@ class _LibraryShellState extends State<LibraryShell>
     await widget.onActivateFont(name);
   }
 
+  /// The shelf opens a book through its details page: the cover flies over
+  /// (Hero, tagged by storage id), the shelf recedes, and reading stays one
+  /// tap away. Metadata only — the body is not loaded until the reader opens.
+  Future<void> _openBookDetails(ImportedBook book) async {
+    await Navigator.of(context).push(
+      BookJourneyRoute<void>(
+        builder: (_) => BookDetailsPage(
+          book: book,
+          progress: _progressById[book.storageId] ?? 0,
+          onRead: () => _openBook(book),
+          onEditCover: () => _editBookCover(book),
+        ),
+      ),
+    );
+    // Returning from the reader via details: refresh what the page shows.
+    if (!mounted) return;
+    final latest = await _library.loadReadingState(book);
+    if (!mounted) return;
+    setState(() {
+      _continueState = latest;
+      _updateWidgetProgress(book, latest);
+    });
+    _queueWidgetShelfSync(currentBookId: book.storageId, immediate: true);
+  }
+
   Future<void> _openBook(ImportedBook book) async {
     final full = await _library.loadBookContent(book);
     final originalPath = book.format == BookFormat.epub
@@ -863,13 +890,15 @@ class _LibraryShellState extends State<LibraryShell>
                                 books: _books,
                                 continueState: _continueState,
                                 onOpen: _openBook,
+                                onOpenDetails: _openBookDetails,
                                 onImport: _importBook,
                               ),
                               1 => LibraryPage(
                                 books: _books,
                                 folders: _folders,
                                 progressById: _progressById,
-                                onOpen: _openBook,
+                                onOpen: _openBookDetails,
+                                onOpenDetails: _openBookDetails,
                                 onImport: _importBook,
                                 onDelete: _deleteBook,
                                 onEditCover: _editBookCover,
