@@ -33,6 +33,7 @@ import 'services/widget_shelf.dart';
 
 import 'theme/app_colors.dart';
 import 'widgets/ui/app_dock.dart';
+import 'widgets/ui/app_dock_auto_hide.dart';
 import 'widgets/ui/book_motion.dart';
 import 'theme/app_shape.dart';
 import 'theme/app_type.dart';
@@ -848,115 +849,115 @@ class _LibraryShellState extends State<LibraryShell>
       // content, which floated the dock up the screen instead of pinning it.
       fit: StackFit.expand,
       children: [
-        // A destination is built the first time it is opened and then stays
-        // mounted, so scroll offsets, open sheets and drafts survive a dock
-        // tap — but only the visible one is on stage. Offstage (rather than
+        // The dock and the page live in one wrapper so the dock can answer the
+        // page's scroll without any page knowing about it. A destination is
+        // built the first time it is opened and then stays mounted, so scroll
+        // offsets, open sheets and drafts survive a dock tap — but only the
+        // visible one is on stage. Offstage (rather than
         // IndexedStack) also keeps the hidden pages out of the hero and focus
         // trees: two CupertinoNavigationBars both "on stage" claim the same
         // default hero tag and break the push animation.
         ValueListenableBuilder<int>(
           valueListenable: _tab,
-          builder: (context, index, _) => Stack(
-            fit: StackFit.expand,
-            children: [
-              // A destination is built the first time it is opened and then
-              // stays mounted, so scroll offsets, open sheets and drafts
-              // survive a dock tap. Unvisited tabs are an empty box of the same
-              // size: identical layout, none of that page's startup work.
-              for (var i = 0; i < 4; i++)
-                if (!_visitedTabs.contains(i))
-                  const SizedBox.expand()
-                else
-                  // Only the visible destination is on stage: an offstage page
-                  // must not take taps (it does if it is a Stack child with no
-                  // hit-test guard) and must not join the hero or focus trees,
-                  // where two CupertinoNavigationBars claim the same default
-                  // hero tag and break the push animation.
-                  //
-                  // Each destination owns a Navigator, so a page opened from
-                  // 书库 keeps its back stack while the reader is on screen.
-                  Offstage(
-                    offstage: i != index,
-                    child: TickerMode(
-                      enabled: i == index,
-                      child: Navigator(
-                        key: _tabNavigators[i],
-                        onGenerateRoute: (settings) => PageRouteBuilder<void>(
-                          settings: settings,
-                          pageBuilder: (_, _, _) => KeyedSubtree(
-                            key: ValueKey<int>(i),
-                            child: switch (i) {
-                              0 => HomePage(
-                                books: _books,
-                                continueState: _continueState,
-                                onOpen: _openBook,
-                                onOpenDetails: _openBookDetails,
-                                onImport: _importBook,
-                              ),
-                              1 => LibraryPage(
-                                books: _books,
-                                folders: _folders,
-                                progressById: _progressById,
-                                onOpen: _openBookDetails,
-                                onOpenDetails: _openBookDetails,
-                                onImport: _importBook,
-                                onDelete: _deleteBook,
-                                onEditCover: _editBookCover,
-                                onMoveToFolder: _moveBookToFolder,
-                                onCreateFolder: _createFolder,
-                                onDeleteFolder: _deleteFolder,
-                                onRenameFolder: _renameFolder,
-                              ),
-                              2 => const WritingPage(),
-                              _ => SettingsPage(
-                                onCycleTheme: widget.onCycleTheme,
-                                themeModeLabel: widget.themeModeLabel,
-                                isDark: widget.isDark,
-                                installedFonts: widget.installedFonts,
-                                activeFontName: widget.activeFontName,
-                                useFontForUi: widget.useFontForUi,
-                                useFontForContent: widget.useFontForContent,
-                                onImportFonts: widget.onImportFonts,
-                                onActivateFont: widget.onActivateFont,
-                                onDeleteFont: widget.onDeleteFont,
-                                onFontUsageChanged: widget.onFontUsageChanged,
-                                storageUsage: _library.storageUsage,
-                                availableBooks: exportableBooks(_books),
-                                onClearBooks: () async {
-                                  await _library.clearBooks();
-                                  await _library.clearReadingStates();
-                                  if (mounted) {
-                                    setState(() => _books.clear());
-                                    _progressById.clear();
-                                    _widgetCurrentBookId = null;
-                                    _queueWidgetShelfSync(immediate: true);
-                                  }
-                                },
-                                onClearReadingStates:
-                                    _library.clearReadingStates,
-                              ),
-                            },
+          builder: (context, index, _) => AppDockAutoHide(
+            key: const Key('app-dock-shell'),
+            bottomInset: MediaQuery.viewPaddingOf(context).bottom,
+            dock: _FloatingDock(
+              tab: _tab,
+              bottomInset: MediaQuery.viewPaddingOf(context).bottom,
+              onOpen: (value) {
+                if (_visitedTabs.contains(value)) return;
+                setState(() => _visitedTabs.add(value));
+              },
+            ),
+            page: Stack(
+              fit: StackFit.expand,
+              children: [
+                // A destination is built the first time it is opened and then
+                // stays mounted, so scroll offsets, open sheets and drafts
+                // survive a dock tap. Unvisited tabs are an empty box of the same
+                // size: identical layout, none of that page's startup work.
+                for (var i = 0; i < 4; i++)
+                  if (!_visitedTabs.contains(i))
+                    const SizedBox.expand()
+                  else
+                    // Only the visible destination is on stage: an offstage page
+                    // must not take taps (it does if it is a Stack child with no
+                    // hit-test guard) and must not join the hero or focus trees,
+                    // where two CupertinoNavigationBars claim the same default
+                    // hero tag and break the push animation.
+                    //
+                    // Each destination owns a Navigator, so a page opened from
+                    // 书库 keeps its back stack while the reader is on screen.
+                    Offstage(
+                      offstage: i != index,
+                      child: TickerMode(
+                        enabled: i == index,
+                        child: Navigator(
+                          key: _tabNavigators[i],
+                          onGenerateRoute: (settings) => PageRouteBuilder<void>(
+                            settings: settings,
+                            pageBuilder: (_, _, _) => KeyedSubtree(
+                              key: ValueKey<int>(i),
+                              child: switch (i) {
+                                0 => HomePage(
+                                  books: _books,
+                                  continueState: _continueState,
+                                  onOpen: _openBook,
+                                  onOpenDetails: _openBookDetails,
+                                  onImport: _importBook,
+                                ),
+                                1 => LibraryPage(
+                                  books: _books,
+                                  folders: _folders,
+                                  progressById: _progressById,
+                                  onOpen: _openBookDetails,
+                                  onOpenDetails: _openBookDetails,
+                                  onImport: _importBook,
+                                  onDelete: _deleteBook,
+                                  onEditCover: _editBookCover,
+                                  onMoveToFolder: _moveBookToFolder,
+                                  onCreateFolder: _createFolder,
+                                  onDeleteFolder: _deleteFolder,
+                                  onRenameFolder: _renameFolder,
+                                ),
+                                2 => const WritingPage(),
+                                _ => SettingsPage(
+                                  onCycleTheme: widget.onCycleTheme,
+                                  themeModeLabel: widget.themeModeLabel,
+                                  isDark: widget.isDark,
+                                  installedFonts: widget.installedFonts,
+                                  activeFontName: widget.activeFontName,
+                                  useFontForUi: widget.useFontForUi,
+                                  useFontForContent: widget.useFontForContent,
+                                  onImportFonts: widget.onImportFonts,
+                                  onActivateFont: widget.onActivateFont,
+                                  onDeleteFont: widget.onDeleteFont,
+                                  onFontUsageChanged: widget.onFontUsageChanged,
+                                  storageUsage: _library.storageUsage,
+                                  availableBooks: exportableBooks(_books),
+                                  onClearBooks: () async {
+                                    await _library.clearBooks();
+                                    await _library.clearReadingStates();
+                                    if (mounted) {
+                                      setState(() => _books.clear());
+                                      _progressById.clear();
+                                      _widgetCurrentBookId = null;
+                                      _queueWidgetShelfSync(immediate: true);
+                                    }
+                                  },
+                                  onClearReadingStates:
+                                      _library.clearReadingStates,
+                                ),
+                              },
+                            ),
+                            transitionsBuilder: (_, _, _, child) => child,
                           ),
-                          transitionsBuilder: (_, _, _, child) => child,
                         ),
                       ),
                     ),
-                  ),
-            ],
-          ),
-        ),
-
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _FloatingDock(
-            tab: _tab,
-            bottomInset: MediaQuery.viewPaddingOf(context).bottom,
-            onOpen: (value) {
-              if (_visitedTabs.contains(value)) return;
-              setState(() => _visitedTabs.add(value));
-            },
+              ],
+            ),
           ),
         ),
 
