@@ -9,6 +9,7 @@ import '../theme/app_type.dart';
 import '../widgets/ui/app_page.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../widgets/ui/app_section.dart';
+import '../widgets/ui/shelf_reveal.dart';
 import 'book_widgets.dart';
 import '../theme/app_icons.dart';
 
@@ -70,54 +71,77 @@ class HomePage extends StatelessWidget {
       ),
       child: books.isEmpty
           ? AppPage(child: EmptyLibrary(onImport: onImport))
-          : AppPage(
-              reserveDock: true,
-              sections: [
-                Text('继续阅读', style: AppText.pageTitle(colors.foreground)),
-                const SizedBox(height: AppSpace.x4),
-                _ContinueCard(
-                  book: continueBook!,
-                  progress: _continueProgress,
-                  onTap: () => onOpen(continueBook!),
-                ),
-                if (books.length > 1) ...[
-                  const SizedBox(height: AppSpace.x6),
-                  _RecentHeader(count: books.length - 1),
-                  const SizedBox(height: AppSpace.x2),
-                  ClipRRect(
-                    borderRadius: AppRadius.groupedAll,
-                    child: ColoredBox(
-                      color: colors.card,
-                      child: Column(
-                        children: [
-                          for (var i = 1; i < books.length; i++) ...[
-                            if (i > 1)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 70),
-                                child: SizedBox(
-                                  height: appHairline(context),
-                                  child: ColoredBox(color: colors.border),
+          // The home page assembles the same way the shelf does: one shared
+          // clock, blocks arriving in order. Reusing the shelf's scope rather
+          // than writing a second reveal keeps the two screens from drifting.
+          //
+          // The reveal only fades and lifts; it never covers the content or
+          // delays a tap, so "continue reading" is tappable on the first frame.
+          : ShelfRevealScope(
+              child: AppPage(
+                reserveDock: true,
+                sections: [
+                  ShelfRevealItem(
+                    index: 0,
+                    child: Text(
+                      '继续阅读',
+                      style: AppText.pageTitle(colors.foreground),
+                    ),
+                  ),
+                  ShelfRevealItem(
+                    index: 1,
+                    child: _ContinueCard(
+                      book: continueBook!,
+                      progress: _continueProgress,
+                      onTap: () => onOpen(continueBook!),
+                    ),
+                  ),
+                  if (books.length > 1) ...[
+                    ShelfRevealItem(
+                      index: 3,
+                      child: _RecentHeader(count: books.length - 1),
+                    ),
+                    ShelfRevealItem(
+                      index: 4,
+                      child: ClipRRect(
+                        borderRadius: AppRadius.groupedAll,
+                        child: ColoredBox(
+                          color: colors.card,
+                          child: Column(
+                            children: [
+                              for (var i = 1; i < books.length; i++) ...[
+                                if (i > 1)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 70),
+                                    child: SizedBox(
+                                      height: appHairline(context),
+                                      child: ColoredBox(color: colors.border),
+                                    ),
+                                  ),
+                                BookRow(
+                                  book: books[i],
+                                  onTap: () => onOpenDetails(books[i]),
                                 ),
-                              ),
-                            BookRow(
-                              book: books[i],
-                              onTap: () => onOpenDetails(books[i]),
-                            ),
-                          ],
-                        ],
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpace.x6),
+                  // The product's own voice, kept as a grouped footer.
+                  ShelfRevealItem(
+                    index: 5,
+                    child: Center(
+                      child: Text(
+                        '安静地读一本书',
+                        style: AppText.caption(colors.mutedForeground),
                       ),
                     ),
                   ),
                 ],
-                const SizedBox(height: AppSpace.x6),
-                // The product's own voice, kept as a grouped footer.
-                Center(
-                  child: Text(
-                    '安静地读一本书',
-                    style: AppText.caption(colors.mutedForeground),
-                  ),
-                ),
-              ],
+              ),
             ),
     );
   }
