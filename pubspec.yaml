@@ -55,6 +55,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # On-device verification of the import pipeline: the file picker cannot be
+  # driven from adb, so the only honest way to prove an EPUB/MOBI reaches the
+  # shelf is to run the app's own import code on a real device.
+  integration_test:
+    sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -70,6 +75,11 @@ dev_dependencies:
 flutter:
   assets:
     - assets/epub_reader/
+    # Real EPUB/MOBI files, used by the on-device import test. The system file
+    # picker cannot be driven from adb, so the only way to prove a book reaches
+    # the shelf is to ship the fixture and import it with the app's own code.
+    - assets/test_books/inspect.epub
+    - assets/test_books/inspect.mobi
 
   # No Material icon font: the interface uses Cupertino glyphs (chrome the
   # platform draws itself) and Lucide (every glyph we place).
