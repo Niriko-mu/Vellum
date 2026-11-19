@@ -206,6 +206,10 @@ class ReaderPageState extends State<ReaderPage>
     // page pagination for all of them makes the first frame compete with a
     // long layout pass and can trigger an Android ANR. The lazy scroll surface
     // opens immediately; users can still switch to page mode after opening.
+    // Kept even though page mode is now the default: the reason this exists
+    // is a first-frame ANR on a book with thousands of tiny HTML paragraphs,
+    // and changing the default does not make that cheaper. A reader can still
+    // switch to page mode by hand once it has opened.
     final largeMobi =
         widget.book.format == BookFormat.mobi &&
         !widget.book.usesLazyContent &&
@@ -626,11 +630,7 @@ class ReaderPageState extends State<ReaderPage>
         message: '上次听到第 ${remembered.paragraphIndex + 1} 段。',
         cancelLabel: '从本页开始',
         actions: [
-          AppDialogAction<bool>(
-            label: '继续上次',
-            value: true,
-            isDefault: true,
-          ),
+          AppDialogAction<bool>(label: '继续上次', value: true, isDefault: true),
         ],
       );
       if (!mounted) return;

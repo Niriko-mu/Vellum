@@ -25,14 +25,17 @@ void main() {
       route.dispose();
     });
 
-    testWidgets('keeps the Cupertino slide and adds a fade over it', (tester) async {
+    testWidgets('keeps the Cupertino slide and adds a fade over it', (
+      tester,
+    ) async {
       await _openReader(tester);
 
       final page = find.text('reader-page');
       expect(
         find.ancestor(of: page, matching: find.byType(SlideTransition)),
         findsWidgets,
-        reason: 'the framework transition must be wrapped, not replaced: it '
+        reason:
+            'the framework transition must be wrapped, not replaced: it '
             'is what carries the edge-swipe-back gesture',
       );
       expect(
@@ -66,12 +69,41 @@ void main() {
       expect(opacity(), 1);
     });
 
+    testWidgets('carries a backdrop for the shrinking sheet', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: VellumTheme.forBrightness(Brightness.light),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: AppTextButton(
+                  label: 'open',
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).push(PaperRoute<void>(builder: (_) => const _ReaderLike())),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(PaperDismissBackdrop),
+        findsOneWidget,
+        reason: 'without it the scaled page shows a light seam at every edge',
+      );
+    });
+
     testWidgets('is a clean slide when the platform asks for reduced motion', (
       tester,
     ) async {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
-      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
 
       await _openReader(tester);
 
@@ -81,7 +113,8 @@ void main() {
           matching: find.byType(FadeTransition),
         ),
         findsNothing,
-        reason: 'a crossfade is still movement; reduced motion keeps the '
+        reason:
+            'a crossfade is still movement; reduced motion keeps the '
             'platform transition alone',
       );
       expect(tester.hasRunningAnimations, isFalse);
@@ -98,9 +131,9 @@ Future<void> _openReader(WidgetTester tester) async {
           body: Center(
             child: AppTextButton(
               label: 'open',
-              onPressed: () => Navigator.of(context).push(
-                PaperRoute<void>(builder: (_) => const _ReaderLike()),
-              ),
+              onPressed: () => Navigator.of(
+                context,
+              ).push(PaperRoute<void>(builder: (_) => const _ReaderLike())),
             ),
           ),
         ),

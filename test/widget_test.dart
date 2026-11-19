@@ -327,6 +327,9 @@ void main() {
     await tester.pumpWidget(
       CupertinoApp(
         home: ReaderPage(
+          // The inline-image path is the scroll surface; page mode paginates
+          // it differently. Ask for scroll explicitly.
+          initialState: const ReadingState(mode: 'scroll'),
           book: ImportedBook(
             title: '段内注释',
             format: BookFormat.mobi,
@@ -504,6 +507,8 @@ void main() {
     await tester.pumpWidget(
       CupertinoApp(
         home: ReaderPage(
+          // Starts in scroll so the test exercises the *switch* to page mode.
+          initialState: const ReadingState(mode: 'scroll'),
           onStateChanged: (value) async => saved = value,
           book: const ImportedBook(
             title: '阅读方式记忆',
@@ -619,7 +624,9 @@ void main() {
     await tester.pumpWidget(
       CupertinoApp(
         home: ReaderPage(
-          initialState: const ReadingState(position: 260),
+          // This test is about the scroll surface, so it asks for scroll mode
+          // explicitly rather than relying on it being the default.
+          initialState: const ReadingState(mode: 'scroll', position: 260),
           onStateChanged: (value) async => saved = value,
           book: ImportedBook(
             title: '滚动位置恢复',
