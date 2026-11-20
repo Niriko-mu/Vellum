@@ -217,8 +217,11 @@ class _BookIdentity extends StatelessWidget {
       tag: bookCoverHeroTag(book.storageId),
       child: CoverThumb(
         book: book,
-        width: 136,
-        height: 196,
+        // 118 wide at 1.4 is the reading-dock proportion: large enough to read
+        // the artwork, small enough that the title beside it keeps two full
+        // lines on a 360 dp phone.
+        width: 118,
+        height: 165,
         radius: AppRadius.md,
       ),
     );
@@ -229,14 +232,26 @@ class _BookIdentity extends StatelessWidget {
           book.title,
           maxLines: 5,
           overflow: TextOverflow.ellipsis,
-          style: AppText.pageTitle(colors.foreground).copyWith(fontSize: 26),
+          // Heavier and tighter than the page-title role: a book's name is the
+          // one heading on this screen, and the tighter tracking is what keeps
+          // a long Chinese title from ragging at 24 pt.
+          style: AppText.pageTitle(colors.foreground).copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+            height: 1.25,
+          ),
         ),
-        const SizedBox(height: AppSpace.x3),
+        const SizedBox(height: AppSpace.x2),
         Text(
           book.author.trim().isEmpty ? '未知作者' : book.author.trim(),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppText.rowTitle(colors.mutedForeground),
+          // Semibold, not a plain row: the author line reads as a byline under
+          // the title, and regular weight at this size disappears next to it.
+          style: AppText.rowTitle(
+            colors.mutedForeground,
+          ).copyWith(fontSize: 15, height: 1.4, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: AppSpace.x5),
         Wrap(
