@@ -197,6 +197,10 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                   // triple the paragraph work of an idle page (measured: 2 built
                   // at rest, 7 during a turn) and is what made a turn hitch.
                   pageSurface: coverDestinationSurface,
+                  // 仿真 uses the same controller and the same commit path; only
+                  // the painting differs, so a drag feels identical either way.
+                  curl: pageTurnStyle == PageTurnStyle.curl,
+                  backgroundColor: backgroundFor(context),
                 ),
               if (eyeCare != ReaderEyeCare.off)
                 Positioned.fill(

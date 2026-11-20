@@ -81,8 +81,16 @@ class SnapPageScrollPhysics extends PageScrollPhysics {
 }
 
 enum PageTurnStyle {
+  /// A flipped sheet carried across on its own layer, with an edge shadow.
   cover('覆盖'),
+
+  /// The whole page slides, as if the book were a strip.
   slide('平移'),
+
+  /// A simulated curl: the corner lifts, the fold travels, and the lifted part
+  /// is mirrored back as the paper's reverse.
+  curl('仿真'),
+
   none('无动画');
 
   const PageTurnStyle(this.label);

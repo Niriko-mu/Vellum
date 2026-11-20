@@ -5,6 +5,7 @@ import '../theme/vellum_theme.dart';
 import '../theme/app_shape.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_icons.dart';
+import 'reader_page_curl.dart';
 
 /// Compact reading-time indicator shown while reader chrome is hidden.
 class ReaderReadingTimePill extends StatelessWidget {
@@ -93,8 +94,19 @@ class ReaderCoverTurnOverlay extends StatelessWidget {
     required this.dragTurn,
     required this.dragCommitted,
     required this.pageSurface,
+    this.curl = false,
+    this.backgroundColor = const Color(0xFFFFFFFF),
     super.key,
   });
+
+  /// Paint the turn as a simulated curl instead of a sliding sheet. Both read
+  /// the same controller, so the drag path, the commit threshold and the settle
+  /// curve are shared; only the painting differs.
+  final bool curl;
+
+  /// The surface behind the curl's mirror; the lifted corner must not show
+  /// whatever is behind the reader through it.
+  final Color backgroundColor;
 
   final int fromPage;
   final int toPage;
@@ -108,6 +120,26 @@ class ReaderCoverTurnOverlay extends StatelessWidget {
     final isNext = toPage > fromPage;
     final movingPage = isNext ? fromPage : toPage;
     final staticPage = isNext ? toPage : fromPage;
+    if (curl) {
+      return Positioned.fill(
+        child: IgnorePointer(
+          child: AnimatedBuilder(
+            animation: animation,
+            builder: (context, _) => ReaderPageCurl(
+              outgoing: RepaintBoundary(
+                child: pageSurface(context, movingPage),
+              ),
+              incoming: RepaintBoundary(
+                child: pageSurface(context, staticPage),
+              ),
+              progress: animation.value,
+              forward: isNext,
+              backgroundColor: backgroundColor,
+            ),
+          ),
+        ),
+      );
+    }
     return Positioned.fill(
       child: IgnorePointer(
         child: RepaintBoundary(
