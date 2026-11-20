@@ -661,54 +661,53 @@ class _ReaderMenuState extends State<ReaderMenu>
 
   Widget _actionRow(BuildContext context, Color themeBg) {
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    // No inner height: the capsule already fixes this row at capsuleHeight, and
+    // a 56 inside a 54 box was a number that never applied.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: SizedBox(
-        height: 56,
-        child: Row(
-          children: [
+      child: Row(
+        children: [
+          _actionItem(
+            context,
+            themeBg,
+            icon: AppIcons.listBullet,
+            label: '目录',
+            selected: _panel == _AbovePanel.catalog,
+            onTap: () => _togglePanel(_AbovePanel.catalog),
+          ),
+          _actionItem(
+            context,
+            themeBg,
+            icon: isDark ? AppIcons.sunMax : AppIcons.moon,
+            label: isDark ? '日间' : '夜间',
+            selected: false,
+            onTap: () {
+              if (_throttled) return;
+              widget.onToggleUiTheme?.call();
+            },
+          ),
+          if (widget.onListen != null)
             _actionItem(
               context,
               themeBg,
-              icon: AppIcons.listBullet,
-              label: '目录',
-              selected: _panel == _AbovePanel.catalog,
-              onTap: () => _togglePanel(_AbovePanel.catalog),
+              icon: widget.listening ? AppIcons.speaker2 : AppIcons.speaker1,
+              // While a book is being read aloud this cell is the pause and
+              // continue control, not a second start button: the label has
+              // said 听书中 since the first chapter, and tapping it used to
+              // restart the whole flow from the top.
+              label: widget.listening ? '暂停' : '听书',
+              selected: widget.listening,
+              onTap: widget.onListen!,
             ),
-            _actionItem(
-              context,
-              themeBg,
-              icon: isDark ? AppIcons.sunMax : AppIcons.moon,
-              label: isDark ? '日间' : '夜间',
-              selected: false,
-              onTap: () {
-                if (_throttled) return;
-                widget.onToggleUiTheme?.call();
-              },
-            ),
-            if (widget.onListen != null)
-              _actionItem(
-                context,
-                themeBg,
-                icon: widget.listening ? AppIcons.speaker2 : AppIcons.speaker1,
-                // While a book is being read aloud this cell is the pause and
-                // continue control, not a second start button: the label has
-                // said 听书中 since the first chapter, and tapping it used to
-                // restart the whole flow from the top.
-                label: widget.listening ? '暂停' : '听书',
-                selected: widget.listening,
-                onTap: widget.onListen!,
-              ),
-            _actionItem(
-              context,
-              themeBg,
-              icon: AppIcons.gear,
-              label: '设置',
-              selected: _panel == _AbovePanel.settings,
-              onTap: () => _togglePanel(_AbovePanel.settings),
-            ),
-          ],
-        ),
+          _actionItem(
+            context,
+            themeBg,
+            icon: AppIcons.gear,
+            label: '设置',
+            selected: _panel == _AbovePanel.settings,
+            onTap: () => _togglePanel(_AbovePanel.settings),
+          ),
+        ],
       ),
     );
   }

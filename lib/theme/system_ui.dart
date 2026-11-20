@@ -1,7 +1,5 @@
 import 'package:flutter/services.dart';
 
-import '../theme/vellum_theme.dart';
-
 /// The system bars (status bar icons, navigation bar icons) for one surface.
 ///
 /// Two things live here rather than in a widget:
@@ -37,8 +35,10 @@ abstract final class VellumSystemUi {
   /// the icons have to follow the *paper*: a night paper under a light app theme
   /// otherwise left dark icons on a near-black page.
   static SystemUiOverlayStyle forPaper(Color paper) {
-    final ink = VellumTheme.readerInkFor(paper);
-    final lightPaper = ink.computeLuminance() < .5;
+    // The paper decides, not its ink: a night paper's ink is a mid grey whose
+    // own luminance sits near the midpoint, so asking the ink where the paper
+    // is gives the wrong answer for exactly the case this exists for.
+    final lightPaper = paper.computeLuminance() > .5;
     return SystemUiOverlayStyle(
       statusBarColor: const Color(0x00000000),
       statusBarIconBrightness: lightPaper ? Brightness.dark : Brightness.light,
