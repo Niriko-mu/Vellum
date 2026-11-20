@@ -217,7 +217,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('继续阅读'), findsOneWidget);
-    expect(find.text('全书 42% · 本章 35% · 第 42 页'), findsOneWidget);
+    // 本章 → 全书, matching the progress row directly above this card. The card
+    // used to print the pair the other way round, so the same two numbers
+    // appeared in two orders on one screen.
+    expect(find.text('本章 35% · 全书 42% · 第 42 页'), findsOneWidget);
     expect(find.text('读到 35% · 第 42 页'), findsOneWidget);
 
     await tester.tap(find.byIcon(AppIcons.chevronForward));

@@ -20,6 +20,7 @@ import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_pressable.dart';
 import '../theme/app_icons.dart';
 import '../widgets/ui/app_dialog.dart';
+import '../widgets/ui/app_sheet.dart';
 import '../widgets/ui/app_toast.dart';
 
 /// Writing tab: list of local drafts, open editor to write .md / .txt.
@@ -397,30 +398,31 @@ class _WritingEditorPageState extends State<WritingEditorPage>
 
   void _showMoreActions() {
     FocusScope.of(context).unfocus();
+    // AppActionSheet, not CupertinoActionSheet: the stock one draws an iOS
+    // action sheet — its radius, its row height, its separators — inside a
+    // product that otherwise speaks its own geometry, and the app had both
+    // kinds in different places for the same job.
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (sheetContext) => CupertinoActionSheet(
+      builder: (sheetContext) => AppActionSheet(
         actions: [
-          CupertinoActionSheetAction(
+          AppActionSheetItem(
+            label: '导出文稿',
             onPressed: () {
               Navigator.pop(sheetContext);
               unawaited(_exportFile());
             },
-            child: const Text('导出文稿'),
           ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
+          AppActionSheetItem(
+            label: '删除文稿',
+            destructive: true,
             onPressed: () {
               Navigator.pop(sheetContext);
               unawaited(_confirmDelete());
             },
-            child: const Text('删除文稿'),
           ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheetContext),
-          child: const Text('取消'),
-        ),
+        onCancel: () => Navigator.pop(sheetContext),
       ),
     );
   }
@@ -486,10 +488,9 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                 placeholder: '标题',
                 maxLines: 1,
                 textInputAction: TextInputAction.next,
-                style: AppText.pageTitle(ink).copyWith(
-                  fontFamily: _typo.fontFamily,
-                  height: 1.4,
-                ),
+                style: AppText.pageTitle(
+                  ink,
+                ).copyWith(fontFamily: _typo.fontFamily, height: 1.4),
                 placeholderStyle: AppText.pageTitle(
                   muted.withValues(alpha: .65),
                 ).copyWith(fontWeight: FontWeight.w500),
@@ -632,29 +633,43 @@ class _WritingEditorPageState extends State<WritingEditorPage>
                           ),
                         ),
                         const SizedBox(width: 16),
-                        CupertinoSlidingSegmentedControl<WritingFormat>(
-                          groupValue: _format,
-                          backgroundColor: context.c.secondary,
-                          thumbColor: context.c.card,
-                          children: {
-                            for (final format in WritingFormat.values)
-                              format: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                child: Text(
-                                  format.label,
-                                  style: TextStyle(
-                                    color: _format == format ? ink : muted,
-                                    fontSize: 13,
-                                  ),
-                                ),
+                        // A two-word mode switch is not body copy: at 2x system
+                        // text its labels outgrew the row and pushed both icons
+                        // off the toolbar, so the size is clamped the way the
+                        // dock's is. No flex here: the row sits in a horizontal
+                        // scroll view, where a flexible child has no width to
+                        // claim and the layout would have no bound to solve.
+                        MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: 1.3,
+                          child:
+                              CupertinoSlidingSegmentedControl<WritingFormat>(
+                                groupValue: _format,
+                                backgroundColor: context.c.secondary,
+                                thumbColor: context.c.card,
+                                children: {
+                                  for (final format in WritingFormat.values)
+                                    format: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      child: Text(
+                                        format.label,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: _format == format
+                                              ? ink
+                                              : muted,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                },
+                                onValueChanged: (value) {
+                                  if (value != null) _setFormat(value);
+                                },
                               ),
-                          },
-                          onValueChanged: (value) {
-                            if (value != null) _setFormat(value);
-                          },
                         ),
                         const SizedBox(width: 16),
                         Semantics(

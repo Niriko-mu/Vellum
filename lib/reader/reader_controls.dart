@@ -542,6 +542,9 @@ class _ReaderMenuState extends State<ReaderMenu>
         label: text,
         color: color,
         pressedColor: ink.withValues(alpha: .06),
+        // Flanking a slider is a thumb-sized job: the small variant is 32 tall
+        // and these two are pressed more than anything else in the reader.
+        minTapHeight: 44,
         onPressed: enabled ? onTap : null,
       );
     }

@@ -43,6 +43,7 @@ import 'theme/vellum_theme.dart';
 import 'theme/system_ui.dart';
 import 'theme/app_icons.dart';
 import 'widgets/ui/app_dialog.dart';
+import 'widgets/ui/app_sheet.dart';
 import 'widgets/ui/paper_route.dart';
 
 final appNavigatorKey = GlobalKey<NavigatorState>();
@@ -596,22 +597,19 @@ class _LibraryShellState extends State<LibraryShell>
     if (_importing) return;
     final scan = await showCupertinoModalPopup<bool>(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: const Text('导入本地书'),
+      builder: (context) => AppActionSheet(
+        title: '导入本地书',
         actions: [
-          CupertinoActionSheetAction(
+          AppActionSheetItem(
+            label: '选择文件（可多选）',
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('选择文件（可多选）'),
           ),
-          CupertinoActionSheetAction(
+          AppActionSheetItem(
+            label: '扫描授权文件夹',
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('扫描授权文件夹'),
           ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
+        onCancel: () => Navigator.pop(context),
       ),
     );
     if (scan == null || !mounted) return;

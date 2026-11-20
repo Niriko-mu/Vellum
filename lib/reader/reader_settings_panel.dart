@@ -120,7 +120,8 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     // Sub-page switches (main → 更多设置 → 背景) resize the content; the panel
     // appearing/disappearing is owned by the transition outside this widget.
     return AnimatedSize(
-      duration: AppMotion.fast,
+      // Reduced motion lands the sub-page immediately instead of resizing it.
+      duration: motionDuration(context, AppMotion.fast),
       curve: AppMotion.settle,
       alignment: Alignment.topCenter,
       child: SingleChildScrollView(
@@ -670,6 +671,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           size: AppButtonSize.regular,
           color: _ink,
           pressedColor: _ink.withValues(alpha: .06),
+          minTapHeight: 44,
           onPressed: () => widget.onFontSize(
             (widget.fontSize - 1).clamp(kReaderFontMin, kReaderFontMax),
           ),
@@ -688,6 +690,7 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
           size: AppButtonSize.regular,
           color: _ink,
           pressedColor: _ink.withValues(alpha: .06),
+          minTapHeight: 44,
           onPressed: () => widget.onFontSize(
             (widget.fontSize + 1).clamp(kReaderFontMin, kReaderFontMax),
           ),
@@ -708,19 +711,29 @@ class _ReaderSettingsPanelState extends State<ReaderSettingsPanel> {
     children: [
       Icon(AppIcons.sunMin, size: 16, color: _muted),
       Expanded(
-        child: CupertinoSlider(
-          value: (_followsSystem ? 0.6 : widget.brightness).clamp(0.05, 1.0),
-          min: 0.05,
-          max: 1,
-          activeColor: _accent,
-          onChanged: widget.onBrightness,
+        // While following the system there is no local value to show, so the
+        // slider is inert rather than parked at a made-up .6 that the reader
+        // could not tell from a real setting.
+        child: Opacity(
+          opacity: _followsSystem ? .45 : 1,
+          child: CupertinoSlider(
+            value: (_followsSystem ? 0.6 : widget.brightness).clamp(0.05, 1.0),
+            min: 0.05,
+            max: 1,
+            activeColor: _accent,
+            onChanged: _followsSystem ? null : widget.onBrightness,
+          ),
         ),
       ),
       AppTextButton(
-        label: _followsSystem ? '跟随系统' : '恢复跟随',
+        // The label is the action, not the state: a button that already says
+        // 跟随系统 and can only re-apply 跟随系统 is a dead control.
+        label: '跟随系统',
         color: _followsSystem ? _muted : _accent,
         pressedColor: _ink.withValues(alpha: .06),
-        onPressed: () => widget.onBrightness(_followSystemBrightness),
+        onPressed: _followsSystem
+            ? null
+            : () => widget.onBrightness(_followSystemBrightness),
       ),
     ],
   );

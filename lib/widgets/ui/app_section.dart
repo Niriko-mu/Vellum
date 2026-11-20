@@ -574,13 +574,18 @@ class AppSwitchRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpace.x3),
-                // Indicator only: the row already handles the tap.
-                IgnorePointer(
-                  child: AppSwitch(
-                    value: value,
-                    enabled: enabled,
-                    semanticLabel: label,
-                    onChanged: onChanged,
+                // Indicator only: the row already handles the tap, and the
+                // row already announces the state. IgnorePointer stops the hit
+                // test but leaves the switch in the semantics tree, so a
+                // screen reader stopped twice on one row.
+                ExcludeSemantics(
+                  child: IgnorePointer(
+                    child: AppSwitch(
+                      value: value,
+                      enabled: enabled,
+                      semanticLabel: label,
+                      onChanged: onChanged,
+                    ),
                   ),
                 ),
               ],

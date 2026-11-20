@@ -89,41 +89,42 @@ class _LibraryPageState extends State<LibraryPage> {
   /// The cover carries no permanent delete disc any more — it sat on top of the
   /// progress badge and, at large text sizes, on the generated title. Opening a
   /// book is the frequent act; removing it is not.
+  ///
+  /// AppActionSheet rather than CupertinoActionSheet: the stock one draws an
+  /// iOS action sheet inside a product that speaks its own geometry, and the
+  /// same screen already used the custom one for its folder list.
   Future<void> _showBookActions(ImportedBook book) async {
     await showCupertinoModalPopup<void>(
       context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: Text(book.title),
+      builder: (ctx) => AppActionSheet(
+        title: book.title,
         actions: [
           if (widget.onEditCover != null)
-            CupertinoActionSheetAction(
+            AppActionSheetItem(
+              label: '编辑封面',
               onPressed: () {
                 Navigator.pop(ctx);
                 widget.onEditCover!(book);
               },
-              child: const Text('编辑封面'),
             ),
           if (widget.onMoveToFolder != null)
-            CupertinoActionSheetAction(
+            AppActionSheetItem(
+              label: '移动到文件夹',
               onPressed: () {
                 Navigator.pop(ctx);
                 _showFolderPicker(book);
               },
-              child: const Text('移动到文件夹'),
             ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
+          AppActionSheetItem(
+            label: '删除这本书',
+            destructive: true,
             onPressed: () {
               Navigator.pop(ctx);
               widget.onDelete(book);
             },
-            child: const Text('删除这本书'),
           ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('取消'),
-        ),
+        onCancel: () => Navigator.pop(ctx),
       ),
     );
   }
@@ -220,30 +221,27 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _promptFolderOptions(LibraryFolder folder) async {
     await showCupertinoModalPopup<void>(
       context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: Text(folder.name),
+      builder: (ctx) => AppActionSheet(
+        title: folder.name,
         actions: [
-          CupertinoActionSheetAction(
+          AppActionSheetItem(
+            label: '重命名',
             onPressed: () {
               Navigator.pop(ctx);
               _promptRenameFolder(folder);
             },
-            child: const Text('重命名'),
           ),
           if (widget.onDeleteFolder != null)
-            CupertinoActionSheetAction(
-              isDestructiveAction: true,
+            AppActionSheetItem(
+              label: '删除文件夹',
+              destructive: true,
               onPressed: () {
                 Navigator.pop(ctx);
                 widget.onDeleteFolder!(folder.id);
               },
-              child: const Text('删除文件夹'),
             ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('取消'),
-        ),
+        onCancel: () => Navigator.pop(ctx),
       ),
     );
   }

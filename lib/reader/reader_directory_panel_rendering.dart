@@ -388,7 +388,10 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
               widget.bookTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: ink.withValues(alpha: .45), fontSize: 14),
+              // The shared muted role rather than a local .45: the book name
+              // is the one line that says which book this catalogue belongs
+              // to, and .45 sits under the text floor on the white paper.
+              style: TextStyle(color: muted, fontSize: 14),
             ),
           ),
 
@@ -461,7 +464,9 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
             : isRead
             ? ink.withValues(alpha: .6)
             : ink;
-        final metaColor = ink.withValues(alpha: .45);
+        // The row's meta line is read, not decorative: same muted role as the
+        // rest of the panel instead of a one-off .45.
+        final metaColor = muted;
         final secondary = secondaryLabel(entry.key, isCurrent, isRead);
         return Semantics(
           button: true,
@@ -667,8 +672,12 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '全书 $bookPercent% · 本章 $chapterPercent%'
-                        '${summary.currentPageLabel.isEmpty ? '' : ' · ${summary.currentPageLabel}'}',
+                        // 本章 → 全书, the order the progress row uses. The card
+                        // printed the pair backwards, and in scroll mode
+                        // currentPageLabel *is* the book percentage, so the
+                        // same number used to appear twice on one line.
+                        '本章 $chapterPercent% · 全书 $bookPercent%'
+                        '${summary.currentPageLabel.isEmpty || summary.currentPageLabel == '$bookPercent%' ? '' : ' · ${summary.currentPageLabel}'}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(color: muted, fontSize: 13),
@@ -676,20 +685,27 @@ extension ReaderDirectoryPanelRendering on ReaderDirectoryPanelState {
                     ],
                   ),
                 ),
-                AppPressable(
-                  onTap: enabled ? widget.onContinueReading : null,
-                  enabled: enabled,
-                  semanticLabel: '继续阅读',
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(
-                      AppIcons.chevronForward,
-                      color: enabled ? accent : muted.withValues(alpha: .45),
-                      size: 18,
+                // The arrow is an affordance, so it is only drawn when there is
+                // somewhere to go. saveState() rewrites the resume position on
+                // every turn, so while reading the card is almost always at the
+                // reader; a disabled chevron there promised a jump that would
+                // never happen.
+                if (enabled)
+                  AppPressable(
+                    onTap: widget.onContinueReading,
+                    semanticLabel: '继续阅读',
+                    child: SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Icon(
+                        AppIcons.chevronForward,
+                        color: accent,
+                        size: 18,
+                      ),
                     ),
-                  ),
-                ),
+                  )
+                else
+                  const SizedBox(width: 8),
               ],
             ),
           ),

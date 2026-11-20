@@ -242,7 +242,10 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: ink.withValues(alpha: .35),
+                  // The shared muted ink, not a local .35: at .35 this line is
+                  // about 2.4:1 on the white paper, under the 4.5:1 text floor,
+                  // and its whole job is to be read as context.
+                  color: muted,
                   fontSize: 13,
                 ),
               ),
@@ -254,10 +257,7 @@ extension ReaderDirectoryPanelSearchRendering on ReaderDirectoryPanelState {
                 hit.first.trailingContext,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: ink.withValues(alpha: .35),
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: muted, fontSize: 13),
               ),
             ],
             const SizedBox(height: 6),

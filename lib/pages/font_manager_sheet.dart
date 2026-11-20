@@ -45,8 +45,9 @@ class FontManagerSheet extends StatelessWidget {
         onTap: onImportFonts,
         semanticLabel: '导入字体',
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpace.x2),
+        child: SizedBox(
+          width: 44,
+          height: 44,
           child: Icon(AppIcons.plusCircle, color: colors.primary),
         ),
       ),

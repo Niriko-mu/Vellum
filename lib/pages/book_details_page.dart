@@ -232,15 +232,11 @@ class _BookIdentity extends StatelessWidget {
           book.title,
           maxLines: 5,
           overflow: TextOverflow.ellipsis,
-          // Heavier and tighter than the page-title role: a book's name is the
-          // one heading on this screen, and the tighter tracking is what keeps
-          // a long Chinese title from ragging at 24 pt.
-          style: AppText.pageTitle(colors.foreground).copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            height: 1.25,
-          ),
+          // A named role, not a local copyWith: w800 and negative tracking were
+          // a loudness fix that broke the type scale's semibold ceiling, and the
+          // same 24pt heading appeared twice on this screen under two different
+          // names.
+          style: AppText.bookTitle(colors.foreground),
         ),
         const SizedBox(height: AppSpace.x2),
         Text(
@@ -362,7 +358,7 @@ class _BookContents extends StatelessWidget {
       children: [
         Text(
           '目录',
-          style: AppText.pageTitle(colors.foreground).copyWith(fontSize: 24),
+          style: AppText.bookTitle(colors.foreground),
         ),
         const SizedBox(height: AppSpace.x3),
         Text(
@@ -404,7 +400,11 @@ class _BookContents extends StatelessWidget {
                             width: 28,
                             child: Text(
                               '${index + 1}'.padLeft(2, '0'),
-                              style: AppText.caption(colors.foregroundTertiary),
+                              // mutedForeground, not foregroundTertiary: the
+                            // tertiary role is declared for non-text graphics,
+                            // and at 3.53:1 on the card this ordinal was under
+                            // the text floor.
+                            style: AppText.caption(colors.mutedForeground),
                             ),
                           ),
                           Expanded(

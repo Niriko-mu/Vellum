@@ -66,6 +66,16 @@ abstract final class AppText {
   static TextStyle sectionHeader(Color color) =>
       _style(AppTypeStep.base, FontWeight.w600, color);
 
+  /// Heading of a book-sized surface: the details page's title and its
+  /// catalogue heading (24/32 semibold, no tracking).
+  ///
+  /// A role rather than a per-call-site copyWith: both places had reached for
+  /// pageTitle and then overridden its size and weight by hand, which is how
+  /// one screen ended up with a w800 heading under a scale that stops at
+  /// semibold.
+  static TextStyle bookTitle(Color color) =>
+      _style(AppTypeStep.xxl, FontWeight.w600, color);
+
   static TextStyle rowTitle(Color color) =>
       _style(AppTypeStep.base, FontWeight.w400, color);
 

@@ -282,7 +282,13 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                   ),
                 if (bookmarkNotice != null)
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
+                    // The bookmark notice is feedback, not decoration: it
+                    // still arrives under reduced motion, it just does not
+                    // scale and fade into place.
+                    duration: motionDuration(
+                      context,
+                      const Duration(milliseconds: 180),
+                    ),
                     transitionBuilder: (child, animation) => FadeTransition(
                       opacity: animation,
                       child: ScaleTransition(

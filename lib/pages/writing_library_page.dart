@@ -66,16 +66,26 @@ class _WritingPageState extends State<WritingPage> {
     _reload();
   }
 
+  /// A failed read is not an empty shelf.
+  ///
+  /// Swallowing the error into an empty list showed "开始写作 / 文稿保存在本机"
+  /// over a disk that had failed to open — the one message a writer must never
+  /// be shown about their own drafts.
+  bool _loadFailed = false;
+
   Future<void> _reload() async {
     List<WritingDocument> docs;
+    var failed = false;
     try {
       docs = await _library.load().timeout(const Duration(seconds: 2));
     } catch (_) {
       docs = [];
+      failed = true;
     }
     if (!mounted) return;
     setState(() {
       _documents = docs;
+      _loadFailed = failed;
       _loading = false;
     });
   }
@@ -244,6 +254,28 @@ class _WritingPageState extends State<WritingPage> {
                     hasScrollBody: false,
                     child: Center(
                       child: AppContentState(kind: AppContentStateKind.loading),
+                    ),
+                  )
+                else if (_loadFailed)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: AppContentState(
+                        kind: AppContentStateKind.error,
+                        title: '文稿读取失败',
+                        description: '本地存储暂时无法打开，文稿没有丢失。',
+                        actions: [
+                          AppButton(
+                            label: '重试',
+                            variant: AppButtonVariant.tonal,
+                            pill: true,
+                            onPressed: () {
+                              setState(() => _loading = true);
+                              _reload();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 else if (_documents.isEmpty)

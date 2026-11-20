@@ -247,11 +247,18 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
       for (final hit in group.hits) {
         if (hit.paragraphIndex == paragraphIndex) {
           final max = searchScrollController.position.maxScrollExtent;
-          searchScrollController.animateTo(
-            (row * _searchRowHeight).clamp(0.0, max),
-            duration: const Duration(milliseconds: 160),
-            curve: AppMotion.settle,
-          );
+          // Reduced motion jumps instead of travelling: the panel still ends
+          // on the hit, it just does not scroll there.
+          final distance = (row * _searchRowHeight).clamp(0.0, max);
+          if (MediaQuery.disableAnimationsOf(context)) {
+            searchScrollController.jumpTo(distance);
+          } else {
+            searchScrollController.animateTo(
+              distance,
+              duration: const Duration(milliseconds: 160),
+              curve: AppMotion.settle,
+            );
+          }
           return;
         }
         row++;
@@ -370,11 +377,15 @@ class ReaderDirectoryPanelState extends State<ReaderDirectoryPanel> {
     final maxOffset = scrollController.position.maxScrollExtent;
     final offset = (target * itemExtent - 96).clamp(0.0, maxOffset);
     if ((offset - scrollController.offset).abs() > 1) {
-      scrollController.animateTo(
-        offset,
-        duration: const Duration(milliseconds: 220),
-        curve: AppMotion.settle,
-      );
+      if (MediaQuery.disableAnimationsOf(context)) {
+        scrollController.jumpTo(offset);
+      } else {
+        scrollController.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 220),
+          curve: AppMotion.settle,
+        );
+      }
     }
     if (currentOffscreen) setState(() => currentOffscreen = false);
   }

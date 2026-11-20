@@ -13,6 +13,7 @@ import '../services/epub_original_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/ui/app_controls.dart';
 import '../widgets/ui/app_section.dart';
+import '../widgets/ui/app_sheet.dart';
 
 String _anchor(String text) =>
     String.fromCharCodes(text.replaceAll(RegExp(r'\s+'), '').runes.take(80));
@@ -203,19 +204,16 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
     if (text.isEmpty || cfi.isEmpty) return;
     final result = await showCupertinoModalPopup<bool>(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: const Text('标注选中文字'),
-        message: Text(text.characters.take(300).join()),
+      builder: (context) => AppActionSheet(
+        title: '标注选中文字',
+        message: text.characters.take(300).join(),
         actions: [
-          CupertinoActionSheetAction(
+          AppActionSheetItem(
+            label: '保存划线',
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('保存划线'),
           ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('取消'),
-        ),
+        onCancel: () => Navigator.pop(context, false),
       ),
     );
     if (result != true || !mounted) return;

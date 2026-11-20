@@ -299,6 +299,7 @@ class AppTextButton extends StatelessWidget {
     this.color,
     this.pressedColor,
     this.semanticLabel,
+    this.minTapHeight = 0,
     super.key,
   });
 
@@ -306,6 +307,11 @@ class AppTextButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
   final AppButtonSize size;
+
+  /// Floor for the tappable area. The small variant is 32pt tall, which is
+  /// right inside a dense panel and wrong for the reader's most-pressed
+  /// controls (上一章 / 下一章 / A− / A+): pass 44 there.
+  final double minTapHeight;
 
   /// Overrides the label colour. Reader panels sit on a paper surface whose ink
   /// is not the theme foreground, so they pass their own.
@@ -329,20 +335,27 @@ class AppTextButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.sm),
         semanticLabel: semanticLabel ?? label,
         pressedColor: pressedColor,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: geometry.horizontal,
-            vertical: geometry.vertical,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: minTapHeight,
+            minWidth: minTapHeight,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: geometry.iconSize, color: labelColor),
-                SizedBox(width: geometry.gap),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: geometry.horizontal,
+              vertical: geometry.vertical,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: geometry.iconSize, color: labelColor),
+                  SizedBox(width: geometry.gap),
+                ],
+                Text(label, style: geometry.labelStyle(labelColor)),
               ],
-              Text(label, style: geometry.labelStyle(labelColor)),
-            ],
+            ),
           ),
         ),
       ),
