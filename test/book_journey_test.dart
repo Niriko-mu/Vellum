@@ -67,8 +67,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('旅程之书'), findsOneWidget);
-    expect(find.text('某作者'), findsOneWidget);
+    // Twice now: once as the page title, once on the generated cover — a book
+    // with no artwork is drawn from its own metadata.
+    expect(find.text('旅程之书'), findsNWidgets(2));
+    // Also on the generated cover, next to the format.
+    expect(find.text('某作者'), findsNWidgets(2));
     // One chip spells the format; the default cover artwork repeats it.
     expect(find.text('TXT'), findsWidgets);
     expect(find.text('2 章节'), findsOneWidget);

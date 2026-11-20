@@ -254,28 +254,84 @@ class DefaultCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.c;
-    final label = (book.coverText?.isNotEmpty ?? false)
-        ? book.coverText!
-        : book.format.name.toUpperCase();
-    final isCustom = book.coverText?.isNotEmpty ?? false;
-    return ColoredBox(
-      // Artwork, not a surface: one flat brand fill instead of a gradient.
-      color: colors.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpace.x3),
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: isCustom ? 6 : 2,
-            overflow: TextOverflow.ellipsis,
-            style: AppText.caption(colors.primaryForeground).copyWith(
-              fontSize: isCustom ? 14 : 11,
-              fontWeight: isCustom ? FontWeight.w500 : FontWeight.w600,
-              letterSpacing: isCustom ? 0 : 1.4,
+    // A generated cover shows the book, not the file extension. Two shelves of
+    // "TXT" tiles are indistinguishable; the title is the only thing that makes
+    // a cover identifiable at a glance, which is the job a cover does.
+    if (book.coverText?.isNotEmpty ?? false) {
+      return ColoredBox(
+        color: colors.primary,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.x3),
+          child: Center(
+            child: Text(
+              book.coverText!,
+              textAlign: TextAlign.center,
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.caption(
+                colors.primaryForeground,
+              ).copyWith(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
         ),
+      );
+    }
+    return _GeneratedCover(book: book);
+  }
+}
+
+/// A cover drawn from the book's own metadata: title, author, and the format in
+/// a quiet corner.
+class _GeneratedCover extends StatelessWidget {
+  const _GeneratedCover({required this.book});
+
+  final ImportedBook book;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.c;
+    final title = book.title.trim().isEmpty ? '未命名' : book.title.trim();
+    final author = book.author.trim();
+    return ColoredBox(
+      // Artwork, not a surface: one flat brand fill instead of a gradient.
+      color: colors.primary,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Type has to follow the tile: the same widget is used for a 42 pt
+          // list thumbnail and a 200 pt grid cover.
+          final w = constraints.maxWidth;
+          final scale = (w / 120).clamp(.55, 1.6);
+          return Padding(
+            padding: EdgeInsets.all(AppSpace.x3 * scale),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.caption(colors.primaryForeground).copyWith(
+                      fontSize: 12 * scale,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (author.isNotEmpty || w > 60)
+                  Text(
+                    author.isEmpty ? book.format.name.toUpperCase() : author,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.caption(
+                      colors.primaryForeground.withValues(alpha: .78),
+                    ).copyWith(fontSize: 9 * scale, height: 1.2),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
