@@ -106,7 +106,12 @@ abstract final class AppSpace {
   // the page needs a matching reservation or its last row sits under the dock.
 
   /// Height of the dock capsule itself (icons + labels, no insets).
-  static const double dockHeight = 64;
+  ///
+  /// 54, not 64: at 64 the capsule reads as a bar with icons in it rather than
+  /// as a floating pill, and it eats room the page needed. The label sits on
+  /// the type scale's floor, so the capsule only has to carry an icon and one
+  /// line of text.
+  static const double dockHeight = 54;
 
   /// Distance from the bottom safe area to the dock's underside.
   static const double dockBottomGap = 10;

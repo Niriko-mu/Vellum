@@ -47,7 +47,9 @@ class AppDock extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final double bottomInset;
 
-  static const double _iconSize = 24;
+  // 20 rather than 24: inside a 54 pt capsule a 24 pt glyph leaves no air, and
+  // the label underneath starts to crowd it. Matches the reading dock's scale.
+  static const double _iconSize = 20;
   static const double _labelGap = 3;
 
   @override
