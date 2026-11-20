@@ -30,6 +30,7 @@ import 'reader_page_state_gestures.dart';
 import 'reader_page_state_surface_rendering.dart';
 import '../theme/app_motion.dart';
 import '../widgets/ui/app_dialog.dart';
+import '../widgets/ui/book_motion.dart';
 
 class ReaderPage extends StatefulWidget {
   final ImportedBook book;
@@ -614,7 +615,7 @@ class ReaderPageState extends State<ReaderPage>
       if (go != true || !mounted) return;
       await Navigator.of(
         context,
-      ).push(CupertinoPageRoute(builder: (_) => const TtsSettingsPage()));
+      ).push(BookJourneyRoute<void>(builder: (_) => const TtsSettingsPage()));
       return;
     }
 

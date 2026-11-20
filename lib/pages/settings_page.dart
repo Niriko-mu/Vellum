@@ -31,6 +31,7 @@ import 'tts_settings_page.dart';
 import 'update_sheet.dart';
 import '../theme/app_icons.dart';
 import '../widgets/ui/app_dialog.dart';
+import '../widgets/ui/book_motion.dart';
 
 class SettingsPage extends StatefulWidget {
   final VoidCallback onCycleTheme;
@@ -148,9 +149,9 @@ class _SettingsPageState extends State<SettingsPage> {
       }
       final bytes = Uint8List.fromList(
         utf8.encode(
-          const JsonEncoder.withIndent('  ').convert([
-            for (final n in notes) n.toJson(),
-          ]),
+          const JsonEncoder.withIndent(
+            '  ',
+          ).convert([for (final n in notes) n.toJson()]),
         ),
       );
       final suggested =
@@ -230,7 +231,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       final import = parseNotesFile(content: content, fileName: file.name);
       if (import.isEmpty) {
-        await _showNote(import.warning.isEmpty ? '没有在文件里找到笔记。' : import.warning);
+        await _showNote(
+          import.warning.isEmpty ? '没有在文件里找到笔记。' : import.warning,
+        );
         return;
       }
 
@@ -291,7 +294,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final next = await showAppDialog<String>(
       context: context,
       title: '更新仓库',
-      message: '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；'
+      message:
+          '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；'
           '留空则使用默认仓库。',
       content: CupertinoTextField(
         controller: controller,
@@ -398,9 +402,7 @@ class _SettingsPageState extends State<SettingsPage> {
           AppSection(
             children: [
               AppRow(
-                leading: Icon(
-                  widget.isDark ? AppIcons.sunMax : AppIcons.moon,
-                ),
+                leading: Icon(widget.isDark ? AppIcons.sunMax : AppIcons.moon),
                 label: '界面主题',
                 value: widget.themeModeLabel,
                 onTap: widget.onCycleTheme,
@@ -430,7 +432,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 leading: const Icon(AppIcons.docText),
                 label: 'MOBI / EPUB 转 TXT',
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute(builder: (_) => const EbookToTxtPage()),
+                  BookJourneyRoute<void>(
+                    builder: (_) => const EbookToTxtPage(),
+                  ),
                 ),
               ),
               AppRow(
@@ -438,7 +442,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: '数据备份',
                 value: '本地/云端',
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute(builder: (_) => const BackupSettingsPage()),
+                  BookJourneyRoute<void>(
+                    builder: (_) => const BackupSettingsPage(),
+                  ),
                 ),
               ),
               AppRow(
@@ -446,7 +452,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: '朗读服务（听书）',
                 value: 'TTS 接口',
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute(builder: (_) => const TtsSettingsPage()),
+                  BookJourneyRoute<void>(
+                    builder: (_) => const TtsSettingsPage(),
+                  ),
                 ),
               ),
             ],
@@ -462,7 +470,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     ' · 累计 ${ReadingStatsService.formatDuration(_readingStats.totalSeconds)}',
                 onTap: () async {
                   await Navigator.of(context).push(
-                    CupertinoPageRoute(builder: (_) => const ReadingStatsPage()),
+                    BookJourneyRoute<void>(
+                      builder: (_) => const ReadingStatsPage(),
+                    ),
                   );
                   await _loadReadingStats();
                 },

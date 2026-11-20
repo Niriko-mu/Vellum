@@ -607,7 +607,7 @@ class _LibraryShellState extends State<LibraryShell>
     setState(() => _importing = true);
     try {
       final updated = await Navigator.of(context).push<List<ImportedBook>>(
-        CupertinoPageRoute(
+        BookJourneyRoute<List<ImportedBook>>(
           builder: (_) => BookBatchImportPage(
             library: _library,
             existing: List.of(_books),
