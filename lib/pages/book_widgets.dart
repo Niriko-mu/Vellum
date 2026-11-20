@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show LinearProgressIndicator;
 
 import '../services/book_importer.dart';
 import '../theme/app_colors.dart';
@@ -86,9 +85,7 @@ class EmptyLibrary extends StatelessWidget {
           icon: AppIcons.book,
           title: '书房还没有书',
           description: '导入 EPUB、MOBI 或 TXT，开始你的私人书房。',
-          actions: [
-            AppButton(label: '导入电子书', pill: true, onPressed: onImport),
-          ],
+          actions: [AppButton(label: '导入电子书', pill: true, onPressed: onImport)],
         ),
         if (onDebugSeed != null)
           Padding(
@@ -160,60 +157,15 @@ class BookGridCard extends StatelessWidget {
                                     errorBuilder: (_, _, _) =>
                                         DefaultCover(book: book),
                                   ),
-                            // Reading progress sits on the cover itself, so it is
-                            // chrome over uncontrolled content: constant colours
-                            // only, never a theme role.
+                            // Reading progress as a small badge on the cover's
+                            // top-right corner, inset 4 — the shelf convention.
+                            // A full-width bar across the bottom of every cover
+                            // fights the artwork and outweighs the title below.
                             if (percent > 0)
-                              Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        colors.constantBlack.withValues(
-                                          alpha: 0,
-                                        ),
-                                        colors.constantBlack.withValues(
-                                          alpha: 0.55,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            AppRadius.hairlineXs,
-                                          ),
-                                          child: LinearProgressIndicator(
-                                            value: progress.clamp(0.0, 1.0),
-                                            minHeight: 3,
-                                            backgroundColor: colors
-                                                .constantWhite
-                                                .withValues(alpha: 0.25),
-                                            valueColor: AlwaysStoppedAnimation(
-                                              colors.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '$percent%',
-                                        style: AppText.caption(
-                                          colors.constantWhite,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: _ProgressBadge(percent: percent),
                               ),
                           ],
                         ),
@@ -249,6 +201,47 @@ class BookGridCard extends StatelessWidget {
             style: AppText.caption(colors.mutedForeground),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The reading-progress badge on a cover: a small pill in the cover's
+/// top-right corner.
+///
+/// It sits on uncontrolled artwork, so it uses the constant chrome colours
+/// rather than a theme role — a themed fill would change with day/night while
+/// the cover behind it does not.
+class _ProgressBadge extends StatelessWidget {
+  const _ProgressBadge({required this.percent});
+
+  final int percent;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.c;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 26),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.primary,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+          child: Text(
+            '$percent%',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.clip,
+            style: TextStyle(
+              color: colors.primaryForeground,
+              fontSize: 9,
+              height: 1.2,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -12,6 +12,7 @@ import '../widgets/ui/app_section.dart';
 import '../widgets/ui/app_sheet.dart';
 import '../widgets/ui/shelf_reveal.dart';
 import 'book_widgets.dart';
+import 'shelf_grid_metrics.dart';
 import '../theme/app_icons.dart';
 import '../widgets/ui/app_dialog.dart';
 
@@ -408,10 +409,17 @@ class _LibraryPageState extends State<LibraryPage> {
                                   crossAxisCount: columns,
                                   crossAxisSpacing: width >= 820 ? 14 : 10,
                                   mainAxisSpacing: 16,
-                                  // BookGridCard contains title/meta below its
-                                  // cover, so give wider cards a little more
-                                  // vertical room to avoid clipped metadata.
-                                  childAspectRatio: width >= 820 ? .60 : .55,
+                                  // Derived, never a constant. A fixed ratio
+                                  // clips the title at large text sizes: the
+                                  // cell keeps the right shape but the caption
+                                  // under the cover grows past it.
+                                  childAspectRatio: shelfCellAspectRatio(
+                                    context,
+                                    availableWidth: width,
+                                    columns: columns,
+                                    horizontalPadding: AppSpace.pageGutter * 2,
+                                    coverRatio: 1.4,
+                                  ),
                                 ),
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
