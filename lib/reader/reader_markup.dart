@@ -214,18 +214,25 @@ abstract final class ReaderMarkup {
     return (level <= 2 ? 10 : 6) + 8;
   }
 
+  /// How much larger a chapter heading is than the body.
+  ///
+  /// A heading is a change of *topic*, not a change of volume: at 1.5 the H1
+  /// ran half again the body size and dominated the page, which is the opposite
+  /// of what a quiet reader wants. The reference reader sits at roughly 1.1, so
+  /// the ramp here starts near that and opens up only for deeper levels where
+  /// the difference has to carry without any other cue.
   static double headingFontScale(int level) {
     switch (level) {
       case 1:
-        return 1.5;
+        return 1.25;
       case 2:
-        return 1.3;
-      case 3:
         return 1.16;
+      case 3:
+        return 1.1;
       case 4:
-        return 1.08;
+        return 1.06;
       default:
-        return 1.04;
+        return 1.03;
     }
   }
 
