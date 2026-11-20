@@ -60,47 +60,56 @@ class AppDock extends StatelessWidget {
         right: AppSpace.dockSideInset,
         bottom: bottomInset + AppSpace.dockBottomGap,
       ),
-      child: Center(
-        heightFactor: 1,
-        child: ConstrainedBox(
-          // A dock is a thumb target, not a page-wide bar: past this width the
-          // items stop being reachable with one hand.
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.dock),
-              // A floating overlay is one of the three surfaces the system
-              // allows a shadow on (see [AppShadow.overlay]).
-              boxShadow: AppShadow.overlay(colors),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.dock),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.background.withValues(alpha: 0.82),
-                    borderRadius: BorderRadius.circular(AppRadius.dock),
-                    border: Border.all(
-                      color: colors.border,
-                      width: 1 / (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
+      // The capsule repaints itself; nothing under it should repaint with it.
+      child: RepaintBoundary(
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            // A dock is a thumb target, not a page-wide bar: past this width the
+            // items stop being reachable with one hand.
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.dock),
+                // A floating overlay is one of the three surfaces the system
+                // allows a shadow on (see [AppShadow.overlay]).
+                boxShadow: AppShadow.overlay(colors),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.dock),
+                // A blur is re-sampled every frame anything behind it moves, and
+                // the cost scales with sigma. 24 was heavy enough to show up as
+                // dropped frames while scrolling a shelf; at 14 the capsule reads
+                // the same through an 82 % opaque fill but costs a fraction.
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.background.withValues(alpha: 0.82),
+                      borderRadius: BorderRadius.circular(AppRadius.dock),
+                      border: Border.all(
+                        color: colors.border,
+                        width:
+                            1 /
+                            (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
+                      ),
                     ),
-                  ),
-                  child: SizedBox(
-                    height: AppSpace.dockHeight,
-                    // A tab label is a label, not body copy. Left unclamped,
-                    // a 2x system font turns "设置" into a two-line block that
-                    // overflows the capsule and pushes the icons off centre.
-                    // The dock is the one surface where the system size stops
-                    // being useful: it is four fixed words.
-                    child: MediaQuery.withClampedTextScaling(
-                      maxScaleFactor: 1.3,
-                      child: _DockItems(
-                        items: items,
-                        index: index,
-                        onSelected: onSelected,
-                        iconSize: _iconSize,
-                        labelGap: _labelGap,
+                    child: SizedBox(
+                      height: AppSpace.dockHeight,
+                      // A tab label is a label, not body copy. Left unclamped,
+                      // a 2x system font turns "设置" into a two-line block that
+                      // overflows the capsule and pushes the icons off centre.
+                      // The dock is the one surface where the system size stops
+                      // being useful: it is four fixed words.
+                      child: MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: 1.3,
+                        child: _DockItems(
+                          items: items,
+                          index: index,
+                          onSelected: onSelected,
+                          iconSize: _iconSize,
+                          labelGap: _labelGap,
+                        ),
                       ),
                     ),
                   ),

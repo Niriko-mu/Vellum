@@ -252,7 +252,12 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
     return _writes;
   }
 
-  Future<void> _reflow() async {
+  /// Saves the original-mode location, flips the remembered mode to reflow and
+  /// hands control back. Kept as a public entry point because the navigation
+  /// bar no longer carries a 重排 button: the mode is a remembered preference,
+  /// and callers (a future settings row, a failure recovery path) still need to
+  /// be able to switch without losing the reader's place.
+  Future<void> reflow() async {
     if (_switching) return;
     _switching = true;
     _saveTimer?.cancel();
@@ -325,13 +330,7 @@ class _EpubOriginalReaderPageState extends State<EpubOriginalReaderPage> {
 
   @override
   Widget build(BuildContext context) => CupertinoPageScaffold(
-    navigationBar: CupertinoNavigationBar(
-      middle: Text(widget.book.title),
-      trailing: AppTextButton(
-        label: '重排',
-        onPressed: widget.onUseReflow == null ? null : _reflow,
-      ),
-    ),
+    navigationBar: CupertinoNavigationBar(middle: Text(widget.book.title)),
     child: SafeArea(
       child: Column(
         children: [

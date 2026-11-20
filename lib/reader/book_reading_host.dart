@@ -8,7 +8,6 @@ import '../services/book_search.dart';
 import 'epub_original_reader_page.dart';
 import '../services/epub_original_state.dart';
 import 'reader_page.dart';
-import '../widgets/ui/app_controls.dart';
 
 /// Routes EPUB to its retained original while keeping the existing reader.
 class BookReadingHost extends StatefulWidget {
@@ -106,21 +105,9 @@ class _BookReadingHostState extends State<BookReadingHost> {
       onActivateFont: widget.onActivateFont,
       onToggleUiTheme: widget.onToggleUiTheme,
     );
-    if (!Platform.isAndroid || widget.originalPath == null) return reader;
-    return Stack(
-      children: [
-        reader,
-        Positioned(
-          top: MediaQuery.paddingOf(context).top + 4,
-          right: 12,
-          child: AppButton(
-            label: '原书样式',
-            variant: AppButtonVariant.tonal,
-            size: AppButtonSize.small,
-            onPressed: () => _switchMode(true),
-          ),
-        ),
-      ],
-    );
+    // No floating "原书样式" affordance: switching presentation is a reading
+    // preference, not a per-page action, and a button pinned over the text cost
+    // a strip of every page. The mode is chosen once and remembered.
+    return reader;
   }
 }

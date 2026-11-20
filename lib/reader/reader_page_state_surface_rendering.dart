@@ -175,7 +175,11 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                       selectionHoldTimer?.cancel();
                       handleReaderPointerUp(context, event);
                     },
-                    child: readerSurface(),
+                    // The body is the most expensive thing on screen and it
+                    // changes only when the page does. Without its own layer,
+                    // every chrome fade, progress tick and bookmark hint above
+                    // it repaints the entire text block with it.
+                    child: RepaintBoundary(child: readerSurface()),
                   ),
                 ),
               ),

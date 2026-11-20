@@ -774,9 +774,12 @@ void main() {
           book: ImportedBook(
             title: '无动画翻页',
             format: BookFormat.txt,
+            // Enough pages that this turn is not also the end of the book:
+            // the test is about the transition, and a two-page book turns the
+            // last page into a boundary case with its own behaviour.
             paragraphs: List<String>.generate(
-              9,
-              (index) => '第 ${index + 1} 段翻页内容',
+              60,
+              (index) => '第 ${index + 1} 段翻页内容。' * 6,
             ),
           ),
         ),

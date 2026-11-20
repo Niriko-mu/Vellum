@@ -188,7 +188,9 @@ class ReaderPageSurface extends StatelessWidget {
     return KeyedSubtree(
       key: paragraphKeys.putIfAbsent(index, () => GlobalKey()),
       child: Padding(
-        padding: EdgeInsets.only(bottom: 22, top: isHeading ? 10 : 0),
+        // Paragraph spacing matches the page-mode break (12) and the
+        // reference reader; 22 made long prose read as a list of stanzas.
+        padding: EdgeInsets.only(bottom: 12, top: isHeading ? 10 : 0),
         child: _paragraph(index),
       ),
     );

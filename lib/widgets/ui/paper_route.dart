@@ -102,10 +102,13 @@ class PaperRoute<T> extends CupertinoPageRoute<T> {
       children: [
         AnimatedBuilder(
           animation: animation,
-          // Only visible once the sheet has begun to leave.
-          builder: (context, _) => Opacity(
+          // Only visible once the sheet has begun to leave. The alpha is mixed
+          // into the colour rather than wrapped in an `Opacity`: an opacity
+          // layer around a plain box makes Impeller log
+          // `SetInheritedOpacity ... CanAcceptOpacity returns false` and fall
+          // back to a slower path for every frame of the dismissal.
+          builder: (context, _) => PaperDismissBackdrop(
             opacity: (1 - animation.value).clamp(0.0, 1.0),
-            child: const PaperDismissBackdrop(),
           ),
         ),
         fades,
@@ -120,14 +123,20 @@ class PaperRoute<T> extends CupertinoPageRoute<T> {
 /// returning to, quieted. A shallow darkening reads as depth without flashing
 /// the screen.
 class PaperDismissBackdrop extends StatelessWidget {
-  const PaperDismissBackdrop({super.key});
+  const PaperDismissBackdrop({this.opacity = 1, super.key});
+
+  /// 0 while the page is at rest, 1 once it has fully left.
+  final double opacity;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.c;
+    final alpha = (opacity.clamp(0.0, 1.0) * .10).clamp(0.0, 1.0);
     return ColoredBox(
-      color: colors.background,
-      child: ColoredBox(color: colors.constantBlack.withValues(alpha: .10)),
+      color: Color.alphaBlend(
+        colors.constantBlack.withValues(alpha: alpha),
+        colors.background,
+      ),
     );
   }
 }

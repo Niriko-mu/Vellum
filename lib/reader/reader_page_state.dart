@@ -797,13 +797,16 @@ class ReaderPageState extends State<ReaderPage>
   }
 
   /// Reading-surface insets, matched to the reference reader's page metrics
-  /// (左右 24dp，底部预留给状态胶囊): controls are a floating overlay and must
+  /// (horizontal 20 / vertical 16). Controls are a floating overlay and must
   /// not change these, so opening the menu never reflows or re-paginates.
-  static const double readerSideInset = 24;
-  static const double readerTopInset = 24;
+  ///
+  /// 20 rather than 24: at 24 the measure on a 360 dp phone loses a whole
+  /// character per line, and the column reads narrower than the reference.
+  static const double readerSideInset = 20;
+  static const double readerTopInset = 16;
 
   /// Fanqie page foot is tight so body text fills the column.
-  static const double readerBottomInset = 18;
+  static const double readerBottomInset = 16;
 
   /// Viewport height for pagination. Shares the same fixed bottom reservation
   /// as list/page padding so layout stays identical with controls open or not.
