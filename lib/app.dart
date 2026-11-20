@@ -125,7 +125,9 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
           ? family
           : VellumTheme.systemUiFontFamily;
 
-      VellumTheme.contentFontFamily = _useFontForContent ? family : 'serif';
+      VellumTheme.contentFontFamily = _useFontForContent
+          ? family
+          : VellumTheme.bundledSerifFamily;
     });
 
     await _library.saveFontPreferences(
@@ -227,7 +229,7 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
 
       VellumTheme.fontFamily = VellumTheme.systemUiFontFamily;
 
-      VellumTheme.contentFontFamily = 'serif';
+      VellumTheme.contentFontFamily = VellumTheme.bundledSerifFamily;
 
       await _library.saveFontPreferences(const FontPreferences());
     }
@@ -253,7 +255,9 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
           ? family
           : VellumTheme.systemUiFontFamily;
 
-      VellumTheme.contentFontFamily = useForContent ? family : 'serif';
+      VellumTheme.contentFontFamily = useForContent
+          ? family
+          : VellumTheme.bundledSerifFamily;
     });
 
     await _library.saveFontPreferences(

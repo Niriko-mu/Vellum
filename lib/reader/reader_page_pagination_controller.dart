@@ -30,7 +30,10 @@ class ReaderPaginationController {
   static const _initialLayout = PageLayoutConfig(
     fontSize: 18,
     lineSpacing: ReaderLineSpacing.standard,
-    fontFamily: 'serif',
+    // A const default; the live family is applied per layout at runtime. Kept
+    // in step with VellumTheme.bundledSerifFamily by hand because a const
+    // cannot reference it.
+    fontFamily: 'Noto Serif SC',
     fontWeight: ReaderFontWeight.regular,
     availableHeight: 600,
     contentWidth: 360,

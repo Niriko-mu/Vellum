@@ -93,6 +93,20 @@ flutter:
       fonts:
         - asset: assets/fonts/Lucide.ttf
 
+    # The body serif, vendored rather than left to the platform. `serif`
+    # resolves to a different typeface on every Android ROM - some give a
+    # serif, some silently fall back to the sans face - so line width, line
+    # height and therefore pagination all shift between devices. Shipping the
+    # face is what makes a page look the same everywhere. OFL licensed; the
+    # licence ships beside it. Users can still switch to a system or imported
+    # font in the reader's font picker.
+    - family: Noto Serif SC
+      fonts:
+        - asset: assets/fonts/NotoSerifSC-Regular.otf
+          weight: 400
+        - asset: assets/fonts/NotoSerifSC-Bold.otf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

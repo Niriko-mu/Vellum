@@ -18,7 +18,14 @@ import 'app_type.dart';
 abstract final class VellumTheme {
   static const systemUiFontFamily = 'sans-serif';
   static String fontFamily = systemUiFontFamily;
-  static String contentFontFamily = 'serif';
+
+  /// The vendored body serif (see pubspec). Using a family we ship, rather than
+  /// the generic `serif`, is what keeps line breaks and pagination identical
+  /// across devices: the generic name resolves to a different typeface on every
+  /// Android ROM, and on some it silently falls back to a sans face. A user who
+  /// picks a system or imported font still overrides this.
+  static const bundledSerifFamily = 'Noto Serif SC';
+  static String contentFontFamily = bundledSerifFamily;
 
   // ------------------------------------------------------------------------
   // Brand.
@@ -236,9 +243,9 @@ abstract final class VellumTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: AppText.sectionHeader(colors.foreground).copyWith(
-          fontFamily: family,
-        ),
+        titleTextStyle: AppText.sectionHeader(
+          colors.foreground,
+        ).copyWith(fontFamily: family),
       ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
       visualDensity: VisualDensity.standard,
