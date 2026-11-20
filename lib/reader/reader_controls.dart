@@ -291,7 +291,7 @@ class _ReaderMenuState extends State<ReaderMenu>
     // while a catalog/settings sheet is open. It is a floating stack now:
     // progress pill (78) + gap (8) + capsule (54) + bottom air (12).
     final bottomChrome =
-        78.0 +
+        68.0 +
         _ReaderBottomDock.progressGap +
         _ReaderBottomDock.capsuleHeight +
         12 +
@@ -559,9 +559,12 @@ class _ReaderMenuState extends State<ReaderMenu>
         .round()
         .clamp(0, 100);
     return SizedBox(
-      height: 78,
+      // 68, not 78: this now floats above the action capsule instead of being
+      // welded into a bar, so its own padding was doing the spacing that the
+      // gap between the two surfaces already does.
+      height: 68,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 5, 12, 3),
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 2),
         child: Column(
           children: [
             Row(
