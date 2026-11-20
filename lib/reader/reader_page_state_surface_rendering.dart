@@ -191,7 +191,12 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
                   animation: coverAnim,
                   dragTurn: dragTurn,
                   dragCommitted: dragCommitted,
-                  pageSurface: coverPageSurface,
+                  // The PageView still shows [fromPage] underneath and stays
+                  // laid out for the whole turn, so the overlay only has to
+                  // reproduce the *destination*. Rebuilding both pages here was
+                  // triple the paragraph work of an idle page (measured: 2 built
+                  // at rest, 7 during a turn) and is what made a turn hitch.
+                  pageSurface: coverDestinationSurface,
                 ),
               if (eyeCare != ReaderEyeCare.off)
                 Positioned.fill(
@@ -605,24 +610,22 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
 
   void finishCoverTurn(int to) {
     coverJumping = true;
+    // Land the PageView first, with the overlay still covering it, and only then
+    // tear the overlay down. Doing both in one frame made that frame build the
+    // destination page *and* dispose the two overlay pages - the single worst
+    // frame of a turn (measured at ~60 ms), and the one a reader feels as a
+    // hitch at the end of every page.
     jumpToPageExact(to);
-    refresh(() {
-      currentPage = to;
-      requestedPage = to;
-    });
-    // Cover turns keep PageView on the previous page until the overlay settles,
-    // so its onPageChanged callback is intentionally ignored. Start the next
-    // pagination slice from the committed page instead.
-    maybeExtendPagination();
-    // Drop the overlay one frame after the jump so the user never sees
-    // PageView rebuild/layout under the cover.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       refresh(() {
+        currentPage = to;
+        requestedPage = to;
         coverFromPage = null;
         coverToPage = null;
       });
       coverJumping = false;
+      maybeExtendPagination();
       scheduleSave();
       final pending = pendingPageDelta;
       pendingPageDelta = 0;
@@ -634,24 +637,39 @@ extension ReaderPageSurfaceRendering on ReaderPageState {
     });
   }
 
+  /// Only the destination needs to exist during a turn: the source is already
+  /// painted by the PageView underneath, which keeps the source page laid out
+  /// until [finishCoverTurn] jumps.
+  Widget coverDestinationSurface(BuildContext context, int page) {
+    if (page == coverFromPage) return const SizedBox.expand();
+    return coverPageSurface(context, page);
+  }
+
   Widget coverPageSurface(BuildContext context, int page) {
     if (page < 0 || page >= pageCount) return const SizedBox.expand();
     // Same paper stack as the live page (underlay + image). Painting only a
     // solid colour here made the background pop every cover-style turn.
+    //
+    // Both halves are wrapped in their own layer. During a turn the overlay
+    // repaints every frame to move one page across; without these boundaries
+    // each frame also re-rasterises the other page's text and the paper
+    // gradient, which is what made a cover turn drop frames on a long page.
     return Stack(
       fit: StackFit.expand,
       children: [
         RepaintBoundary(child: paperSurface(context)),
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            ReaderPageState.readerSideInset,
-            ReaderPageState.readerTopInset,
-            ReaderPageState.readerSideInset,
-            ReaderPageState.readerBottomInset,
+        RepaintBoundary(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              ReaderPageState.readerSideInset,
+              ReaderPageState.readerTopInset,
+              ReaderPageState.readerSideInset,
+              ReaderPageState.readerBottomInset,
+            ),
+            // Keep the same text renderer during the turn and after landing.
+            // IgnorePointer on the overlay already prevents selection gestures.
+            child: readerSurface().buildPage(context, page),
           ),
-          // Keep the same text renderer during the turn and after landing.
-          // IgnorePointer on the overlay already prevents selection gestures.
-          child: readerSurface().buildPage(context, page),
         ),
       ],
     );

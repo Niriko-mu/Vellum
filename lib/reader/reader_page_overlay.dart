@@ -115,15 +115,26 @@ class ReaderCoverTurnOverlay extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                RepaintBoundary(child: pageSurface(context, staticPage)),
+                // Keyed by page so a turn reuses the same subtree; the pages
+                // are already rendered below by the PageView, and rebuilding
+                // either of them per frame is what made a turn expensive.
+                RepaintBoundary(
+                  key: ValueKey<int>(staticPage),
+                  child: pageSurface(context, staticPage),
+                ),
                 AnimatedBuilder(
                   animation: animation,
+                  // The moving page is built once, outside the builder: only its
+                  // translation changes while the turn runs.
                   child: RepaintBoundary(
+                    key: ValueKey<int>(movingPage),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
-                            color: context.c.constantBlack.withValues(alpha: .22),
+                            color: context.c.constantBlack.withValues(
+                              alpha: .22,
+                            ),
                             blurRadius: 18,
                             spreadRadius: 1,
                             offset: const Offset(10, 0),

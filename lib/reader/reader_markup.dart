@@ -14,8 +14,21 @@ abstract final class ReaderMarkup {
       .replaceFirst(list, '• ')
       .replaceAll(inlineTag, '');
 
-  static String layoutText(String source) =>
-      readerText(source).replaceAll(inlineImage, '￼');
+  /// Paragraph text is immutable, and a page turn rebuilds every paragraph on
+  /// it. Both calls run a chain of regex passes, so their results are memoised:
+  /// the map is bounded and cleared wholesale rather than allowed to grow with
+  /// the book.
+  static final Map<String, String> _layoutCache = {};
+  static const int _layoutCacheLimit = 800;
+
+  static String layoutText(String source) {
+    final cached = _layoutCache[source];
+    if (cached != null) return cached;
+    final value = readerText(source).replaceAll(inlineImage, '￼');
+    if (_layoutCache.length >= _layoutCacheLimit) _layoutCache.clear();
+    _layoutCache[source] = value;
+    return value;
+  }
 
   static bool isStandaloneImageParagraph(String source) =>
       stripAllMarkers(source).trim().isEmpty;
@@ -129,7 +142,8 @@ abstract final class ReaderMarkup {
   static String indentPrefixFor(String plain) =>
       isLatinBody(plain) ? latinIndent : cjkIndent;
 
-  static int indentPrefixLengthFor(String plain) => indentPrefixFor(plain).length;
+  static int indentPrefixLengthFor(String plain) =>
+      indentPrefixFor(plain).length;
 
   /// Source already carries a first-line indent — display must not double it.
   static bool alreadyHasFirstLineIndent(String source) {
