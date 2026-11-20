@@ -92,7 +92,10 @@ void main() {
       // They answer "is this a double tap / a long press / a pull?", never
       // "how long does this animate". Mixing the two is how one screen ended
       // up with thirteen millisecond values that looked like timings.
-      expect(AppGestureWindow.selectionHold.inMilliseconds, 750);
+      // 400, not 750: the platform starts a text selection at about 500 ms, and
+      // a threshold after that left a window where the reader was already
+      // selecting while a horizontal drag still armed a page turn.
+      expect(AppGestureWindow.selectionHold.inMilliseconds, 400);
       expect(AppGestureWindow.bookmarkPullHold.inMilliseconds, 400);
       expect(AppGestureWindow.doubleTap.inMilliseconds, 200);
     });

@@ -290,12 +290,7 @@ class _ReaderMenuState extends State<ReaderMenu>
     // Bottom chrome always shows progress + actions so seek stays usable
     // while a catalog/settings sheet is open. It is a floating stack now:
     // progress pill (78) + gap (8) + capsule (54) + bottom air (12).
-    final bottomChrome =
-        68.0 +
-        _ReaderBottomDock.progressGap +
-        _ReaderBottomDock.capsuleHeight +
-        12 +
-        bottomSafe;
+    final bottomChrome = _ReaderBottomDock.totalHeight(bottomSafe);
     final bandTop = ReaderTopBar.height + topSafe;
 
     return Positioned.fill(
@@ -319,10 +314,13 @@ class _ReaderMenuState extends State<ReaderMenu>
             final expandSheet =
                 _panel != _AbovePanel.none && (_searchActive || squeezed);
             final compact = expandSheet || available < 420;
+            // In a short window the floating stack does not shrink: it is two
+            // fixed-height rows. Reserving .22 of the box (capped at 90) put the
+            // sheet's bottom ~50dp under the capsule, hiding its last rows.
             final chrome = expandSheet
                 ? 0.0
                 : compact
-                ? (available * .22).clamp(0.0, 90.0)
+                ? _ReaderBottomDock.totalHeight(bottomSafe)
                 : bottomChrome;
             final band = expandSheet
                 ? 0.0
@@ -562,7 +560,7 @@ class _ReaderMenuState extends State<ReaderMenu>
       // 68, not 78: this now floats above the action capsule instead of being
       // welded into a bar, so its own padding was doing the spacing that the
       // gap between the two surfaces already does.
-      height: 68,
+      height: _ReaderBottomDock.progressHeight,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 2),
         child: Column(
@@ -570,6 +568,7 @@ class _ReaderMenuState extends State<ReaderMenu>
             Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: Text(
                     chapterText.isEmpty ? '阅读进度' : chapterText,
                     maxLines: 1,
@@ -580,11 +579,19 @@ class _ReaderMenuState extends State<ReaderMenu>
                     ),
                   ),
                 ),
-                Text(
-                  '本章 $chapterPercent% · 全书 $bookPercent%',
-                  style: TextStyle(
-                    color: ink.withValues(alpha: .55),
-                    fontSize: 13,
+                // Flexible, not a bare Text: at 2.5x system text this line is
+                // wider than the pill, and the unconstrained Row overflowed
+                // instead of ellipsising.
+                Flexible(
+                  child: Text(
+                    '本章 $chapterPercent% · 全书 $bookPercent%',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: ink.withValues(alpha: .62),
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
@@ -681,7 +688,11 @@ class _ReaderMenuState extends State<ReaderMenu>
                 context,
                 themeBg,
                 icon: widget.listening ? AppIcons.speaker2 : AppIcons.speaker1,
-                label: widget.listening ? '听书中' : '听书',
+                // While a book is being read aloud this cell is the pause and
+                // continue control, not a second start button: the label has
+                // said 听书中 since the first chapter, and tapping it used to
+                // restart the whole flow from the top.
+                label: widget.listening ? '暂停' : '听书',
                 selected: widget.listening,
                 onTap: widget.onListen!,
               ),
@@ -835,6 +846,17 @@ class _ReaderBottomDock extends StatelessWidget {
   /// Gap between the progress pill and the capsule.
   static const double progressGap = 8;
 
+  /// Height of the progress pill itself (its content is a fixed 68).
+  static const double progressHeight = 68;
+
+  /// The vertical room the whole floating stack occupies, safe area included.
+  ///
+  /// One number for both the panel's bottom bound and the layout: they were
+  /// computed separately, and the short-window branch used a fraction of the
+  /// box instead — which is how a sheet ended up behind its own controls.
+  static double totalHeight(double bottomSafe) =>
+      progressHeight + progressGap + capsuleHeight + 12 + bottomSafe;
+
   /// Side inset of the floating stack from the window edge.
   static const double sideInset = 12;
 
@@ -844,8 +866,14 @@ class _ReaderBottomDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(capsuleHeight / 2);
+    // Two steps above the paper, not a translucent film over it: at .96 the body
+    // text showed through the progress pill, which read as a mis-rendered page
+    // rather than as a surface floating above one.
+    final pill = Color.alphaBlend(surface.withValues(alpha: .94), ink);
     final hairline = Border.all(
-      color: ink.withValues(alpha: .10),
+      // .10 was 1.24:1 on the white paper — below even the 3:1 graphics floor,
+      // so the capsule had no edge at all and the text it covered looked cut off.
+      color: ink.withValues(alpha: .18),
       width: 1 / (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
     );
     return SafeArea(
@@ -865,7 +893,7 @@ class _ReaderBottomDock extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: surface.withValues(alpha: .96),
+                      color: pill,
                       borderRadius: BorderRadius.circular(18),
                       border: hairline,
                     ),

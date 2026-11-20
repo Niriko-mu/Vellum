@@ -680,6 +680,27 @@ class ReaderPageState extends State<ReaderPage>
     });
   }
 
+  /// The dock's 听书 cell while a book is already being read aloud.
+  ///
+  /// Tapping it used to start the whole flow again — the "上次听到第 N 段"
+  /// dialog, then playback from the current page — for a button whose label
+  /// already said 听书中. Pausing is what that tap means.
+  Future<void> toggleListening() async {
+    final handler = ttsHandler;
+    if (handler == null) return;
+    if (!listening) {
+      await startListening();
+      return;
+    }
+    if (handler.isPlaying) {
+      await handler.pause();
+    } else {
+      await handler.play();
+    }
+    if (!mounted) return;
+    setState(() => ttsLabel = handler.positionLabel);
+  }
+
   void onTtsError(TtsException error) {
     if (!mounted) return;
     showBookmarkNotice(error.userMessage);

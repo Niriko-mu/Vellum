@@ -139,8 +139,10 @@ class TtsBar extends StatelessWidget {
   }) => AppPressable(
     onTap: onTap,
     child: SizedBox(
+      // 44 square: these four are the only transport controls while a book is
+      // being read aloud, and a 36-high target misses under a thumb.
       width: 44,
-      height: 36,
+      height: 44,
       child: Icon(icon, size: size, color: color),
     ),
   );

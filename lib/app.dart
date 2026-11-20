@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/services.dart' show SystemUiOverlayStyle, Uint8List;
+import 'package:flutter/services.dart'
+    show SystemChrome, SystemUiOverlayStyle, Uint8List;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart'
-    show Colors, MaterialApp, Theme, ThemeMode;
+import 'package:flutter/material.dart' show MaterialApp, Theme, ThemeMode;
 
 import 'pages/book_details_page.dart';
 import 'pages/cover_editor_sheet.dart';
@@ -40,6 +40,7 @@ import 'widgets/ui/book_motion.dart';
 import 'theme/app_shape.dart';
 import 'theme/app_type.dart';
 import 'theme/vellum_theme.dart';
+import 'theme/system_ui.dart';
 import 'theme/app_icons.dart';
 import 'widgets/ui/app_dialog.dart';
 import 'widgets/ui/paper_route.dart';
@@ -76,6 +77,18 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
     super.initState();
 
     WidgetsBinding.instance.addObserver(this);
+
+    // Once, not per frame: the AnnotatedRegion in build() states the style to
+    // the layer tree, but the platform only learns it when a frame carrying it
+    // is composited. On a cold start the first frame can be drawn before that
+    // hand-off, which is when Android painted its own status-bar scrim.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChrome.setSystemUIOverlayStyle(
+        VellumSystemUi.forBrightness(
+          _manualBrightness ?? _brightness,
+        ),
+      );
+    });
 
     _loadFonts();
   }
@@ -309,7 +322,6 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
           : ThemeMode.light,
       builder: (context, child) {
         final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
         final family =
             theme.textTheme.bodyMedium?.fontFamily ??
             VellumTheme.systemUiFontFamily;
@@ -319,12 +331,7 @@ class _VellumAppState extends State<VellumApp> with WidgetsBindingObserver {
           // the layer tree, so it costs nothing per rebuild — a
           // `SystemChrome.setSystemUIOverlayStyle` call here would cross the
           // platform channel on every tab tap and every theme frame.
-          value:
-              (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
-                  .copyWith(
-                    statusBarColor: Colors.transparent,
-                    systemNavigationBarColor: Colors.transparent,
-                  ),
+          value: VellumSystemUi.forBrightness(theme.brightness),
           child: DefaultTextStyle(
             // MaterialApp ships WidgetsApp with a deliberately loud red-on-yellow
             // error text style as its default. Everything we have not styled

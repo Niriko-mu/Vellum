@@ -294,11 +294,21 @@ class AppRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: AppText.rowTitle(titleColor)),
+                  // Two lines and then ellipsis: a label that wraps to a third
+                  // line is a label that no longer fits beside its value, and
+                  // an unbounded one pushed the glyph column out of alignment.
+                  Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.rowTitle(titleColor),
+                  ),
                   if (description != null) ...[
                     const SizedBox(height: AppSpace.x1),
                     Text(
                       description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: AppText.rowDescription(colors.mutedForeground),
                     ),
                   ],
@@ -306,10 +316,11 @@ class AppRow extends StatelessWidget {
               ),
             ),
             if (value != null)
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.sizeOf(context).width * 0.62,
-                ),
+              // Flexible against the label rather than a fraction of the
+              // window: 62 % of the screen is not 62 % of the row, and on a
+              // 360 dp phone it squeezed "阅读统计" into two 45 dp columns while
+              // the value still ran under the chevron.
+              Flexible(
                 child: Padding(
                   padding: const EdgeInsets.only(left: AppSpace.x3),
                   child: Text(
@@ -431,11 +442,18 @@ class AppSelectRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(label, style: AppText.rowTitle(colors.foreground)),
+                      Text(
+                        label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.rowTitle(colors.foreground),
+                      ),
                       if (description != null) ...[
                         const SizedBox(height: AppSpace.x1),
                         Text(
                           description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: AppText.rowDescription(
                             colors.mutedForeground,
                           ),
@@ -445,10 +463,9 @@ class AppSelectRow extends StatelessWidget {
                   ),
                 ),
                 if (value != null)
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.sizeOf(context).width * 0.62,
-                    ),
+                  // Same reason as AppRow: the value competes with the label
+                  // for the row's width, not for a fraction of the window.
+                  Flexible(
                     child: Padding(
                       padding: const EdgeInsets.only(left: AppSpace.x3),
                       child: Text(

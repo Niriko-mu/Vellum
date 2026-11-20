@@ -108,225 +108,250 @@ class _WritingTypographySheetState extends State<WritingTypographySheet> {
     final line = context.c.border;
     return SafeArea(
       top: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(AppRadius.grouped),
+      child: ConstrainedBox(
+        // A sheet is bounded: with the system text at 2x this panel is taller
+        // than the screen, and an unbounded Column simply overflowed — the
+        // 「完成」button left the display with no way to scroll to it.
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .8,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              '排版',
-              textAlign: TextAlign.center,
-              style: AppText.sectionHeader(ink),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '对所有文稿全局生效',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: muted),
-            ),
-            const SizedBox(height: 12),
-            // Font row — same picker as the reading page (system + imported).
-            Text('字体', style: TextStyle(fontSize: 13, color: muted)),
-            const SizedBox(height: 8),
-            AppPressable(
-              onTap: _busyFont ? null : _openFontPicker,
-              enabled: !_busyFont,
-              semanticLabel: '选择字体',
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: .08),
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
-                  border: Border.all(color: line),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _busyFont ? '正在加载字体…' : _fontLabel,
-                        style: TextStyle(
-                          color: ink,
-                          fontSize: 16,
-                          fontFamily: _typo.fontFamily,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '永Aa',
-                      style: TextStyle(
-                        color: muted,
-                        fontSize: 16,
-                        fontFamily: _typo.fontFamily,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      AppIcons.rightChevron,
-                      size: 16,
-                      color: muted,
-                    ),
-                  ],
-                ),
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          decoration: BoxDecoration(
+            color: card,
+            borderRadius: BorderRadius.circular(AppRadius.grouped),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '排版',
+                textAlign: TextAlign.center,
+                style: AppText.sectionHeader(ink),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text('字号', style: TextStyle(fontSize: 13, color: muted)),
-            Row(
-              children: [
-                AppTextButton(
-                  label: 'A−',
-                  color: ink,
-                  onPressed: () => _update(
-                    _typo.copyWith(
-                      fontSize: (_typo.fontSize - 1).clamp(
-                        WritingTypography.minSize,
-                        WritingTypography.maxSize,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: CupertinoSlider(
-                    value: _typo.fontSize.clamp(
-                      WritingTypography.minSize,
-                      WritingTypography.maxSize,
-                    ),
-                    min: WritingTypography.minSize,
-                    max: WritingTypography.maxSize,
-                    onChanged: (v) => _update(_typo.copyWith(fontSize: v)),
-                  ),
-                ),
-                AppTextButton(
-                  label: 'A+',
-                  color: ink,
-                  onPressed: () => _update(
-                    _typo.copyWith(
-                      fontSize: (_typo.fontSize + 1).clamp(
-                        WritingTypography.minSize,
-                        WritingTypography.maxSize,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 36,
-                  child: Text(
-                    '${_typo.fontSize.round()}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: muted),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text('字重', style: TextStyle(fontSize: 13, color: muted)),
-            const SizedBox(height: 8),
-            CupertinoSlidingSegmentedControl<int>(
-              groupValue: _typo.weightIndex,
-              children: {
-                for (var i = 0; i < WritingTypography.weightLabels.length; i++)
-                  i: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(WritingTypography.weightLabels[i]),
-                  ),
-              },
-              onValueChanged: (v) {
-                if (v == null) return;
-                _update(_typo.copyWith(weightIndex: v));
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
+              const SizedBox(height: 4),
+              Text(
+                '对所有文稿全局生效',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: muted),
+              ),
+              const SizedBox(height: 12),
+              // Everything between the title and 完成 scrolls; the title stays put
+              // and the button stays reachable.
+              Flexible(
+                child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        '小说模式',
-                        style: AppText.stateTitle(
-                          widget.novelAvailable ? ink : muted,
+                      // Font row — same picker as the reading page (system + imported).
+                      Text('字体', style: TextStyle(fontSize: 13, color: muted)),
+                      const SizedBox(height: 8),
+                      AppPressable(
+                        onTap: _busyFont ? null : _openFontPicker,
+                        enabled: !_busyFont,
+                        semanticLabel: '选择字体',
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: .08),
+                            borderRadius: BorderRadius.circular(AppRadius.xl),
+                            border: Border.all(color: line),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _busyFont ? '正在加载字体…' : _fontLabel,
+                                  style: TextStyle(
+                                    color: ink,
+                                    fontSize: 16,
+                                    fontFamily: _typo.fontFamily,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '永Aa',
+                                style: TextStyle(
+                                  color: muted,
+                                  fontSize: 16,
+                                  fontFamily: _typo.fontFamily,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                AppIcons.rightChevron,
+                                size: 16,
+                                color: muted,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        widget.novelAvailable
-                            ? '开启后自动排版：段首两格缩进 · 段间空行'
-                            : 'Markdown 模式下不启用，切换到纯文本即可使用',
-                        style: AppText.caption(muted),
+                      const SizedBox(height: 16),
+                      Text('字号', style: TextStyle(fontSize: 13, color: muted)),
+                      Row(
+                        children: [
+                          AppTextButton(
+                            label: 'A−',
+                            color: ink,
+                            onPressed: () => _update(
+                              _typo.copyWith(
+                                fontSize: (_typo.fontSize - 1).clamp(
+                                  WritingTypography.minSize,
+                                  WritingTypography.maxSize,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: CupertinoSlider(
+                              value: _typo.fontSize.clamp(
+                                WritingTypography.minSize,
+                                WritingTypography.maxSize,
+                              ),
+                              min: WritingTypography.minSize,
+                              max: WritingTypography.maxSize,
+                              onChanged: (v) =>
+                                  _update(_typo.copyWith(fontSize: v)),
+                            ),
+                          ),
+                          AppTextButton(
+                            label: 'A+',
+                            color: ink,
+                            onPressed: () => _update(
+                              _typo.copyWith(
+                                fontSize: (_typo.fontSize + 1).clamp(
+                                  WritingTypography.minSize,
+                                  WritingTypography.maxSize,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 36,
+                            child: Text(
+                              '${_typo.fontSize.round()}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: muted),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text('字重', style: TextStyle(fontSize: 13, color: muted)),
+                      const SizedBox(height: 8),
+                      CupertinoSlidingSegmentedControl<int>(
+                        groupValue: _typo.weightIndex,
+                        children: {
+                          for (
+                            var i = 0;
+                            i < WritingTypography.weightLabels.length;
+                            i++
+                          )
+                            i: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Text(WritingTypography.weightLabels[i]),
+                            ),
+                        },
+                        onValueChanged: (v) {
+                          if (v == null) return;
+                          _update(_typo.copyWith(weightIndex: v));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '小说模式',
+                                  style: AppText.stateTitle(
+                                    widget.novelAvailable ? ink : muted,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.novelAvailable
+                                      ? '开启后自动排版：段首两格缩进 · 段间空行'
+                                      : 'Markdown 模式下不启用，切换到纯文本即可使用',
+                                  style: AppText.caption(muted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          AppSwitch(
+                            value: widget.novelAvailable && _typo.novelMode,
+                            enabled: widget.novelAvailable,
+                            semanticLabel: '小说排版',
+                            onChanged: (v) =>
+                                _update(_typo.copyWith(novelMode: v)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('显示保存状态', style: AppText.stateTitle(ink)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '关闭后标题下方只保留日期，写作时不再出现变化的文字',
+                                  style: AppText.caption(muted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          AppSwitch(
+                            value: _typo.showSaveStatus,
+                            semanticLabel: '显示保存状态',
+                            onChanged: (v) =>
+                                _update(_typo.copyWith(showSaveStatus: v)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: .08),
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                        ),
+                        child: Text(
+                          (widget.novelAvailable && _typo.novelMode)
+                              ? '　　示例文字 The quick brown fox'
+                              : '示例文字 The quick brown fox',
+                          style: TextStyle(
+                            color: ink,
+                            fontSize: _typo.fontSize,
+                            fontFamily: _typo.fontFamily,
+                            fontWeight: _typo.fontWeight,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                AppSwitch(
-                  value: widget.novelAvailable && _typo.novelMode,
-                  enabled: widget.novelAvailable,
-                  semanticLabel: '小说排版',
-                  onChanged: (v) => _update(_typo.copyWith(novelMode: v)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '显示保存状态',
-                        style: AppText.stateTitle(ink),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '关闭后标题下方只保留日期，写作时不再出现变化的文字',
-                        style: AppText.caption(muted),
-                      ),
-                    ],
-                  ),
-                ),
-                AppSwitch(
-                  value: _typo.showSaveStatus,
-                  semanticLabel: '显示保存状态',
-                  onChanged: (v) => _update(_typo.copyWith(showSaveStatus: v)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: .08),
-                borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
-              child: Text(
-                (widget.novelAvailable && _typo.novelMode)
-                    ? '　　示例文字 The quick brown fox'
-                    : '示例文字 The quick brown fox',
-                style: TextStyle(
-                  color: ink,
-                  fontSize: _typo.fontSize,
-                  fontFamily: _typo.fontFamily,
-                  fontWeight: _typo.fontWeight,
-                ),
+              const SizedBox(height: 12),
+              AppTextButton(
+                label: '完成',
+                onPressed: () => Navigator.pop(context),
               ),
-            ),
-            const SizedBox(height: 12),
-            AppTextButton(
-              label: '完成',
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

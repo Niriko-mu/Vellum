@@ -193,7 +193,16 @@ class _EbookToTxtPageState extends State<EbookToTxtPage> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              // The floating dock hovers over this page; 28 was less than one
+              // dock height, so the closing line sat behind the capsule.
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                AppSpace.dockReserve(
+                  MediaQuery.viewPaddingOf(context).bottom,
+                ),
+              ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(

@@ -65,7 +65,13 @@ abstract final class AppGestureWindow {
   static const Duration doubleTap = Duration(milliseconds: 200);
 
   /// How long a press must hold before it counts as selecting text.
-  static const Duration selectionHold = Duration(milliseconds: 750);
+  ///
+  /// The platform begins a selection at about 500 ms. Holding our own flag for
+  /// longer than that left a window in which the finger had already started
+  /// selecting but a horizontal drag still armed a page turn — a highlight
+  /// turned into a flipped page. 400 ms is comfortably before the platform, so
+  /// the turn never gets that window.
+  static const Duration selectionHold = Duration(milliseconds: 400);
 
   /// Longest a bookmark pull is tracked before it commits.
   static const Duration bookmarkPullHold = Duration(milliseconds: 400);

@@ -121,6 +121,8 @@ class _TtsSettingsPageState extends State<TtsSettingsPage> {
       ),
       child: AppPage(
         scrollable: true,
+        // Leaves room for the floating dock instead of scrolling under it.
+        reserveDock: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

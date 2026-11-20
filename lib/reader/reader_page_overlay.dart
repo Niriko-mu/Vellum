@@ -13,12 +13,17 @@ class ReaderReadingTimePill extends StatelessWidget {
     required this.sessionSeconds,
     required this.todaySeconds,
     required this.surface,
+    this.bookmarkTabVisible = false,
     super.key,
   });
 
   final ValueListenable<int> sessionSeconds;
   final ValueListenable<int> todaySeconds;
   final Color surface;
+
+  /// Whether the pinned bookmark tab is on the paper right now: it shares this
+  /// corner, so the pill has to make room for it.
+  final bool bookmarkTabVisible;
 
   /// Reading time is ambient information, so it is rendered in minutes.
   ///
@@ -43,7 +48,10 @@ class ReaderReadingTimePill extends StatelessWidget {
       child: Align(
         alignment: Alignment.topRight,
         child: Padding(
-          padding: const EdgeInsets.only(top: 4, right: 18),
+          // The bookmark tab lives in the same corner at the same moment as
+          // this pill. It is 28 wide and flush to the edge, so the pill steps
+          // in to clear it instead of being painted over.
+          padding: EdgeInsets.only(top: 4, right: bookmarkTabVisible ? 44 : 18),
           child: ValueListenableBuilder<int>(
             valueListenable: sessionSeconds,
             builder: (context, session, _) => ValueListenableBuilder<int>(
