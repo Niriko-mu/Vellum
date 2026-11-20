@@ -288,8 +288,14 @@ class _ReaderMenuState extends State<ReaderMenu>
     final chromeVisible = widget.visible || _chromeAnim.isAnimating;
 
     // Bottom chrome always shows progress + actions so seek stays usable
-    // while a catalog/settings sheet is open.
-    final bottomChrome = 65.0 + 1 + 2 + 56 + 2 + bottomSafe;
+    // while a catalog/settings sheet is open. It is a floating stack now:
+    // progress pill (78) + gap (8) + capsule (54) + bottom air (12).
+    final bottomChrome =
+        78.0 +
+        _ReaderBottomDock.progressGap +
+        _ReaderBottomDock.capsuleHeight +
+        12 +
+        bottomSafe;
     final bandTop = ReaderTopBar.height + topSafe;
 
     return Positioned.fill(
@@ -494,22 +500,11 @@ class _ReaderMenuState extends State<ReaderMenu>
                     bottom: 0,
                     child: SlideTransition(
                       position: bottomSlide,
-                      child: ColoredBox(
-                        color: themeBg,
-                        child: SafeArea(
-                          top: false,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _progressRow(context, themeBg),
-                              Container(
-                                height: 1,
-                                color: chromeInk.withValues(alpha: .08),
-                              ),
-                              _actionRow(context, themeBg),
-                            ],
-                          ),
-                        ),
+                      child: _ReaderBottomDock(
+                        surface: themeBg,
+                        ink: chromeInk,
+                        progress: _progressRow(context, themeBg),
+                        actions: _actionRow(context, themeBg),
                       ),
                     ),
                   ),
@@ -801,6 +796,95 @@ class _ReaderMenuState extends State<ReaderMenu>
         onVolumeKeys: widget.onVolumeKeys,
         onShowFonts: widget.onShowFonts,
         onClose: _closePanel,
+      ),
+    );
+  }
+}
+
+/// The reader's bottom chrome, as a floating capsule rather than a full-width bar.
+///
+/// A bar welded to the bottom edge occupies a permanent strip of the page; a
+/// capsule hovers over the text and lets the page run underneath it, which is
+/// what makes the reading surface feel like the whole screen. The progress row
+/// sits directly on top of the capsule (also floating) so seeking never costs
+/// another band of height.
+///
+/// Geometry follows the reading-dock convention: 54 tall capsule, fully rounded,
+/// 12 above the safe area, a hairline instead of a shadow, and an edge shade
+/// where it meets the page so the capsule reads as glass over paper rather than
+/// as a pasted-on rectangle.
+class _ReaderBottomDock extends StatelessWidget {
+  const _ReaderBottomDock({
+    required this.surface,
+    required this.ink,
+    required this.progress,
+    required this.actions,
+  });
+
+  final Color surface;
+  final Color ink;
+  final Widget progress;
+  final Widget actions;
+
+  /// Capsule height. Label + icon need 44; the rest is breathing room.
+  static const double capsuleHeight = 54;
+
+  /// Gap between the progress pill and the capsule.
+  static const double progressGap = 8;
+
+  /// Side inset of the floating stack from the window edge.
+  static const double sideInset = 12;
+
+  /// Largest width the capsule grows to; a reading dock is a thumb target.
+  static const double maxWidth = 560;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(capsuleHeight / 2);
+    final hairline = Border.all(
+      color: ink.withValues(alpha: .10),
+      width: 1 / (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
+    );
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: sideInset),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxWidth),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Progress floats above the capsule, sharing its width.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: surface.withValues(alpha: .96),
+                      borderRadius: BorderRadius.circular(18),
+                      border: hairline,
+                    ),
+                    child: progress,
+                  ),
+                ),
+                const SizedBox(height: progressGap),
+                ClipRRect(
+                  borderRadius: radius,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: surface,
+                      borderRadius: radius,
+                      border: hairline,
+                    ),
+                    child: SizedBox(height: capsuleHeight, child: actions),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
