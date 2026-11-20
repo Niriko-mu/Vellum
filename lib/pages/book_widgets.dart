@@ -105,12 +105,10 @@ class BookGridCard extends StatelessWidget {
   final ImportedBook book;
   final double progress;
   final VoidCallback onTap;
-  final VoidCallback onDelete;
   final VoidCallback? onLongPress;
   const BookGridCard({
     required this.book,
     required this.onTap,
-    required this.onDelete,
     this.progress = 0,
     this.onLongPress,
     super.key,
@@ -158,13 +156,14 @@ class BookGridCard extends StatelessWidget {
                                         DefaultCover(book: book),
                                   ),
                             // Reading progress as a small badge on the cover's
-                            // top-right corner, inset 4 — the shelf convention.
-                            // A full-width bar across the bottom of every cover
-                            // fights the artwork and outweighs the title below.
+                            // bottom-left corner. It used to sit top-right,
+                            // where it was covered by the delete disc; the
+                            // corner that carries it now is the one that is
+                            // never occupied by a control.
                             if (percent > 0)
                               Positioned(
-                                top: 4,
-                                right: 4,
+                                left: 4,
+                                bottom: 4,
                                 child: _ProgressBadge(percent: percent),
                               ),
                           ],
@@ -173,14 +172,11 @@ class BookGridCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: LibraryDeleteButton(
-                    onPressed: onDelete,
-                    onCover: true,
-                  ),
-                ),
+                // The delete disc is not permanent furniture on every cover:
+                // it was covering the progress badge and, at large text sizes,
+                // part of the generated title as well. A cover is an object to
+                // open; deleting a book is a deliberate act, and it waits for
+                // the long press that already opens the book's actions.
               ],
             ),
           ),

@@ -179,7 +179,10 @@ void main() {
     expect(find.text('清除阅读记录'), findsOneWidget);
   });
 
-  testWidgets('shows a delete action for books in the library', (tester) async {
+  testWidgets('a cover carries no permanent delete disc', (tester) async {
+    // Deleting used to be a disc welded to every cover's top-right corner. It
+    // covered the reading-progress badge, and at large text sizes the title
+    // drawn on a generated cover. The action moved into the long-press sheet.
     await tester.pumpWidget(
       CupertinoApp(
         home: LibraryPage(
@@ -197,7 +200,37 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(AppIcons.trash), findsOneWidget);
+    expect(find.byIcon(AppIcons.trash), findsNothing);
+    expect(find.text('待删除的书'), findsWidgets);
+  });
+
+  testWidgets('long pressing a cover offers delete and edit actions', (
+    tester,
+  ) async {
+    var deleted = false;
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LibraryPage(
+          books: const [
+            ImportedBook(
+              title: '待删除的书',
+              format: BookFormat.txt,
+              paragraphs: ['正文'],
+            ),
+          ],
+          onOpen: (_) {},
+          onImport: () {},
+          onDelete: (_) => deleted = true,
+        ),
+      ),
+    );
+
+    await tester.longPress(find.text('待删除的书').first);
+    await tester.pumpAndSettle();
+    expect(find.text('删除这本书'), findsOneWidget);
+    await tester.tap(find.text('删除这本书'));
+    await tester.pumpAndSettle();
+    expect(deleted, isTrue);
   });
 
   testWidgets('reading controls live in the reader overlay', (tester) async {

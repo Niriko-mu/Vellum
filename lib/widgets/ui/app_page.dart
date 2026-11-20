@@ -106,7 +106,11 @@ class AppPage extends StatelessWidget {
       ),
     );
 
-    if (safeArea) body = SafeArea(top: false, bottom: false, child: body);
+    // Top matters now that a destination can have no navigation bar: settings
+    // dropped its (empty) bar, and without this its title drew under the status
+    // bar icons. A page that *does* carry a bar gets a zero inset here, because
+    // CupertinoPageScaffold already consumes the top padding for it.
+    if (safeArea) body = SafeArea(bottom: false, child: body);
 
     if (background == null) return body;
     return ColoredBox(color: background!, child: body);

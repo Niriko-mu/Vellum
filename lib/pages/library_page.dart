@@ -84,6 +84,11 @@ class _LibraryPageState extends State<LibraryPage> {
     ];
   }
 
+  /// Long press: the only place a book can be deleted or re-filed.
+  ///
+  /// The cover carries no permanent delete disc any more — it sat on top of the
+  /// progress badge and, at large text sizes, on the generated title. Opening a
+  /// book is the frequent act; removing it is not.
   Future<void> _showBookActions(ImportedBook book) async {
     await showCupertinoModalPopup<void>(
       context: context,
@@ -106,6 +111,14 @@ class _LibraryPageState extends State<LibraryPage> {
               },
               child: const Text('移动到文件夹'),
             ),
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.onDelete(book);
+            },
+            child: const Text('删除这本书'),
+          ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(ctx),
@@ -144,6 +157,10 @@ class _LibraryPageState extends State<LibraryPage> {
     final name = await showAppDialog<String>(
       context: context,
       title: '新建文件夹',
+      // The field is handed over so the dialog can watch it: without that the
+      // confirm action was evaluated when the dialog opened, i.e. before the
+      // name existed, and every "创建" popped an empty string.
+      contentController: controller,
       content: CupertinoTextField(
         controller: controller,
         placeholder: '文件夹名称',
@@ -163,7 +180,8 @@ class _LibraryPageState extends State<LibraryPage> {
       actions: [
         AppDialogAction<String>(
           label: '创建',
-          value: controller.text.trim(),
+          valueBuilder: () => controller.text.trim(),
+          enabledBuilder: () => controller.text.trim().isNotEmpty,
           isDefault: true,
         ),
       ],
@@ -235,6 +253,7 @@ class _LibraryPageState extends State<LibraryPage> {
     final name = await showAppDialog<String>(
       context: context,
       title: '重命名文件夹',
+      contentController: controller,
       content: CupertinoTextField(
         controller: controller,
         autofocus: true,
@@ -253,7 +272,8 @@ class _LibraryPageState extends State<LibraryPage> {
       actions: [
         AppDialogAction<String>(
           label: '保存',
-          value: controller.text.trim(),
+          valueBuilder: () => controller.text.trim(),
+          enabledBuilder: () => controller.text.trim().isNotEmpty,
           isDefault: true,
         ),
       ],
@@ -272,38 +292,51 @@ class _LibraryPageState extends State<LibraryPage> {
     final colors = context.c;
     return CupertinoPageScaffold(
       backgroundColor: colors.background,
-      navigationBar: CupertinoNavigationBar(
-        backgroundColor: colors.background,
-        border: null,
-        middle: const Text('书库'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.onCreateFolder != null)
-              AppPressable(
-                onTap: _promptManageFolders,
-                semanticLabel: '管理文件夹',
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Icon(AppIcons.folder),
-                ),
-              ),
-            AppPressable(
-              onTap: widget.onImport,
-              semanticLabel: '导入电子书',
-              child: const SizedBox(
-                width: 44,
-                height: 44,
-                child: Icon(AppIcons.add),
-              ),
-            ),
-          ],
-        ),
-      ),
+      // No navigation bar. A 16pt inline title was the only destination using
+      // the small size — 阅读, 写作 and 设置 all lead with a 32pt title in the
+      // page — and the bar also kept its height for nothing but two glyphs.
+      // The title and the actions now share one row inside the content.
+      navigationBar: null,
       child: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.pageGutter,
+                AppSpace.pageTopGap,
+                AppSpace.x2,
+                0,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '书库',
+                      style: AppText.pageTitle(colors.foreground),
+                    ),
+                  ),
+                  if (widget.onCreateFolder != null)
+                    AppPressable(
+                      onTap: _promptManageFolders,
+                      semanticLabel: '管理文件夹',
+                      child: SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Icon(AppIcons.folder, color: colors.primary),
+                      ),
+                    ),
+                  AppPressable(
+                    onTap: widget.onImport,
+                    semanticLabel: '导入电子书',
+                    child: SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Icon(AppIcons.add, color: colors.primary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             if (!showEmptyLibrary) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -325,8 +358,12 @@ class _LibraryPageState extends State<LibraryPage> {
                             setState(() => _query = '');
                           },
                           semanticLabel: '清除搜索',
-                          child: const Padding(
-                            padding: EdgeInsets.all(4),
+                          // 44 square: the glyph is 16, and a 24dp target on
+                          // the edge of a text field is a miss waiting to
+                          // happen under a thumb.
+                          child: const SizedBox(
+                            width: 44,
+                            height: 44,
                             child: Icon(AppIcons.xmarkCircleFill, size: 16),
                           ),
                         ),
@@ -431,7 +468,6 @@ class _LibraryPageState extends State<LibraryPage> {
                                   progress:
                                       widget.progressById[book.storageId] ?? 0,
                                   onTap: () => widget.onOpen(book),
-                                  onDelete: () => widget.onDelete(book),
                                   onLongPress: () => _showBookActions(book),
                                 ),
                               );

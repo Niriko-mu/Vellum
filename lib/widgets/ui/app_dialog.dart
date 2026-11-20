@@ -16,6 +16,8 @@ class AppDialogAction<T> {
   const AppDialogAction({
     required this.label,
     this.value,
+    this.valueBuilder,
+    this.enabledBuilder,
     this.isDestructive = false,
     this.isDefault = false,
   });
@@ -26,10 +28,30 @@ class AppDialogAction<T> {
   /// as [AppDialog.cancelLabel] rather than as an action.
   final T? value;
 
+  /// Read at the moment of the tap, for an action whose result depends on what
+  /// the reader has typed or chosen inside the dialog.
+  ///
+  /// [value] cannot do this job: the action list is built once, when the dialog
+  /// opens, so a value read there is whatever the field held *before* anyone
+  /// could touch it — which is how "新建文件夹" popped an empty name and
+  /// "设置备份密码" reported that no password had been entered.
+  final T Function()? valueBuilder;
+
+  /// Whether the action is available right now. Re-evaluated when the dialog's
+  /// body reports a change (see [AppDialog.contentChanged]) and on every tap,
+  /// so "确定" is not offered for an empty field.
+  final bool Function()? enabledBuilder;
+
   final bool isDestructive;
 
   /// Rendered with the accent colour.
   final bool isDefault;
+
+  /// The value this action carries at this instant.
+  T? valueNow() => valueBuilder != null ? valueBuilder!() : value;
+
+  /// Whether this action can be taken at this instant.
+  bool enabledNow() => enabledBuilder?.call() ?? true;
 }
 
 /// A decision, not a page.
@@ -42,11 +64,12 @@ class AppDialogAction<T> {
 /// The card is the same shape as a sheet's: AppRadius.grouped, no stroke,
 /// AppShadow.overlay. Actions are 44pt targets, right-aligned, and only the
 /// destructive or default one carries colour.
-class AppDialog extends StatelessWidget {
+class AppDialog extends StatefulWidget {
   const AppDialog({
     required this.title,
     this.message,
     this.content,
+    this.contentController,
     this.actions = const [],
     this.cancelLabel,
     this.semanticLabel,
@@ -62,6 +85,11 @@ class AppDialog extends StatelessWidget {
   /// pushing the actions off the screen.
   final Widget? content;
 
+  /// The field inside [content], when the action's availability depends on what
+  /// it holds. Watching it here is what makes "创建" enable itself the moment
+  /// the name is typed, instead of offering an action that would pop "".
+  final TextEditingController? contentController;
+
   final List<AppDialogAction<Object?>> actions;
 
   /// Adds a cancel action that pops null. Omit only when dismissing is not a
@@ -71,14 +99,74 @@ class AppDialog extends StatelessWidget {
   final String? semanticLabel;
 
   @override
+  State<AppDialog> createState() => _AppDialogState();
+}
+
+class _AppDialogState extends State<AppDialog> {
+  @override
   Widget build(BuildContext context) {
     final colors = context.c;
     final maxHeight = MediaQuery.sizeOf(context).height * .7;
+    final title = widget.title;
+    final message = widget.message ?? '';
+    final content = widget.content;
+    final controller = widget.contentController;
+
+    // A function, not a value: the tree is rebuilt on every keystroke in the
+    // body so an action's enabledBuilder is re-read. That is what makes the
+    // confirm button light up as soon as the name stops being empty.
+    Widget body() => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.x5,
+                  AppSpace.x5,
+                  AppSpace.x5,
+                  AppSpace.x4,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: AppText.stateTitle(colors.foreground),
+                    ),
+                    if (message.isNotEmpty) ...[
+                      const SizedBox(height: AppSpace.x2),
+                      Text(
+                        message,
+                        style: AppText.rowDescription(colors.mutedForeground),
+                      ),
+                    ],
+                    if (content != null) ...[
+                      const SizedBox(height: AppSpace.x4),
+                      content,
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (widget.actions.isNotEmpty || widget.cancelLabel != null)
+          _ActionBar(
+            actions: widget.actions,
+            cancelLabel: widget.cancelLabel,
+          ),
+      ],
+    );
 
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
-      label: semanticLabel ?? title,
+      label: widget.semanticLabel ?? title,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -95,52 +183,12 @@ class AppDialog extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: AppRadius.groupedAll,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Flexible(
-                      child: SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: maxHeight),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpace.x5,
-                              AppSpace.x5,
-                              AppSpace.x5,
-                              AppSpace.x4,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  title,
-                                  style: AppText.stateTitle(colors.foreground),
-                                ),
-                                if (message != null) ...[
-                                  const SizedBox(height: AppSpace.x2),
-                                  Text(
-                                    message!,
-                                    style: AppText.rowDescription(
-                                      colors.mutedForeground,
-                                    ),
-                                  ),
-                                ],
-                                if (content != null) ...[
-                                  const SizedBox(height: AppSpace.x4),
-                                  content!,
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
+                child: controller == null
+                    ? body()
+                    : ListenableBuilder(
+                        listenable: controller,
+                        builder: (context, _) => body(),
                       ),
-                    ),
-                    if (actions.isNotEmpty || cancelLabel != null)
-                      _ActionBar(actions: actions, cancelLabel: cancelLabel),
-                  ],
-                ),
               ),
             ),
           ),
@@ -192,7 +240,12 @@ class _ActionBar extends StatelessWidget {
                           : action.isDefault
                           ? colors.primary
                           : colors.foreground,
-                      onPressed: () => Navigator.of(context).pop(action.value),
+                      // Read at the tap, not when the dialog opened: a field's
+                      // current text is the whole answer for "创建"/"保存".
+                      onPressed: action.enabledNow()
+                          ? () =>
+                                Navigator.of(context).pop(action.valueNow())
+                          : null,
                     ),
                   ),
                 ),
@@ -213,6 +266,7 @@ Future<T?> showAppDialog<T>({
   required String title,
   String? message,
   Widget? content,
+  TextEditingController? contentController,
   List<AppDialogAction<T>> actions = const [],
   String? cancelLabel = '取消',
   bool barrierDismissible = true,
@@ -227,6 +281,7 @@ Future<T?> showAppDialog<T>({
       title: title,
       message: message,
       content: content,
+      contentController: contentController,
       actions: actions,
       cancelLabel: cancelLabel,
     ),

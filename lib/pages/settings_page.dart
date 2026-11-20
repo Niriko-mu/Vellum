@@ -297,6 +297,7 @@ class _SettingsPageState extends State<SettingsPage> {
       message:
           '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；'
           '留空则使用默认仓库。',
+      contentController: controller,
       content: CupertinoTextField(
         controller: controller,
         placeholder: vellumDefaultRepository,
@@ -319,7 +320,7 @@ class _SettingsPageState extends State<SettingsPage> {
         AppDialogAction<String>(label: '恢复默认', value: ''),
         AppDialogAction<String>(
           label: '保存',
-          value: controller.text.trim(),
+          valueBuilder: () => controller.text.trim(),
           isDefault: true,
         ),
       ],
@@ -382,10 +383,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return CupertinoPageScaffold(
       backgroundColor: colors.background,
-      navigationBar: CupertinoNavigationBar(
-        backgroundColor: colors.background,
-        border: null,
-      ),
+      // No navigation bar: every field here is empty, and an empty bar still
+      // costs 44dp of blank band above the page's own title — the one thing a
+      // settings page cannot afford. The safe area is handled by AppPage.
+      navigationBar: null,
       // No text-scale clamp: the grouped rows grow with the reader's system
       // font size instead of pinning the page at 1.2.
       //

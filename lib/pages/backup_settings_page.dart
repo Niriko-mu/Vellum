@@ -85,6 +85,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
       context: context,
       title: title ?? (required ? '输入备份密码' : '设置备份密码'),
       message: required ? '这个备份是加密的，需要密码才能恢复。' : null,
+      contentController: controller,
       content: CupertinoTextField(
         controller: controller,
         obscureText: true,
@@ -105,7 +106,10 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
       actions: [
         AppDialogAction<String>(
           label: '继续',
-          value: controller.text,
+          valueBuilder: () => controller.text,
+          // A required password cannot be submitted empty; without this the
+          // dialog closed on a value captured before anyone could type.
+          enabledBuilder: () => !required || controller.text.isNotEmpty,
           isDefault: true,
         ),
       ],
@@ -323,6 +327,9 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
       ),
       child: AppPage(
         scrollable: true,
+        // The floating dock draws over the page; without this the last row sits
+        // under the capsule and cannot be tapped.
+        reserveDock: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
