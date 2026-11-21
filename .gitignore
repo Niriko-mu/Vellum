@@ -30,3 +30,5 @@ doc/api/
 
 # Remotion 宣传片工程（本地素材，不属于应用本体）
 VideoScripts/
+developDoc/
+tmp/
