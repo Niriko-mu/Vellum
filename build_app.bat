@@ -53,7 +53,15 @@ if errorlevel 1 (
 echo.
 echo [3/4] Building ABI-split Release APKs for Vellum V!VERSION!...
 echo Gradle compilation may take several minutes. Output is also saved to the log.
-"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& $env:ComSpec /d /c ('call '+[char]34+$env:VELLUM_FLUTTER+[char]34+' --no-version-check build apk --release --split-per-abi --no-pub 2>&1') | ForEach-Object { $_; $_ | Out-File -LiteralPath $env:VELLUM_BUILD_LOG -Append -Encoding utf8 }; exit $LASTEXITCODE"
+rem No --no-pub here on purpose. android/app/src/main/java/io/flutter/plugins/
+rem GeneratedPluginRegistrant.java is generated per build mode: a debug build
+rem (flutter run, flutter build apk --debug) lists dev_dependencies such as
+rem integration_test, which are not on the release classpath. Building release
+rem with --no-pub reuses that stale file and javac fails with "package
+rem dev.flutter.plugins.integration_test does not exist". Letting the build run
+rem its own pub get regenerates the registrant for the release set; it costs
+rem seconds because step [2/4] already warmed the pub cache.
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command "& $env:ComSpec /d /c ('call '+[char]34+$env:VELLUM_FLUTTER+[char]34+' --no-version-check build apk --release --split-per-abi 2>&1') | ForEach-Object { $_; $_ | Out-File -LiteralPath $env:VELLUM_BUILD_LOG -Append -Encoding utf8 }; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo [ERROR] Release APK build failed. See !VELLUM_BUILD_LOG!
   goto finish
