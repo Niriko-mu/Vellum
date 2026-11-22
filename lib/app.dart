@@ -559,8 +559,10 @@ class _LibraryShellState extends State<LibraryShell>
     final progressById = <String, double>{};
 
     if (books.isNotEmpty) {
+      // One read of the progress file for the whole shelf, not one per book.
+      final states = await _library.loadReadingStates(books);
       for (final book in books) {
-        final state = await _library.loadReadingState(book);
+        final state = states[book.storageId]!;
         final total = book.paragraphCount;
         if (total > 1) {
           progressById[book.storageId] = (state.paragraphIndex / (total - 1))
@@ -570,7 +572,7 @@ class _LibraryShellState extends State<LibraryShell>
           continueState = state;
         }
       }
-      continueState ??= await _library.loadReadingState(books.first);
+      continueState ??= states[books.first.storageId];
     }
 
     if (!mounted) return;

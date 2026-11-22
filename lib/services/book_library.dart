@@ -901,17 +901,50 @@ class BookLibrary {
 
   Future<ReadingState> loadReadingState(ImportedBook book) async {
     final prefs = await loadReaderPreferences();
-    final display = _displayState(prefs).copyWith(bookId: book.storageId);
+    return _stateFromMap(book, await _readStatesFile(), prefs);
+  }
+
+  /// Every book's saved progress, from a single read of the file.
+  ///
+  /// The shelf loop used to call [loadReadingState] per book, and each call
+  /// re-read and re-parsed the whole map — a file that grows with the library.
+  /// Two hundred books meant two hundred reads of every other book's progress
+  /// at launch.
+  Future<Map<String, ReadingState>> loadReadingStates(
+    List<ImportedBook> books,
+  ) async {
+    final prefs = await loadReaderPreferences();
+    final raw = await _readStatesFile();
+    return {
+      for (final book in books) book.storageId: _stateFromMap(book, raw, prefs),
+    };
+  }
+
+  /// The progress document as a map, or empty when there is nothing usable.
+  ///
+  /// Unreadable progress reads as "nothing saved yet" here; the write path
+  /// refuses to overwrite it (see [saveReadingState]), which is what keeps a
+  /// damaged file from being replaced by an empty one.
+  Future<Map<String, dynamic>> _readStatesFile() async {
     final file = await _stateFile();
-    if (!await file.exists()) return display;
+    if (!await file.exists()) return const {};
     try {
-      final raw = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      final value = raw[_key(book)] ?? raw[_legacyKey(book)];
-      if (value is! Map<String, dynamic>) return display;
-      return _mergeProgress(display, ReadingState.fromJson(value));
+      final decoded = jsonDecode(await file.readAsString());
+      return decoded is Map<String, dynamic> ? decoded : const {};
     } catch (_) {
-      return display;
+      return const {};
     }
+  }
+
+  ReadingState _stateFromMap(
+    ImportedBook book,
+    Map<String, dynamic> raw,
+    ReaderPreferences prefs,
+  ) {
+    final display = _displayState(prefs).copyWith(bookId: book.storageId);
+    final value = raw[_key(book)] ?? raw[_legacyKey(book)];
+    if (value is! Map<String, dynamic>) return display;
+    return _mergeProgress(display, ReadingState.fromJson(value));
   }
 
   Future<void> saveReadingState(ImportedBook book, ReadingState state) async {
