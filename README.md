@@ -119,6 +119,24 @@ flutter build appbundle --release
 
 说明：当前 release 仍使用 debug 签名，便于自测；上架前请配置正式 keystore。
 
+**但 debug 签名也不是随便哪个都行。** Android 的 debug key 是构建机上「第一次构建时现场生成」
+的，所以 GitHub 的每个 runner 拿到的都是**不同**的密钥。用新密钥签出的包无法覆盖安装到用旧密钥
+签出的包上，读者更新时只会看到「应用未安装」——为了让从 GitHub 下载的人能持续更新，必须把同一份
+debug keystore 固定下来：
+
+1. 取本机（也就是历史 release 用的那份）密钥，转成一行 base64：
+   ```bat
+   certutil -encodehex -f "%USERPROFILE%\.android\debug.keystore" keystore.b64 0x40000001
+   :: 或 Git Bash： base64 -w0 ~/.android/debug.keystore > keystore.b64
+   ```
+2. 仓库 **Settings → Secrets and variables → Actions → New repository secret**，名字填
+   `VELLUM_DEBUG_KEYSTORE_BASE64`，值粘贴上一步的内容。
+3. 之后每次发版，工作流会先还原这份密钥再构建；日志里的
+   `Report the signing certificate` 步骤会打印实际签名证书的 SHA-256，可用来核对。
+
+如果没配这个 secret，工作流仍会出包（不至于卡死手工发版），但会在日志里打一条警告，并且
+**已有安装无法覆盖更新**。
+
 ### 更新包命名
 
 应用内更新按机型架构区分安装包，文件名必须是 `Vellum-V<版本>-<abi>.apk`：

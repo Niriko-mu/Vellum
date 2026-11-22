@@ -105,6 +105,31 @@ jobs:
         if: ${{ github.event.inputs.skip_tests != 'true' }}
         run: flutter test
 
+      # Every GitHub runner starts with an empty ~/.android, and the Android
+      # Gradle Plugin generates a *fresh* debug key when it finds none. A release
+      # built that way is signed by a key nobody else has, so the next one cannot
+      # install over it: readers see 「应用未安装」 and have to uninstall, which
+      # wipes their library. Restoring the one existing debug key keeps the
+      # signature stable across CI builds and identical to local builds.
+      #
+      # Optional: set the repository secret VELLUM_DEBUG_KEYSTORE_BASE64 to
+      # `base64 -w0 ~/.android/debug.keystore`. Without it the build still runs
+      # (so a one-off manual release is not blocked) but says so loudly.
+      - name: Restore the debug signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.VELLUM_DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "::warning title=签名不一致的风险::没有配置 VELLUM_DEBUG_KEYSTORE_BASE64。" \
+              "本次构建会使用 runner 现场生成的 debug 签名，与已有安装的签名不同，" \
+              "读者更新时会提示「应用未安装」。见 README 的「CI / 发布」。"
+            exit 0
+          fi
+          mkdir -p "$HOME/.android"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+          echo "Restored debug keystore: $(wc -c < "$HOME/.android/debug.keystore") bytes"
+
       - name: Build APKs
         env:
           VERSION: ${{ steps.meta.outputs.version }}
@@ -130,6 +155,19 @@ jobs:
           cp "$apk_dir/app-release.apk" "dist/Vellum-V${VERSION}-universal.apk"
 
           ls -l dist
+
+      # Prints the certificate the released APK was actually signed with, so a
+      # mismatch is visible in the run log instead of only in a reader's error
+      # message. Compare it against the previous release when unsure.
+      - name: Report the signing certificate
+        run: |
+          set -euo pipefail
+          sdk_root="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          apksigner=$(find "$sdk_root/build-tools" -name apksigner -type f | sort -V | tail -1)
+          for apk in dist/*.apk; do
+            echo "--- $apk"
+            "$apksigner" verify --print-certs "$apk" | grep -E 'SHA-256 digest|Signer #1 certificate DN' || true
+          done
 
       - name: Build App Bundle
         run: |
