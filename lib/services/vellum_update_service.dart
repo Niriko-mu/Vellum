@@ -231,6 +231,32 @@ String abiDescription(String? abi) {
   }
 }
 
+/// Turns a transport failure into something a reader can act on.
+///
+/// Returns null when the failure is not recognisable as a network problem, so
+/// the caller can fall back to a generic message rather than claiming the
+/// network is down when it might be something else.
+String? updateNetworkHint(Object error) {
+  final text = error.toString().toLowerCase();
+  if (text.contains('failed host lookup') ||
+      text.contains('no address associated') ||
+      text.contains('name or service not known')) {
+    return '解析不了域名，请检查网络是否可用（离线时需要联网才能检查更新）。';
+  }
+  if (text.contains('timeout') || text.contains('timed out')) {
+    return '连接超时，请检查网络后重试。';
+  }
+  if (text.contains('connection refused') ||
+      text.contains('connection reset') ||
+      text.contains('network is unreachable')) {
+    return '连不上更新服务器，请检查网络后重试。';
+  }
+  if (text.contains('certificate') || text.contains('handshake')) {
+    return '安全连接失败，请检查系统时间或代理设置。';
+  }
+  return null;
+}
+
 class VellumUpdateService {
   const VellumUpdateService();
 
@@ -248,8 +274,18 @@ class VellumUpdateService {
     Map<String, dynamic>? data;
     try {
       data = await _fetchLatest(ref);
+    } on UpdateCheckException catch (error) {
+      // Already user-facing ("HTTP 403"), so it stays as it is.
+      throw UpdateCheckException('无法访问 ${ref.host}：${error.message}');
     } catch (error) {
-      throw UpdateCheckException('无法访问 ${ref.host}：$error');
+      // Everything else is a transport failure whose `toString` is a wall of
+      // ClientException / SocketException text with the full URL in it. On a
+      // phone with no network that is all the reader would see; say the one
+      // thing they can act on instead, and keep the detail in the log.
+      throw UpdateCheckException(
+        updateNetworkHint(error) ??
+            '无法访问 ${ref.host}，请检查网络后重试。${ref.webUrl}',
+      );
     }
     if (data == null) {
       throw UpdateCheckException('未能读取 ${ref.toString()} 的 Release，请确认仓库名与网络。');

@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import '../services/book_importer.dart';
 import '../services/book_library.dart';
+import '../services/diagnostic_log.dart';
 import '../services/notes_library.dart';
 import '../theme/vellum_theme.dart';
 import 'reader_gestures.dart';
@@ -887,11 +888,20 @@ class ReaderPageState extends State<ReaderPage>
     // keeps going.
     saveQueue = saveQueue
         .then((_) => callback(state))
-        .catchError((Object error) {
-          debugPrint('Vellum: reading progress not saved: $error');
-          if (error is StorageDamagedException && mounted) {
-            showBookmarkNotice(error.message);
-          }
+        .catchError((Object error, StackTrace stack) {
+          // Recorded, not just printed: a save that silently stops working is
+          // exactly the failure the diagnostic log exists for, and the reader
+          // cannot be expected to notice "my progress is not being kept".
+          unawaited(
+            DiagnosticLog.record(error, stack, context: 'reader.saveState'),
+          );
+          if (!mounted) return;
+          // One short line. The exception's own message carries the full file
+          // path, which wrapped to three lines and covered the body text the
+          // reader was in the middle of — the notice is feedback, not a log.
+          showBookmarkNotice(
+            error is StorageDamagedException ? '阅读进度没能保存，原进度文件已备份。' : '阅读进度没能保存。',
+          );
         });
     await saveQueue;
   }

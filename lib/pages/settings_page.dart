@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -366,7 +366,9 @@ class _SettingsPageState extends State<SettingsPage> {
   /// the system save dialog so the log leaves through a path the reader chose.
   Future<void> _exportDiagnosticLog() async {
     try {
-      final text = await DiagnosticLog.read();
+      // Composed, not raw: the header carries the platform and version that
+      // make a stack trace from an R8-obfuscated build answerable.
+      final text = await DiagnosticLog.composeReport();
       if (!mounted) return;
       if (text.trim().isEmpty) {
         await _showNote('还没有记录到问题。可以先继续阅读，出问题时再来导出。');
@@ -553,7 +555,10 @@ class _SettingsPageState extends State<SettingsPage> {
               AppRow(
                 leading: const Icon(AppIcons.gearAlt),
                 label: '更新仓库',
-                value: '自定义',
+                // Says whether this is the built-in repository or one the
+                // reader typed: it used to read 自定义 even on a fresh
+                // install, which implied a setting none was active.
+                value: _updateRepo.trim().isEmpty ? '默认' : '自定义',
                 onTap: _editUpdateRepo,
               ),
               AppSwitchRow(

@@ -111,6 +111,27 @@ abstract final class DiagnosticLog {
     }
   }
 
+  /// The log with a header identifying the build it came from.
+  ///
+  /// A stack trace on its own is not actionable: the same code path can fail on
+  /// one Android version and not another, and R8's names only line up with the
+  /// mapping file of *that* version. The header is what makes an exported file
+  /// answerable weeks later.
+  static Future<String> composeReport() async {
+    final buffer = StringBuffer()
+      ..writeln('Vellum 诊断日志')
+      ..writeln('导出时间：${DateTime.now().toLocal()}')
+      ..writeln('未上传任何内容，仅本机记录。');
+    for (final entry in environment().entries) {
+      buffer.writeln('${entry.key}: ${entry.value}');
+    }
+    buffer
+      ..writeln()
+      ..writeln('--- 记录 ---');
+    buffer.write(await read());
+    return buffer.toString();
+  }
+
   /// Copies the log somewhere the reader can share it from.
   ///
   /// Written with a timestamped name so repeated exports do not overwrite each
@@ -126,16 +147,10 @@ abstract final class DiagnosticLog {
           .replaceAll(RegExp(r'[:.]'), '-')
           .split('+')
           .first;
-      final target = File('${dir.path}${Platform.pathSeparator}vellum-$stamp.log');
-      final header = StringBuffer()
-        ..writeln('Vellum 诊断日志')
-        ..writeln('导出时间：${DateTime.now().toLocal()}')
-        ..writeln('未上传任何内容，仅本机记录。')
-        ..writeln();
-      await target.writeAsString(
-        header.toString() + await file.readAsString(),
-        flush: true,
+      final target = File(
+        '${dir.path}${Platform.pathSeparator}vellum-$stamp.log',
       );
+      await target.writeAsString(await composeReport(), flush: true);
       return target;
     } catch (_) {
       return null;
