@@ -698,6 +698,18 @@ class _LibraryShellState extends State<LibraryShell>
 
   Future<void> _openBook(ImportedBook book) async {
     final full = await _library.loadBookContent(book);
+    // The shelf entry survives an unreadable body (title, cover, progress), so
+    // without this the reader paid a page turn into a blank book and had no way
+    // to tell a broken file from an empty one.
+    if (full.contentError != null && mounted) {
+      await showAppDialog<void>(
+        context: context,
+        title: '打不开这本书',
+        message: '${full.contentError!}\n\n书还在书架上，可以删除后重新导入原始文件。',
+        cancelLabel: '知道了',
+      );
+      return;
+    }
     final originalPath = book.format == BookFormat.epub
         ? await _library.originalEpubPath(book.storageId)
         : null;
