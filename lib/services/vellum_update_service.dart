@@ -3,9 +3,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// Default update/download repository (Gitee).
-const vellumDefaultRepository = 'gitee.com/Murchey/vellum';
-const vellumDefaultRepositoryUrl = 'https://gitee.com/Murchey/vellum';
+/// Default update/download repository.
+///
+/// This must be where the release workflow actually publishes, which is GitHub
+/// (see .github/workflows/release.yml). It used to point at the older Gitee
+/// mirror, whose newest release is 1.0.15 — so every reader who installed a
+/// GitHub build checked a repository that would never have a newer version, and
+/// 「检查更新」 answered "已是最新" forever. Readers can still point the updater
+/// at another repository by hand in 设置 → 更新仓库.
+const vellumDefaultRepository = 'github.com/niriko-mu/Vellum';
+const vellumDefaultRepositoryUrl = 'https://github.com/niriko-mu/Vellum';
 
 class UpdateCheckException implements Exception {
   const UpdateCheckException(this.message);
@@ -46,11 +53,13 @@ RepoRef? parseUpdateRepository(String input) {
   value = value.replaceFirst(RegExp(r'^www\.', caseSensitive: false), '');
   value = value.replaceAll(RegExp(r'/+$'), '');
 
-  var host = 'gitee.com';
+  // A bare `owner/repo` is read as GitHub, matching the default repository.
+  // Gitee is still accepted when the host is spelled out.
+  var host = 'github.com';
   if (value.toLowerCase().startsWith('github.com/')) {
-    host = 'github.com';
     value = value.substring('github.com/'.length);
   } else if (value.toLowerCase().startsWith('gitee.com/')) {
+    host = 'gitee.com';
     value = value.substring('gitee.com/'.length);
   }
 

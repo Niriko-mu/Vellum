@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../services/book_library.dart';
+import '../services/diagnostic_log.dart';
 
 import '../services/notes_library.dart';
 import '../services/notes_import.dart';
@@ -281,7 +282,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return normalized ?? vellumDefaultRepository;
   }
 
-  /// Compact form for list rows: \`Murchey/vellum\` instead of \`gitee.com/...\`.
+  /// Compact form for list rows: owner/repo without the host.
   String get _shortUpdateRepoLabel {
     final full = _updateRepoLabel;
     final hostEnd = full.indexOf('/');
@@ -295,7 +296,7 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       title: '更新仓库',
       message:
-          '支持 owner/repo、gitee.com/owner/repo 或 github.com/owner/repo；'
+          '支持 owner/repo、github.com/owner/repo 或 gitee.com/owner/repo；'
           '留空则使用默认仓库。',
       contentController: controller,
       content: CupertinoTextField(
@@ -356,6 +357,47 @@ class _SettingsPageState extends State<SettingsPage> {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  /// Hands the reader a plain-text file with the last errors on it.
+  ///
+  /// The release build sends nothing anywhere, so this is the only way a crash
+  /// can be investigated at all: the reader exports and shares the file. Uses
+  /// the system save dialog so the log leaves through a path the reader chose.
+  Future<void> _exportDiagnosticLog() async {
+    try {
+      final text = await DiagnosticLog.read();
+      if (!mounted) return;
+      if (text.trim().isEmpty) {
+        await _showNote('还没有记录到问题。可以先继续阅读，出问题时再来导出。');
+        return;
+      }
+      final bytes = Uint8List.fromList(utf8.encode(text));
+      final stamp = DateTime.now()
+          .toIso8601String()
+          .replaceAll(RegExp(r'[:.]'), '-')
+          .split('.')
+          .first;
+      final useSaf = Platform.isAndroid || Platform.isIOS;
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: '导出诊断日志',
+        fileName: 'vellum-$stamp.log',
+        type: FileType.custom,
+        allowedExtensions: ['log', 'txt'],
+        bytes: useSaf ? bytes : null,
+      );
+      if (path == null || path.isEmpty || !mounted) return;
+      if (!useSaf) {
+        final file = File(path);
+        await file.writeAsString(text, flush: true);
+        if (!mounted) return;
+        await _showNote('诊断日志已导出到\n${file.path}');
+      } else {
+        await _showNote('诊断日志已导出');
+      }
+    } catch (error) {
+      if (mounted) await _showNote('导出诊断日志失败：$error');
+    }
   }
 
   Future<void> _confirm(
@@ -519,6 +561,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: '启动时自动检查更新',
                 value: _autoCheckUpdate,
                 onChanged: _setAutoCheckUpdate,
+              ),
+              AppRow(
+                leading: const Icon(AppIcons.docText),
+                label: '导出诊断日志',
+                value: '仅本机记录',
+                onTap: _exportDiagnosticLog,
               ),
             ],
           ),

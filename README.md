@@ -132,7 +132,13 @@ flutter build appbundle --release
 
 应用会读取设备的 `SUPPORTED_ABIS`，把匹配的包排到最前并标「推荐」；装错架构系统会提示「应用未安装」。
 
-版本号以 `pubspec.yaml` 的 `version` 为准，与设置页「当前版本」一致。
+版本号以 `pubspec.yaml` 的 `version` 为准，与设置页「当前版本」一致。`version` 形如
+`1.1.0+16`：前面的 `1.1.0` 是 versionName，「当前版本」与更新比较都取它；后面的 `16` 是
+versionCode，**必须随每次发版递增**，否则 Android 会按降级安装拒绝（用户看到「应用未安装」）。
+CI 直接读这里的 `+N`，不再用 Actions 的 run number（它按仓库计数，和版本号没有关系）。
+
+应用内更新的默认仓库是 `github.com/niriko-mu/Vellum`，也就是本仓库 Release 所在位置。可在
+设置 → 更新仓库 改成 `owner/repo`、`github.com/owner/repo` 或 `gitee.com/owner/repo`。
 
 ### CI / 发布
 
