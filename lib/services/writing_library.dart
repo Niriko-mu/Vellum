@@ -5,6 +5,9 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'atomic_json_store.dart';
+import 'notes_library.dart' show StorageDamagedException;
+
 enum WritingFormat {
   md('Markdown', 'md'),
   txt('纯文本', 'txt');
@@ -364,12 +367,39 @@ class WritingDocument {
 class WritingLibrary {
   const WritingLibrary();
 
+  /// Every draft, in list order.
+  ///
+  /// A damaged document reads as empty so the list still renders — the writing
+  /// page reports the failure separately — but [guardWritable] refuses to let
+  /// that empty result be written back over the drafts.
   Future<List<WritingDocument>> load() async {
+    final docs = await _read();
+    return docs ?? <WritingDocument>[];
+  }
+
+  /// True when the drafts document exists but cannot be parsed.
+  ///
+  /// The writing page turns this into "文稿读取失败" with a retry, instead of
+  /// showing an empty shelf over drafts the reader still has on disk.
+  Future<bool> isDamaged() async {
+    await load();
+    return _damaged;
+  }
+
+  Future<List<WritingDocument>?> _read() async {
     try {
       final file = await _file();
-      if (!await file.exists()) return [];
-      final raw = jsonDecode(await file.readAsString());
-      if (raw is! List<dynamic>) return [];
+      final result = await AtomicJsonStore.read(file);
+      _damaged = result.damaged;
+      _damagedPath = result.damaged ? file.path : '';
+      if (result.missing) return <WritingDocument>[];
+      if (result.damaged) return null;
+      final raw = jsonDecode(result.text!);
+      if (raw is! List<dynamic>) {
+        _damaged = true;
+        _damagedPath = file.path;
+        return null;
+      }
       final docs = <WritingDocument>[];
       for (final entry in raw) {
         if (entry is Map<String, dynamic>) {
@@ -380,17 +410,39 @@ class WritingLibrary {
       docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       return docs;
     } catch (_) {
-      return [];
+      _damaged = false;
+      _damagedPath = '';
+      return null;
     }
   }
 
   Future<void> saveAll(List<WritingDocument> documents) async {
     final file = await _file();
-    await file.writeAsString(
+    await AtomicJsonStore.write(
+      file,
       jsonEncode([for (final doc in documents) doc.toJson()]),
-      flush: true,
     );
   }
+
+  /// Set by [load]/[isDamaged] when the document exists but cannot be parsed.
+  static bool _damaged = false;
+  static String _damagedPath = '';
+
+  /// Refuses to start a read-modify-write on an unreadable drafts document.
+  ///
+  /// [load] is what sets the flag; callers await it first anyway.
+  Future<void> guardWritable() async {
+    if (!_damaged) return;
+    throw StorageDamagedException(
+      '文稿的记录文件已损坏，本次修改没有保存。'
+      '${_damagedPath.isEmpty ? '' : '原文件已保留为 $_damagedPath${AtomicJsonStore.quarantineSuffix}。'}',
+      path: _damagedPath,
+    );
+  }
+
+  /// Serialised on a constant key: resolving the path is itself platform I/O.
+  Future<T> _serialised<T>(Future<T> Function() operation) =>
+      AtomicJsonStore.serialised('vellum_writings', operation);
 
   Future<WritingDocument> create({
     String title = '',
@@ -406,30 +458,42 @@ class WritingLibrary {
       createdAt: now,
       updatedAt: now,
     );
-    final docs = await load();
-    docs.insert(0, doc);
-    await saveAll(docs);
+    await _serialised(() async {
+      await guardWritable();
+      final docs = await load();
+      docs.insert(0, doc);
+      await saveAll(docs);
+    });
     return doc;
   }
 
   Future<WritingDocument> upsert(WritingDocument document) async {
-    final docs = await load();
-    final index = docs.indexWhere((item) => item.id == document.id);
     final next = document.copyWith();
-    if (index >= 0) {
-      docs[index] = next;
-    } else {
-      docs.insert(0, next);
-    }
-    docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    await saveAll(docs);
+    // Serialised: the editor's debounced save and its dispose-time save can
+    // otherwise interleave here, and the later write wins with the earlier
+    // snapshot — a paragraph the reader just typed.
+    await _serialised(() async {
+      await guardWritable();
+      final docs = await load();
+      final index = docs.indexWhere((item) => item.id == document.id);
+      if (index >= 0) {
+        docs[index] = next;
+      } else {
+        docs.insert(0, next);
+      }
+      docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      await saveAll(docs);
+    });
     return next;
   }
 
   Future<void> delete(String id) async {
-    final docs = await load();
-    docs.removeWhere((item) => item.id == id);
-    await saveAll(docs);
+    await _serialised(() async {
+      await guardWritable();
+      final docs = await load();
+      docs.removeWhere((item) => item.id == id);
+      await saveAll(docs);
+    });
   }
 
   Future<File> _file() async {

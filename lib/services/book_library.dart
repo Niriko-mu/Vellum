@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show compute;
+import 'package:flutter/foundation.dart'
+    show compute, debugPrint, debugPrintStack;
 import 'package:path_provider/path_provider.dart';
 
 import 'book_importer.dart';
@@ -14,7 +15,9 @@ import 'library_models.dart';
 import 'txt_catalog.dart';
 import 'txt_seek_source.dart';
 import 'book_search.dart';
+import 'atomic_json_store.dart';
 import 'library_file_mutex.dart';
+import 'notes_library.dart' show StorageDamagedException;
 import 'chunked_book_store.dart';
 import 'lazy_paragraphs.dart';
 import 'book_cover.dart';
@@ -381,7 +384,16 @@ class BookLibrary {
           coverText: book.coverText,
           folderId: book.folderId,
         );
-      } catch (_) {}
+      } catch (error, stack) {
+        // The body is on disk but unusable. Reporting that is the whole point:
+        // silently returning the shell made the reader open a blank page with
+        // no way to tell a broken file from an empty book.
+        debugPrint('Vellum: could not load ${book.storageId}: $error');
+        debugPrintStack(stackTrace: stack);
+        return book.copyWith(
+          contentError: '这本书的正文读不出来，请重新导入。',
+        );
+      }
     }
     return book;
   }
@@ -918,30 +930,47 @@ class BookLibrary {
         volumeKeys: state.volumeKeys,
       ),
     );
+    // Every book's progress lives in one map, so this entry cannot be written
+    // without first reading the others — and reading a map we just failed to
+    // parse must never be mistaken for "no books have progress yet".
     final file = await _stateFile();
-    Map<String, dynamic> states = {};
-    if (await file.exists()) {
-      try {
-        states =
-            (jsonDecode(await file.readAsString()) as Map<String, dynamic>);
-      } catch (_) {
-        states = {};
+    await AtomicJsonStore.serialised('${file.path}.lock', () async {
+      final read = await AtomicJsonStore.read(file);
+      if (read.damaged) {
+        // Save the reader's place anyway, in its own file, rather than either
+        // losing it or wiping every other book's progress.
+        throw StorageDamagedException(
+          '阅读进度文件已损坏，本次进度没有写入。'
+          '${read.quarantined ? '原文件已保留为 ${file.path}${AtomicJsonStore.quarantineSuffix}。' : ''}',
+          path: file.path,
+        );
       }
-    }
-    // Progress only — display prefs live in the shared preferences file.
-    states.remove(_legacyKey(book));
-    states[_key(book)] = {
-      'position': state.position,
-      'page': state.page,
-      'paragraphIndex': state.paragraphIndex,
-      'bookmarks': state.bookmarks,
-      'bookId': book.storageId,
-      'chapterPositions': {
-        for (final entry in state.chapterPositions.entries)
-          entry.key.toString(): entry.value.toJson(),
-      },
-    };
-    await file.writeAsString(jsonEncode(states));
+      final states = <String, dynamic>{};
+      if (read.text != null) {
+        final decoded = jsonDecode(read.text!);
+        if (decoded is! Map<String, dynamic>) {
+          throw StorageDamagedException(
+            '阅读进度文件内容不是预期格式，本次进度没有写入。',
+            path: file.path,
+          );
+        }
+        states.addAll(decoded);
+      }
+      // Progress only — display prefs live in the shared preferences file.
+      states.remove(_legacyKey(book));
+      states[_key(book)] = {
+        'position': state.position,
+        'page': state.page,
+        'paragraphIndex': state.paragraphIndex,
+        'bookmarks': state.bookmarks,
+        'bookId': book.storageId,
+        'chapterPositions': {
+          for (final entry in state.chapterPositions.entries)
+            entry.key.toString(): entry.value.toJson(),
+        },
+      };
+      await AtomicJsonStore.write(file, jsonEncode(states));
+    });
   }
 
   Future<ReaderPreferences> loadReaderPreferences() async {
@@ -963,19 +992,26 @@ class BookLibrary {
 
   Future<void> saveReaderPreferences(ReaderPreferences prefs) async {
     final file = await _prefsFile();
-    await file.writeAsString(jsonEncode(prefs.toJson()), flush: true);
+    // Atomic: this is written on every font/paper/brightness change and read
+    // by every book's reading state, so a truncated file would reset the whole
+    // reader's typography.
+    await AtomicJsonStore.write(file, jsonEncode(prefs.toJson()));
   }
 
   Future<void> deleteReadingState(ImportedBook book) async {
     final file = await _stateFile();
     if (!await file.exists()) return;
-    try {
-      final states =
-          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      states.remove(_key(book));
-      states.remove(_legacyKey(book));
-      await file.writeAsString(jsonEncode(states));
-    } catch (_) {}
+    await AtomicJsonStore.serialised('${file.path}.lock', () async {
+      final read = await AtomicJsonStore.read(file);
+      // Nothing to delete from a document we cannot parse; treating it as an
+      // empty map would rewrite every other book's progress away.
+      if (read.damaged || read.text == null) return;
+      final decoded = jsonDecode(read.text!);
+      if (decoded is! Map<String, dynamic>) return;
+      decoded.remove(_key(book));
+      decoded.remove(_legacyKey(book));
+      await AtomicJsonStore.write(file, jsonEncode(decoded));
+    });
   }
 
   Future<Uint8List?> loadFont() => fonts.loadFont();

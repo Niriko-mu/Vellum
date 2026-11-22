@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'atomic_json_store.dart';
+import 'notes_library.dart' show StorageDamagedException;
+
 /// Cumulative reading-time statistics for the local reader.
 class ReadingStats {
   const ReadingStats({
@@ -95,22 +98,56 @@ class ReadingStatsService {
     return '$value 秒';
   }
 
+  /// Totals so far. An unreadable document reads as zero because a stats page
+  /// with no numbers is better than one that will not open — but every write
+  /// goes through [guardWritable], so the zeros are never saved over it.
   Future<ReadingStats> load() async {
+    final stats = await _read();
+    return stats ?? const ReadingStats();
+  }
+
+  Future<ReadingStats?> _read() async {
     try {
       final file = await _file();
-      if (!await file.exists()) return const ReadingStats();
-      final raw = jsonDecode(await file.readAsString());
-      if (raw is Map<String, dynamic>) {
-        return ReadingStats.fromJson(raw);
-      }
-    } catch (_) {}
-    return const ReadingStats();
+      final result = await AtomicJsonStore.read(file);
+      _damaged = result.damaged;
+      _damagedPath = result.damaged ? file.path : '';
+      if (result.missing) return const ReadingStats();
+      if (result.damaged) return null;
+      final raw = jsonDecode(result.text!);
+      if (raw is Map<String, dynamic>) return ReadingStats.fromJson(raw);
+      _damaged = true;
+      _damagedPath = file.path;
+      return null;
+    } catch (_) {
+      _damaged = false;
+      _damagedPath = '';
+      return null;
+    }
   }
 
   Future<void> save(ReadingStats stats) async {
     final file = await _file();
-    await file.writeAsString(jsonEncode(stats.toJson()), flush: true);
+    await AtomicJsonStore.write(file, jsonEncode(stats.toJson()));
   }
+
+  /// Set by [load] when the document exists but cannot be parsed.
+  static bool _damaged = false;
+  static String _damagedPath = '';
+
+  /// Refuses to overwrite a stats document that cannot be read.
+  Future<void> guardWritable() async {
+    if (!_damaged) return;
+    throw StorageDamagedException(
+      '阅读统计文件已损坏，本次没有写入。'
+      '${_damagedPath.isEmpty ? '' : '原文件已保留为 $_damagedPath${AtomicJsonStore.quarantineSuffix}。'}',
+      path: _damagedPath,
+    );
+  }
+
+  /// Serialised on a constant key: resolving the path is itself platform I/O.
+  Future<T> _serialised<T>(Future<T> Function() operation) =>
+      AtomicJsonStore.serialised('vellum_reading_stats', operation);
 
   /// Adds [seconds] of active reading for [bookId].
   Future<ReadingStats> addSeconds({
@@ -118,36 +155,48 @@ class ReadingStatsService {
     required int seconds,
   }) async {
     if (seconds <= 0) return load();
-    final current = await load();
-    final day = dayKey(DateTime.now());
-    final next = current.copyWith(
-      totalSeconds: current.totalSeconds + seconds,
-      dailySeconds: {
-        ...current.dailySeconds,
-        day: (current.dailySeconds[day] ?? 0) + seconds,
-      },
-      bookSeconds: {
-        ...current.bookSeconds,
-        bookId: (current.bookSeconds[bookId] ?? 0) + seconds,
-      },
-    );
-    await save(next);
-    return next;
+    // Serialised and guarded: the reader flushes every ~10 s while the stats
+    // page and book deletion also touch this file, and interleaved
+    // read-modify-write loses whole sessions of reading time.
+    return _serialised(() async {
+      await guardWritable();
+      final current = await load();
+      final day = dayKey(DateTime.now());
+      final next = current.copyWith(
+        totalSeconds: current.totalSeconds + seconds,
+        dailySeconds: {
+          ...current.dailySeconds,
+          day: (current.dailySeconds[day] ?? 0) + seconds,
+        },
+        bookSeconds: {
+          ...current.bookSeconds,
+          bookId: (current.bookSeconds[bookId] ?? 0) + seconds,
+        },
+      );
+      await save(next);
+      return next;
+    });
   }
 
   /// Wipes all accumulated stats (today / total / per-book).
+  ///
+  /// Deliberately not guarded: resetting is the reader asking to discard the
+  /// file, so a damaged one may be replaced.
   Future<void> reset() async {
-    await save(const ReadingStats());
+    await _serialised(() => save(const ReadingStats()));
   }
 
   /// Drops [bookId]'s row after the book is deleted so the stats page never
   /// has to label it 未知书籍. Totals keep the already-read time (cumulative).
   Future<void> removeBook(String bookId) async {
     if (bookId.isEmpty) return;
-    final current = await load();
-    if (!current.bookSeconds.containsKey(bookId)) return;
-    final books = {...current.bookSeconds}..remove(bookId);
-    await save(current.copyWith(bookSeconds: books));
+    await _serialised(() async {
+      await guardWritable();
+      final current = await load();
+      if (!current.bookSeconds.containsKey(bookId)) return;
+      final books = {...current.bookSeconds}..remove(bookId);
+      await save(current.copyWith(bookSeconds: books));
+    });
   }
 
   Future<File> _file() async {

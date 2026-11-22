@@ -814,7 +814,19 @@ class ReaderPageState extends State<ReaderPage>
       volumeKeys: volumeKeys,
       chapterPositions: Map.unmodifiable(chapterPositions),
     );
-    saveQueue = saveQueue.then((_) => callback(state));
+    // A damaged progress file throws `StorageDamagedException` from the
+    // library. Unhandled, that breaks the save queue for the rest of the
+    // session (every later save chains onto a rejected future) *and* throws out
+    // of whatever UI action triggered it. The reader is told once; the chain
+    // keeps going.
+    saveQueue = saveQueue
+        .then((_) => callback(state))
+        .catchError((Object error) {
+          debugPrint('Vellum: reading progress not saved: $error');
+          if (error is StorageDamagedException && mounted) {
+            showBookmarkNotice(error.message);
+          }
+        });
     await saveQueue;
   }
 

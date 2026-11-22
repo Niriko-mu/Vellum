@@ -41,6 +41,7 @@ class ImportedBook {
     this.id,
     this.catalog,
     this.contentMode = 'inline',
+    this.contentError,
   });
   final String title;
 
@@ -64,6 +65,14 @@ class ImportedBook {
   /// `seek` — paragraphs are served from the source file + [catalog].
   /// `chunked` — MOBI/EPUB body blocks and images are served from disk.
   final String contentMode;
+
+  /// Set when the body file exists but could not be read or decoded.
+  ///
+  /// The shelf entry still has its title and cover, so before this existed the
+  /// reader simply opened an empty book with no explanation — the reader
+  /// concluded the book was lost and had no way to retry. The surfaces read
+  /// this to say "内容读取失败" and offer to try again.
+  final String? contentError;
 
   bool get usesSeek => contentMode == 'seek' && catalog != null;
   bool get usesLazyContent => usesSeek || contentMode == 'chunked';
@@ -99,6 +108,8 @@ class ImportedBook {
     String? contentMode,
     List<BookTocEntry>? tocEntries,
     int? metaParagraphCount,
+    String? contentError,
+    bool clearContentError = false,
     bool clearCoverImage = false,
     bool clearCoverText = false,
     bool clearFolder = false,
@@ -117,6 +128,9 @@ class ImportedBook {
     metaParagraphCount: metaParagraphCount ?? this.metaParagraphCount,
     catalog: catalog ?? this.catalog,
     contentMode: contentMode ?? this.contentMode,
+    contentError: clearContentError
+        ? null
+        : (contentError ?? this.contentError),
   );
 
   ImportedBook asIndexShell() => ImportedBook(
