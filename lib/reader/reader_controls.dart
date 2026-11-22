@@ -570,8 +570,11 @@ class _ReaderMenuState extends State<ReaderMenu>
           children: [
             Row(
               children: [
+                // The title yields, the numbers do not. This used to give the
+                // title `flex: 2`, so even the four characters of 第1章 标题
+                // claimed two thirds of the row and the percentage ellipsised to
+                // 「全书 …」 — the one part of the line that carries data.
                 Expanded(
-                  flex: 2,
                   child: Text(
                     chapterText.isEmpty ? '阅读进度' : chapterText,
                     maxLines: 1,
@@ -582,14 +585,15 @@ class _ReaderMenuState extends State<ReaderMenu>
                     ),
                   ),
                 ),
-                // Flexible, not a bare Text: at 2.5x system text this line is
-                // wider than the pill, and the unconstrained Row overflowed
-                // instead of ellipsising.
-                Flexible(
+                const SizedBox(width: AppSpace.x2),
+                // Clamped rather than Flexible: at 2.5x system text the label
+                // would be wider than the pill, and a truncated percentage is
+                // worse than a slightly smaller one.
+                MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.3,
                   child: Text(
                     '本章 $chapterPercent% · 全书 $bookPercent%',
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       color: ink.withValues(alpha: .62),
