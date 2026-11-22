@@ -21,6 +21,12 @@ class ReaderPaginationController {
   static const int initialPages = 12;
   static const int anchorFoldParagraphs = 4000;
 
+  /// Forward jump, in paragraphs, beyond which re-anchoring beats measuring.
+  ///
+  /// Measuring a prefix costs a full layout pass per paragraph; past a few
+  /// hundred the reader is waiting on pages they will never see.
+  static const int jumpReAnchorParagraphs = 400;
+
   /// How much already-read context to materialise when a deep anchored window
   /// is asked to turn backwards from its local first page.  This keeps the
   /// recovery bounded while still covering many pages for normal chapters.
@@ -207,7 +213,23 @@ class ReaderPaginationController {
           final end = paragraphs.blockEndForParagraph(next);
           sliceSize = (end - next).clamp(1, 20);
         }
-        localPager.paginateSlice(maxParagraphs: sliceSize);
+        // The budget goes into the slice too: the 12 ms check above only runs
+        // between slices, and one slice is up to 20 paragraphs of long text.
+        localPager.paginateSlice(
+          maxParagraphs: sliceSize,
+          clock: sw,
+          budgetMs: 12,
+        );
+      }
+      // The book-wide page number needs a representative character sample. It
+      // used to be measured by the footer getter, inside build; doing it here
+      // keeps the freeze off the frame and lets the number settle within a few
+      // slices instead.
+      if (localPager.isAnchored &&
+          !localPager.isEstimateCalibrated &&
+          isActive() &&
+          identical(localPager, pager)) {
+        localPager.calibrateEstimate();
       }
       if (!isActive() ||
           !_busy ||
@@ -262,16 +284,36 @@ class ReaderPaginationController {
       final anchor = (target - lookback).clamp(0, target - 1);
       cancel();
       pager.paginateFrom(anchor, minPages: initialPages);
-      pager.paginateThrough(target);
+      // Bounded: the window starts [lookback] paragraphs before the target, so
+      // this measures at most that many — but a full layout per paragraph is
+      // still enough to stall the frame, so the slice gets a budget and the
+      // caller may settle for the first page of the window (the reader is
+      // turning backwards, so landing one page earlier is not a regression).
+      final clock = Stopwatch()..start();
+      pager.paginateThrough(
+        target,
+        clock: clock,
+        budgetMs: previousPageBudgetMs,
+      );
 
       final page = pager.exactPageForParagraph(target);
       if (page != null && page > 0) return page;
-      if (anchor == 0 || lookback >= maxBackwardLookbackParagraphs) {
+      if (anchor == 0 ||
+          lookback >= maxBackwardLookbackParagraphs ||
+          clock.elapsedMilliseconds >= previousPageBudgetMs) {
         return page != null && page > 0 ? page : null;
       }
       lookback = maxBackwardLookbackParagraphs;
     }
   }
+
+  /// Upper bound for one backwards-page rebuild.
+  ///
+  /// One 256-paragraph window is normally enough; this stops a pathological
+  /// chapter from turning a single tap on "上一页" into a multi-hundred-ms
+  /// freeze. When it runs out the reader simply stays on the first page of the
+  /// prepared window instead of getting the exact predecessor.
+  static const int previousPageBudgetMs = 80;
 
   int pageForParagraph(int paragraphIndex) {
     final total = _book.paragraphs.length;
@@ -290,15 +332,20 @@ class ReaderPaginationController {
         pager.pageCount - 1,
       );
     }
+    // A forward jump inside the measured prefix is cheap; one further ahead is
+    // not, and measuring everything in between is what made a seek in a big
+    // book block the UI. Past [jumpReAnchorParagraphs] the window is re-anchored
+    // at the target instead of measuring pages the reader will never see.
+    final ahead = paragraphIndex - pager.nextParagraph;
     if (total > 0 &&
         (paragraphIndex > anchorFoldParagraphs ||
-            (_book.usesLazyContent && paragraphIndex > pager.nextParagraph))) {
+            ahead > jumpReAnchorParagraphs ||
+            (_book.usesLazyContent && ahead > 0))) {
       cancel();
       pager.paginateFrom(paragraphIndex, minPages: initialPages);
       return 0;
     }
-    if (paragraphIndex > pager.nextParagraph)
-      pager.paginateThrough(paragraphIndex);
+    if (ahead > 0) pager.paginateThrough(paragraphIndex);
     final exact = pager.exactPageForParagraph(paragraphIndex);
     if (exact != null)
       return exact.clamp(0, (pager.pageCount - 1).clamp(0, exact));

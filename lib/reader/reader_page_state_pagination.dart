@@ -317,10 +317,13 @@ extension ReaderPagePagination on ReaderPageState {
   /// own pages).
   int get bookPageCount {
     if (!pager.isAnchored) return pager.estimatedTotalPageCount;
-    // The footer and the progress bar are the only consumers, and they are built
-    // once per frame: widen the sample here so the number settles instead of
-    // drifting as the reader turns pages.
-    pager.calibrateEstimate();
+    // Read-only: this getter runs once per frame (footer, progress row, seek
+    // preview). Calling calibrateEstimate() here measured up to 150 paragraphs
+    // inside build, so the first frame after a deep jump froze for hundreds of
+    // milliseconds — and it changed the page count mid-frame, which rebuilt the
+    // list with a different itemCount. The measuring now happens in the async
+    // pagination slice; until it is done the estimate is simply what the window
+    // measured so far, which is what the "约" marker is for.
     return pager.estimatedGlobalPageCount;
   }
 

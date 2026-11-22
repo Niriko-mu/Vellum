@@ -312,7 +312,16 @@ class ProgressiveBookPager {
 
   /// Paginate up to [maxParagraphs] more source paragraphs.
   /// Returns true when more book content remains.
-  bool paginateSlice({int maxParagraphs = 30}) {
+  ///
+  /// [clock] is checked between paragraphs, not only between slices: one slice
+  /// can be 20 paragraphs of 2048 characters each, and laying those out is tens
+  /// of milliseconds on a slow phone — a whole frame budget spent after the
+  /// caller had already decided it had time.
+  bool paginateSlice({
+    int maxParagraphs = 30,
+    Stopwatch? clock,
+    int budgetMs = 0,
+  }) {
     if (_finished) return false;
     if (_needsTitleSpace) {
       _usedHeight = measureTitleHeight(_config) + 30;
@@ -323,6 +332,12 @@ class ProgressiveBookPager {
     final total = book.paragraphs.length;
     var processed = 0;
     while (_nextParagraph < total && processed < maxParagraphs) {
+      if (budgetMs > 0 &&
+          clock != null &&
+          processed > 0 &&
+          clock.elapsedMilliseconds >= budgetMs) {
+        break;
+      }
       _paginateParagraph(_nextParagraph);
       _nextParagraph++;
       processed++;
@@ -332,10 +347,16 @@ class ProgressiveBookPager {
   }
 
   /// Ensure [paragraphIndex] has an exact page mapping.
-  void paginateThrough(int paragraphIndex) {
+  void paginateThrough(int paragraphIndex, {Stopwatch? clock, int budgetMs = 0}) {
     var guard = 0;
     while (!_finished && _nextParagraph <= paragraphIndex && guard < 20000) {
-      paginateSlice(maxParagraphs: 40);
+      if (budgetMs > 0 &&
+          clock != null &&
+          guard > 0 &&
+          clock.elapsedMilliseconds >= budgetMs) {
+        break;
+      }
+      paginateSlice(maxParagraphs: 40, clock: clock, budgetMs: budgetMs);
       guard++;
     }
   }
@@ -456,6 +477,14 @@ class ProgressiveBookPager {
     }
     _sampleCharsPerPage();
   }
+
+  /// True once the character-per-page sample is wide enough to trust.
+  ///
+  /// The page footer wants a book-wide number, but computing it must not cost
+  /// a frame: [calibrateEstimate] measures up to 150 paragraphs, which is
+  /// hundreds of milliseconds on a slow phone when it happens inside build.
+  bool get isEstimateCalibrated =>
+      !isAnchored || _sampledParagraphs >= _calibrationParagraphs;
 
   /// Ensure at least [minPages] exact pages exist.
   void paginateUntilPages(int minPages) {
