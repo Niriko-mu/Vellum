@@ -72,12 +72,19 @@ class ReaderReadingTimePill extends StatelessWidget {
                     children: [
                       Icon(AppIcons.timer, size: 12, color: accent),
                       const SizedBox(width: 4),
-                      Text(
-                        '本次 ${compactDuration(session)} · 今日 ${compactDuration(today)}',
-                        style: TextStyle(
-                          color: ink.withValues(alpha: .62),
-                          fontSize: 13,
-                          height: 1.1,
+                      // Capped where the running head assumes it ends. At 2x
+                      // this label grew wide enough to run under 第1章 标题 on
+                      // the other side of the same 4 pt band.
+                      MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: 1.4,
+                        child: Text(
+                          '本次 ${compactDuration(session)} · 今日 ${compactDuration(today)}',
+                          maxLines: 1,
+                          style: TextStyle(
+                            color: ink.withValues(alpha: .62),
+                            fontSize: 13,
+                            height: 1.1,
+                          ),
                         ),
                       ),
                     ],

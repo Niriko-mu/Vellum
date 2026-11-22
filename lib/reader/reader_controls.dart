@@ -290,7 +290,10 @@ class _ReaderMenuState extends State<ReaderMenu>
     // Bottom chrome always shows progress + actions so seek stays usable
     // while a catalog/settings sheet is open. It is a floating stack now:
     // progress pill (78) + gap (8) + capsule (54) + bottom air (12).
-    final bottomChrome = _ReaderBottomDock.totalHeight(bottomSafe);
+    final bottomChrome = _ReaderBottomDock.totalHeightFor(
+      context,
+      bottomSafe,
+    );
     final bandTop = ReaderTopBar.height + topSafe;
 
     return Positioned.fill(
@@ -320,7 +323,7 @@ class _ReaderMenuState extends State<ReaderMenu>
             final chrome = expandSheet
                 ? 0.0
                 : compact
-                ? _ReaderBottomDock.totalHeight(bottomSafe)
+                ? _ReaderBottomDock.totalHeightFor(context, bottomSafe)
                 : bottomChrome;
             final band = expandSheet
                 ? 0.0
@@ -562,8 +565,9 @@ class _ReaderMenuState extends State<ReaderMenu>
     return SizedBox(
       // 68, not 78: this now floats above the action capsule instead of being
       // welded into a bar, so its own padding was doing the spacing that the
-      // gap between the two surfaces already does.
-      height: _ReaderBottomDock.progressHeight,
+      // gap between the two surfaces already does. Grows with the text scaler,
+      // like the capsule below it.
+      height: _ReaderBottomDock.progressHeightFor(context),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 2),
         child: Column(
@@ -846,22 +850,38 @@ class _ReaderBottomDock extends StatelessWidget {
   final Widget progress;
   final Widget actions;
 
-  /// Capsule height. Label + icon need 44; the rest is breathing room.
+  /// Capsule height at 1.0 text scale. Label + icon need 44; the rest is
+  /// breathing room.
   static const double capsuleHeight = 54;
+
+  /// Height of the progress pill at 1.0 text scale.
+  static const double progressHeight = 68;
 
   /// Gap between the progress pill and the capsule.
   static const double progressGap = 8;
 
-  /// Height of the progress pill itself (its content is a fixed 68).
-  static const double progressHeight = 68;
+  /// Rows of the capsule are icon (24) + 2 + label (13 × 1.0). Above 1.0 the
+  /// label grows but the SizedBox did not, so at 1.5 the four cells spilled out
+  /// of the capsule and the 目录/夜间/听书/设置 labels were cut off by the window
+  /// edge — the controls became unusable at exactly the text size that makes
+  /// them necessary. Heights follow the scaler instead of fighting it.
+  static double _labelScale(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(1);
 
-  /// The vertical room the whole floating stack occupies, safe area included.
-  ///
-  /// One number for both the panel's bottom bound and the layout: they were
-  /// computed separately, and the short-window branch used a fraction of the
-  /// box instead — which is how a sheet ended up behind its own controls.
-  static double totalHeight(double bottomSafe) =>
-      progressHeight + progressGap + capsuleHeight + 12 + bottomSafe;
+  static double capsuleHeightFor(BuildContext context) =>
+      capsuleHeight + (24 + 2 + 13 * _labelScale(context) - 39).clamp(0, 80);
+
+  static double progressHeightFor(BuildContext context) =>
+      progressHeight + (13 * _labelScale(context) - 13).clamp(0, 60) * 2;
+
+  static double totalHeightFor(BuildContext context, double bottomSafe) =>
+      progressHeightFor(context) +
+      progressGap +
+      capsuleHeightFor(context) +
+      12 +
+      bottomSafe;
+
+
 
   /// Side inset of the floating stack from the window edge.
   static const double sideInset = 12;
@@ -915,7 +935,10 @@ class _ReaderBottomDock extends StatelessWidget {
                       borderRadius: radius,
                       border: hairline,
                     ),
-                    child: SizedBox(height: capsuleHeight, child: actions),
+                    child: SizedBox(
+                      height: capsuleHeightFor(context),
+                      child: actions,
+                    ),
                   ),
                 ),
               ],

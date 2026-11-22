@@ -174,6 +174,13 @@ class ReaderStatusBar extends StatelessWidget {
 }
 
 /// Top-left running head while chrome is hidden (Fanqie page header).
+/// Room the reading-time pill needs at the top right, at its largest scale.
+///
+/// Kept here rather than measured: the two are separate overlays in a Stack, so
+/// neither can ask the other how wide it is, and measuring would mean laying
+/// the chrome out twice per frame.
+const double _pillReserve = 210;
+
 class ReaderRunningHead extends StatelessWidget {
   const ReaderRunningHead({
     required this.chapterLabel,
@@ -188,26 +195,43 @@ class ReaderRunningHead extends StatelessWidget {
   Widget build(BuildContext context) {
     if (chapterLabel.isEmpty) return const SizedBox.shrink();
     final bg = surface ?? VellumTheme.readerChromeOf(context);
-    return SafeArea(
-      bottom: false,
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, top: 4),
-          child: Text(
-            chapterLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              // Was alpha .38 — 2.64:1 on the white paper, below both the text
-              // and the graphics floor. Tertiary keeps it quiet but readable.
-              color: VellumTheme.readerTertiaryInk(bg),
-              fontSize: 13,
-              height: 18 / 13,
+    // Both the head and the reading-time pill are anchored to the top edge, but
+    // nothing told either how much room the other needed: at 2x text scale
+    // 「第1章 标题」 ran straight through 「本次 0m · 今日 10m」. The head now
+    // stops where the pill starts, and scales against a ceiling so the two fit
+    // together at large system sizes.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final room = constraints.maxWidth - _pillReserve - 20 - 8;
+        return SafeArea(
+          bottom: false,
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, top: 4),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: room < 60 ? 60 : room),
+                child: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.4,
+                  child: Text(
+                    chapterLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      // Was alpha .38 — 2.64:1 on the white paper, below both
+                      // the text and the graphics floor. Tertiary keeps it quiet
+                      // but readable.
+                      color: VellumTheme.readerTertiaryInk(bg),
+                      fontSize: 13,
+                      height: 18 / 13,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
