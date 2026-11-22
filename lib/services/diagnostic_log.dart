@@ -60,8 +60,10 @@ abstract final class DiagnosticLog {
     if (stack != null) entry.writeln(stack.toString().trimRight());
     final text = entry.toString();
 
-    // Also goes to logcat in debug so a developer sees it immediately.
-    debugPrint('Vellum diagnostic: $text');
+    // Also goes to logcat in debug so a developer sees it immediately. Bounded:
+    // one enormous message must not turn into a megabyte of console output.
+    final preview = text.length > 2000 ? '${text.substring(0, 2000)}…' : text;
+    debugPrint('Vellum diagnostic: $preview');
 
     if (!_ready) {
       // Buffered, bounded: a startup crash loop must not grow without limit.
