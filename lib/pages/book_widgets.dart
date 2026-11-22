@@ -278,6 +278,12 @@ class DefaultCover extends StatelessWidget {
 
 /// A cover drawn from the book's own metadata: title, author, and the format in
 /// a quiet corner.
+/// Vertical room the progress badge needs at the bottom of a cover.
+///
+/// 4 pt inset + the pill's own height (a 9 pt line at 1.2, padded 1 pt each
+/// side) plus a hairline of air, so the author line never sits under it.
+const double _badgeClearance = 22;
+
 class _GeneratedCover extends StatelessWidget {
   const _GeneratedCover({required this.book});
 
@@ -298,7 +304,17 @@ class _GeneratedCover extends StatelessWidget {
           final w = constraints.maxWidth;
           final scale = (w / 120).clamp(.55, 1.6);
           return Padding(
-            padding: EdgeInsets.all(AppSpace.x3 * scale),
+            // The progress badge floats over the cover's bottom-left corner,
+            // and this cover's author line lives in exactly that corner: at
+            // 5% they overlapped and read as "5%作者". The badge belongs to the
+            // artwork, not to this painter, so the fix is to keep the text out
+            // from under it.
+            padding: EdgeInsets.fromLTRB(
+              AppSpace.x3 * scale,
+              AppSpace.x3 * scale,
+              AppSpace.x3 * scale,
+              AppSpace.x3 * scale + _badgeClearance,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
