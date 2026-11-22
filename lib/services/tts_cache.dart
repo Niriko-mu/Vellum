@@ -53,17 +53,46 @@ class TtsCache {
       '${(await directory()).path}${Platform.pathSeparator}$key.mp3',
     );
     if (!await file.exists()) return null;
-    // Pruning uses modified time as the last-use marker, including cache hits.
-    await file.setLastModified(DateTime.now());
+    // Touching the file on every hit wrote a metadata update per sentence just
+    // to keep the LRU order — continuous I/O during playback, over and over on
+    // a cache that can hold thousands of segments. Recency within a minute is
+    // plenty for eviction order, so hits that close together skip the write.
+    final now = DateTime.now();
+    try {
+      final modified = (await file.stat()).modified;
+      if (now.difference(modified) > _touchInterval) {
+        await file.setLastModified(now);
+      }
+    } catch (_) {
+      // A stat that fails is not a reason to fail playback.
+    }
     return file;
   }
+
+  /// How stale a hit may be before its last-use time is rewritten.
+  static const Duration _touchInterval = Duration(minutes: 1);
+
+  /// Writes since the last full prune. Pruning walks the whole directory, which
+  /// at a thousand cached sentences cost a stat per file after every sentence.
+  static int _writesSincePrune = 0;
+  static const int _pruneEveryWrites = 32;
 
   /// Persists [bytes] under [key] and prunes the cache to its cap.
   Future<File> write(String key, Uint8List bytes) async {
     final dir = await directory();
     final file = File('${dir.path}${Platform.pathSeparator}$key.mp3');
     await file.writeAsBytes(bytes, flush: true);
-    await prune();
+    // Pruning is a directory-wide scan; doing it after every sentence is what
+    // made continuous listening churn the disk. Every 32nd write is still an
+    // order of magnitude tighter than the cap allows it to grow.
+    _writesSincePrune++;
+    if (_writesSincePrune >= _pruneEveryWrites) {
+      _writesSincePrune = 0;
+      await prune();
+    } else if (await file.length() > maxBytes) {
+      // A single oversized segment must not blow the cap between prunes.
+      await prune();
+    }
     return file;
   }
 

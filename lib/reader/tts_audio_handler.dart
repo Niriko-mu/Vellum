@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 
 import '../services/tts_cache.dart';
@@ -38,6 +39,29 @@ class VellumAudioHandler extends BaseAudioHandler {
   String _bookId = '';
   bool _loading = false;
   int _queueGeneration = 0;
+
+  /// One HTTP client reused across sentences.
+  ///
+  /// Building a client per sentence meant a DNS + TCP + TLS handshake between
+  /// every sentence — audible as a gap, and measurably worse on mobile data.
+  /// It is rebuilt only when the reader changes provider endpoint or key, and
+  /// the previous one is closed so its sockets do not linger.
+  http.Client? _httpClient;
+
+  /// Identity of the endpoint [_httpClient] was built for.
+  String? _httpClientKey;
+
+  /// The client for [preferences], reusing the connection pool when possible.
+  http.Client _clientFor(TtsPreferences preferences) {
+    final key =
+        '${preferences.provider.name}|${preferences.baseUrl}|${preferences.apiKey}';
+    if (_httpClient != null && _httpClientKey == key) return _httpClient!;
+    _httpClient?.close();
+    final client = http.Client();
+    _httpClient = client;
+    _httpClientKey = key;
+    return client;
+  }
 
   /// Reader callback: a sentence started (paragraph, sentence, text).
   void Function(int paragraphIndex, int sentenceIndex, String text)?
@@ -175,6 +199,15 @@ class VellumAudioHandler extends BaseAudioHandler {
     await super.stop();
   }
 
+  /// Releases the pooled connection. Never called while playing — the handler
+  /// lives for the whole app — but kept so a caller that really ends listening
+  /// does not leave sockets open.
+  Future<void> close() async {
+    _httpClient?.close();
+    _httpClient = null;
+    _httpClientKey = null;
+  }
+
   @override
   Future<void> skipToNext() async {
     if (_index + 1 < _segments.length) await _playIndex(_index + 1);
@@ -222,6 +255,7 @@ class VellumAudioHandler extends BaseAudioHandler {
       if (file == null) {
         final bytes = await TtsClient.forPreferences(
           preferences,
+          httpClient: _clientFor(preferences),
         ).synthesize(segment.text);
         file = await cache.write(key, bytes);
       }
@@ -258,6 +292,7 @@ class VellumAudioHandler extends BaseAudioHandler {
     try {
       final bytes = await TtsClient.forPreferences(
         preferences,
+        httpClient: _clientFor(preferences),
       ).synthesize(segment.text);
       await cache.write(key, bytes);
     } catch (_) {

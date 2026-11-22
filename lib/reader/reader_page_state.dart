@@ -271,6 +271,7 @@ class ReaderPageState extends State<ReaderPage>
     loadNotes();
     loadPaper();
     syncPlatformSettings();
+    restoreListeningSession();
     final paragraphs = widget.book.paragraphs;
     if (paragraphs is LazyParagraphs) {
       txtReady = false;
@@ -429,17 +430,62 @@ class ReaderPageState extends State<ReaderPage>
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
+      _resumed = true;
       startReadingTimer();
       loadBatteryLevel();
+      // Catch up on the page the voice reached while the reader was away,
+      // instead of having repaginated for every sentence in the background.
+      if (listening && _pendingVoiceParagraph != null) {
+        final target = _pendingVoiceParagraph!;
+        _pendingVoiceParagraph = null;
+        _jumpAfterVoice(target);
+      }
       return;
     }
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
+      _resumed = false;
       pauseReadingTimer();
       saveTimer?.cancel();
       await saveState();
     }
+  }
+
+  /// Whether the page is in front of the reader right now.
+  bool _resumed = true;
+
+  /// The paragraph the voice reached while the page could not follow it.
+  int? _pendingVoiceParagraph;
+
+  /// Latest narrated position, so a throttled save can catch up.
+  int _voiceParagraph = 0;
+  int _voiceSentence = 0;
+  DateTime? _lastListeningSave;
+
+  /// Follows the narrator: re-anchors pagination to the spoken paragraph.
+  void _jumpAfterVoice(int paragraphIndex) => jumpToParagraph(paragraphIndex);
+
+  /// Records where the narrator is, so 继续听书 resumes in the right place.
+  ///
+  /// Throttled: unthrottled this is a file write per sentence for hours, and
+  /// a resume point one sentence stale is invisible to the reader.
+  void _recordVoicePosition(int paragraphIndex, int sentenceIndex) {
+    _voiceParagraph = paragraphIndex;
+    _voiceSentence = sentenceIndex;
+    final now = DateTime.now();
+    final last = _lastListeningSave;
+    if (last != null && now.difference(last) < const Duration(seconds: 15)) {
+      return;
+    }
+    _lastListeningSave = now;
+    const ListeningLibrary().save(
+      bookId,
+      ListeningPosition(
+        paragraphIndex: _voiceParagraph,
+        sentenceIndex: _voiceSentence,
+      ),
+    );
   }
 
   @override
@@ -640,31 +686,7 @@ class ReaderPageState extends State<ReaderPage>
         startSentence = remembered.sentenceIndex;
       }
     }
-    handler.onSentenceChanged = (paragraphIndex, sentenceIndex, text) {
-      if (!mounted) return;
-      setState(() {
-        currentParagraph = paragraphIndex;
-        spokenSentence = text;
-      });
-      jumpToParagraph(paragraphIndex);
-      const ListeningLibrary().save(
-        bookId,
-        ListeningPosition(
-          paragraphIndex: paragraphIndex,
-          sentenceIndex: sentenceIndex,
-        ),
-      );
-    };
-    handler.onError = onTtsError;
-    ttsStateSub?.cancel();
-    ttsStateSub = handler.playbackState.listen((state) {
-      if (!mounted) return;
-      setState(() {
-        listening = state.playing || handler.hasBook;
-        ttsLabel = handler.positionLabel;
-        ttsSpeed = handler.preferences?.speed ?? ttsSpeed;
-      });
-    });
+    attachTtsCallbacks(handler);
 
     await handler.startBook(
       bookId: bookId,
@@ -699,6 +721,50 @@ class ReaderPageState extends State<ReaderPage>
     }
     if (!mounted) return;
     setState(() => ttsLabel = handler.positionLabel);
+  }
+
+  /// Re-attaches to playback that is still running from an earlier session.
+  ///
+  /// The handler is app-wide by design (it keeps reading with the screen off
+  /// and the page closed), but the page's mirror state — `listening`, the bar's
+  /// label, the sentence subscription — only ever came from [startListening].
+  /// Coming back to the reader therefore showed no 听书 bar even though the
+  /// voice was talking, and tapping 听书 restarted from the current page
+  /// instead of resuming.
+  void restoreListeningSession() {
+    final handler = ttsHandler;
+    if (handler == null || !handler.hasBook) return;
+    listening = true;
+    ttsLabel = handler.positionLabel;
+    ttsSpeed = handler.preferences?.speed ?? ttsSpeed;
+    attachTtsCallbacks(handler);
+  }
+
+  /// Wires the page to the playback handler: sentence follow + state mirror.
+  void attachTtsCallbacks(VellumAudioHandler handler) {
+    handler.onSentenceChanged = (paragraphIndex, sentenceIndex, text) {
+      if (!mounted) return;
+      setState(() {
+        currentParagraph = paragraphIndex;
+        spokenSentence = text;
+      });
+      _recordVoicePosition(paragraphIndex, sentenceIndex);
+      if (!_resumed) {
+        _pendingVoiceParagraph = paragraphIndex;
+        return;
+      }
+      _jumpAfterVoice(paragraphIndex);
+    };
+    handler.onError = onTtsError;
+    ttsStateSub?.cancel();
+    ttsStateSub = handler.playbackState.listen((state) {
+      if (!mounted) return;
+      setState(() {
+        listening = state.playing || handler.hasBook;
+        ttsLabel = handler.positionLabel;
+        ttsSpeed = handler.preferences?.speed ?? ttsSpeed;
+      });
+    });
   }
 
   void onTtsError(TtsException error) {
